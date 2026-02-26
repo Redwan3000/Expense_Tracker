@@ -69,9 +69,22 @@ public class UserController {
     public ResponseEntity<UserRegisterResponseDto> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
 
 
-        UserRegisterResponseDto userRegisterResponseDto = userService.createSubUser(userRegisterRequestDto, user.getUser_id());
+        UserRegisterResponseDto userRegisterResponseDto = userService.createSubUser(userRegisterRequestDto, user.getUserId());
         return ResponseEntity.ok(userRegisterResponseDto);
     }
+
+
+    @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('delete users') or hasRole('ADMIN')")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        userService.softDeleteUser(id);
+        return ResponseEntity.ok("User and associated sub-users have been soft-deleted successfully.");
+    }
+
+public ResponseEntity<?> getALlUser(){
+
+        return ResponseEntity.ok(userService.getAllUsers());
+}
 
 
 }

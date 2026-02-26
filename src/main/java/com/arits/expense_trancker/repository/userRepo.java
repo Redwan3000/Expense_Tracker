@@ -23,7 +23,7 @@ public interface userRepo extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(@Param("username") String username);
 
-    @Query("select u from User u where lower(u.username)=lower(:keyword) or lower(u.first_name) =lower(:keyword) or lower(u.last_name)=lower(:keyword)  or lower(u.email)=lower(:keyword) ")
+    @Query("select u from User u where lower(u.username)=lower(:keyword) or lower(u.firstName) =lower(:keyword) or lower(u.lastName)=lower(:keyword)  or lower(u.email)=lower(:keyword) ")
     List<User> getUserBySearch(@Param("keyword") String keyword);
 
     @Query("select u from User u where u.parent=:user")
@@ -31,4 +31,11 @@ public interface userRepo extends JpaRepository<User, Long> {
 
 
     List<User> findUsersByRole(Role role);
+
+    @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
+    Optional<User> findByUsernameIncludingDeleted(@Param("username") String username);
+
+    @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
+    Optional<User> findByEmailIncludingDeleted(@Param("email") String email);
+
 }

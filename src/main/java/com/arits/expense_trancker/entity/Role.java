@@ -2,6 +2,8 @@ package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +14,8 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE role SET is_deleted = true WHERE role_id=?")
+@SQLRestriction("is_deleted = false")
 public class Role {
 
     @Id
@@ -20,10 +24,10 @@ public class Role {
     @Column(name = "role_name")
     private String roleName;
 
-    @OneToMany(mappedBy = "role")
+    @OneToMany(mappedBy = "role" , fetch = FetchType.EAGER)
     private Set<User>user;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @Builder.Default
     @JoinTable
             (
@@ -33,7 +37,7 @@ public class Role {
             )
     private Set<Permission>permission= new HashSet<>();
 
-
+    private boolean isDeleted = false;
 
 
     public Role (long roleId , String roleName){

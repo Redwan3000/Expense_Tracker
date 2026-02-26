@@ -63,13 +63,15 @@ public class LoadData implements CommandLineRunner {
         permissionsService.permissionsSeeding("modify role permission", "where the admin can add permission to the roles");
         permissionsService.permissionsSeeding("modify subuser permission", "where the admin can add permission to the roles");
         permissionsService.permissionsSeeding("see permission list", "where the admin can see the list of permissions");
-
+        permissionsService.permissionsSeeding("delete users", "Where the admin can delete any user");
 
 
 
         permissionsService.assigningPermissions(1l, List.of(1l, 2l, 3l, 4l,6l));
         permissionsService.assigningPermissions(2l, List.of(1l,2l,3l));
         permissionsService.assigningPermissions(3l, List.of(1l, 2l, 3l, 4l, 5l, 6l,7l,8l,9l));
+
+        permissionsService.assigningPermissions(4l, List.of(1l, 2l, 3l, 4l, 5l, 6l,7l,8l,9l,10l));
         userService.defaultAdmin(userRegisterRequestDto);
 
     }

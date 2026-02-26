@@ -47,8 +47,8 @@ public class AuthService {
             Set<Permission> defaultPermission = userRole.getPermission();
 
             User newUser = userRepo.save(User.builder()
-                    .first_name(userRegisterRequestDto.getFirst_name())
-                    .last_name(userRegisterRequestDto.getLast_name())
+                    .firstName(userRegisterRequestDto.getFirst_name())
+                    .lastName(userRegisterRequestDto.getLast_name())
                     .email(userRegisterRequestDto.getEmail())
                     .dob(userRegisterRequestDto.getDob())
                     .role(userRole)
@@ -61,7 +61,7 @@ public class AuthService {
                     .build());
 
 
-            return new UserRegisterResponseDto(newUser.getUser_id(), newUser.getUsername());
+            return new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername());
         }
 
 
@@ -78,7 +78,7 @@ public class AuthService {
 
         String token = jwtUtils.createJwtToken(loginUser);
 
-        return new UserLoginResponseDto(token, loginUser.getUser_id());
+        return new UserLoginResponseDto(token, loginUser.getUserId());
 
     }
 }

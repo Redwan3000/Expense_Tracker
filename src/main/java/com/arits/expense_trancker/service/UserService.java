@@ -13,12 +13,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,10 +40,10 @@ public class UserService {
 
         UserDetailResponseDto response = new UserDetailResponseDto();
 
-        response.setUser_id(currentUser.getUser_id());
+        response.setUser_id(currentUser.getUserId());
         response.setUsername(currentUser.getUsername());
-        response.setFirst_name(currentUser.getFirst_name());
-        response.setLast_name(currentUser.getLast_name());
+        response.setFirst_name(currentUser.getFirstName());
+        response.setLast_name(currentUser.getLastName());
         response.setEmail(currentUser.getEmail());
         response.setPhone(currentUser.getPhone());
         response.setDob(currentUser.getDob());
@@ -77,8 +74,8 @@ public class UserService {
             Set<Permission> defaultPermission = userRole.getPermission();
 
             User newUser = userRepo.save(User.builder()
-                    .first_name(userRegisterRequestDto.getFirst_name())
-                    .last_name(userRegisterRequestDto.getLast_name())
+                    .firstName(userRegisterRequestDto.getFirst_name())
+                    .lastName(userRegisterRequestDto.getLast_name())
                     .email(userRegisterRequestDto.getEmail())
                     .dob(userRegisterRequestDto.getDob())
                     .role(userRole)
@@ -90,7 +87,7 @@ public class UserService {
                     .permissions(new HashSet<>(defaultPermission))
                     .build());
 
-            return ResponseEntity.ok(new UserRegisterResponseDto(newUser.getUser_id(), newUser.getUsername()));
+            return ResponseEntity.ok(new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername()));
         }
     return ResponseEntity.ok().build();
     }
@@ -113,8 +110,8 @@ public class UserService {
             User currentUser = userRepo.findById(userId).orElseThrow();
             Set<Permission> defaultPermissions = userRole.getPermission();
             User newUser = userRepo.save(User.builder()
-                    .first_name(userRegisterRequestDto.getFirst_name())
-                    .last_name(userRegisterRequestDto.getLast_name())
+                    .firstName(userRegisterRequestDto.getFirst_name())
+                    .lastName(userRegisterRequestDto.getLast_name())
                     .email(userRegisterRequestDto.getEmail())
                     .dob(userRegisterRequestDto.getDob())
                     .role(userRole)
@@ -127,7 +124,7 @@ public class UserService {
                     .build());
 
 
-            return new UserRegisterResponseDto(newUser.getUser_id(), newUser.getUsername());
+            return new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername());
         }
 
 
@@ -153,10 +150,38 @@ public class UserService {
     public List<SubuserListDto> getSubuserList(User currentUser) {
 
       List<User> subusers= userRepo.getUserByParentId(currentUser);
-      return subusers.stream().map(n-> new SubuserListDto(n.getUsername(),n.getFirst_name()+n.getLast_name())).collect(Collectors.toList());
+      return subusers.stream().map(n-> new SubuserListDto(n.getUsername(),n.getFirstName()+n.getLastName())).collect(Collectors.toList());
 
     }
+
+
+
+        @Transactional
+        public void softDeleteUser(Long userId) {
+            User user = userRepo.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // 1. Find all sub-users (children)
+            List<User> subUsers = userRepo.getUserByParentId(user);
+
+            // 2. Soft delete sub-users first
+            for (User sub : subUsers) {
+                userRepo.delete(sub); // This triggers @SQLDelete for each sub-user
+            }
+
+            // 3. Soft delete the parent
+            userRepo.delete(user); // This triggers @SQLDelete for the parent
+        }
+
+    public List<UserDetailResponseDto> getAllUsers() {
+
+        List<User>allUser= userRepo.findAll();
+
+        List<UserDetailResponseDto>=allUser.stream().map()
+    }
 }
+
+
 
 
 

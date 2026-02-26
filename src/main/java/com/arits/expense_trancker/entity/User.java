@@ -4,6 +4,8 @@ package com.arits.expense_trancker.entity;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,7 +13,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,24 +23,26 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Table(name = "users")
 @Builder
+@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE user_id=?")
+@SQLRestriction("is_deleted = false")
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long user_id;
+    private Long userId;
 
     @Column(unique = true, nullable = false)
     private String username;
 
-    private String first_name;
+    private String firstName;
 
-    private String last_name;
+    private String lastName;
 
     private String email;
     private String phone;
     private String password;
     private LocalDate dob;
-
+    private boolean isDeleted = false;
 
     @ManyToOne
     @JoinColumn(name = "gender_id")
@@ -54,10 +57,10 @@ public class User implements UserDetails {
     @JoinColumn(name = "role_id")
     private Role role;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     private Set<Transactions> transactions;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
 
     @JoinTable
             (
@@ -65,11 +68,8 @@ public class User implements UserDetails {
                     joinColumns = @JoinColumn(name = "user_id"),
                     inverseJoinColumns = @JoinColumn(name = "permission_id")
             )
-    private Set<Permission> permissions;
+    private Set<Permission> permissions = new HashSet<>();
 
-    {
-        permissions = new HashSet<>();
-    }
 
 
     @Override

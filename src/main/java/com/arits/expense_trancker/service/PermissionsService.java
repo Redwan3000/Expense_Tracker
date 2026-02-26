@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,14 +29,23 @@ public class PermissionsService {
     public final roleRepo roleRepo;
     public final userRepo userRepo;
 
-    public Permission permissionsSeeding(String name, String des) {
-        return permissionRepo.findByPermissionName(name).orElseGet(() -> {
-                    return permissionRepo.save(Permission.builder()
-                            .permissionName(name)
-                            .description(des)
-                            .build());
-                }
-        );
+    public void permissionsSeeding(String name, String des) {
+        Optional<Permission> existingPermission = permissionRepo.findByNameIncludingDeleted(name);
+        if (existingPermission.isPresent()) {
+            Permission p = existingPermission.get();
+            if (p.isDeleted()) {
+                p.setDeleted(false);
+                permissionRepo.save(p);
+            }
+        } else {
+
+            permissionRepo.save(Permission.builder()
+                    .permissionName(name)
+                    .description(des)
+                    .isDeleted(false)
+                    .build());
+        }
+
     }
 
 
