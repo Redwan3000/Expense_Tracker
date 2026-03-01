@@ -3,7 +3,9 @@ package com.arits.expense_trancker.repository;
 import com.arits.expense_trancker.dto.SubuserListDto;
 import com.arits.expense_trancker.entity.Role;
 import com.arits.expense_trancker.entity.User;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -32,10 +34,22 @@ public interface userRepo extends JpaRepository<User, Long> {
 
     List<User> findUsersByRole(Role role);
 
-    @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
-    Optional<User> findByUsernameIncludingDeleted(@Param("username") String username);
+//    @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
+//    Optional<User> findByUsernameIncludingDeleted(@Param("username") String username);
+//
+//    @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
+//    Optional<User> findByEmailIncludingDeleted(@Param("email") String email);
 
-    @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
-    Optional<User> findByEmailIncludingDeleted(@Param("email") String email);
+    @Query(value = "select * from users where is_deleted = true", nativeQuery = true)
+    List<User> findAllDeletedUsers();
+
+
+    @Query(value = "SELECT * FROM users WHERE user_id IN (" +
+            "SELECT MIN(user_id) FROM users " +
+            "WHERE parent_id = :parentId " +
+            "GROUP BY role_id)", nativeQuery = true)
+    List<User> findOneSubUserPerRole(@Param("parentId") Long parentId);
+
+
 
 }

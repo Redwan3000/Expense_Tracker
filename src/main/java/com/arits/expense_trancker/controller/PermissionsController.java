@@ -43,7 +43,7 @@ public class PermissionsController {
 
 
 
-//
+
 //    //deleteing roles permission
 //    @DeleteMapping("/modify-roles-permission")
 //    @PreAuthorize("hasAuthority('modify role permission')")
@@ -87,10 +87,18 @@ public class PermissionsController {
 
 
     @GetMapping("/modify-permissions")
-    @PreAuthorize("hasAuthority('see permission list')")
+    @PreAuthorize("hasAuthority('see permission list') or hasRole('ADMIN')")
     public ResponseEntity<?> permissionList(@RequestBody PermissionRequestDto permissionRequestDto) {
         return ResponseEntity.ok(permissionsService.permissionList(permissionRequestDto.getRoleId()));
     }
 
+
+
+    // Check your Controller for this:
+    @GetMapping("/subuser-permission-list")
+    @PreAuthorize("hasAuthority('see subUser permission list') or hasRole('ADMIN')")
+    public ResponseEntity<?> permissionList(@AuthenticationPrincipal User user, @RequestBody PermissionRequestDto permissionRequestDto) {
+        return ResponseEntity.ok(permissionsService.subUsersPermission(user, permissionRequestDto));
+    }
 
 }

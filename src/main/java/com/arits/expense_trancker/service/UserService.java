@@ -161,23 +161,82 @@ public class UserService {
             User user = userRepo.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // 1. Find all sub-users (children)
+
             List<User> subUsers = userRepo.getUserByParentId(user);
 
-            // 2. Soft delete sub-users first
+
             for (User sub : subUsers) {
-                userRepo.delete(sub); // This triggers @SQLDelete for each sub-user
+                userRepo.delete(sub);
             }
 
-            // 3. Soft delete the parent
-            userRepo.delete(user); // This triggers @SQLDelete for the parent
+
+            userRepo.delete(user);
         }
 
-    public List<UserDetailResponseDto> getAllUsers() {
+
+    @Transactional
+    public void softDeleteSubUser(User user,Long userId) {
+        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(()-> new RuntimeException("current user not found"));
+
+        User subUser= userRepo.findById(userId).orElseThrow(()-> new RuntimeException("subuser not found"));
+
+        if(subUser.getParent()==currentuser){
+
+            userRepo.delete(subUser);
+
+        }
+        else {
+            throw  new RuntimeException("subuser do not exist under your account");
+        }
+    }
+
+
+    public List<alluserListDto> getAllUsers() {
 
         List<User>allUser= userRepo.findAll();
 
-        List<UserDetailResponseDto>=allUser.stream().map()
+        List<alluserListDto> users =allUser.stream().map(u->new alluserListDto(u.getUserId(), u.getUsername())).collect(Collectors.toList());
+        return users;
+    }
+    public List<alluserListDto> getAllDeletedUsers() {
+
+        List<User> deletedUsers = userRepo.findAllDeletedUsers();
+
+
+        return deletedUsers.stream()
+                .map(user -> new alluserListDto(
+                        user.getUserId(),
+                        user.getUsername()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public UserRegisterRequestDto updateProfile(User user,UserRegisterRequestDto userRegisterRequestDto) {
+
+        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(()->new RuntimeException("user not found"));
+
+        currentuser.setFirstName(userRegisterRequestDto.getFirst_name());
+        currentuser.setLastName(userRegisterRequestDto.getLast_name());
+
+        currentuser.setDob(userRegisterRequestDto.getDob());
+        currentuser.setGender(genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(()->new RuntimeException("gender not found ")));
+        currentuser.setPhone(userRegisterRequestDto.getPhone());
+
+        currentuser.setPassword(passwordEncoder.encode(userRegisterRequestDto.getPassword()));
+
+        userRepo.save(currentuser);
+
+        return UserRegisterRequestDto.builder()
+                .first_name(currentuser.getFirstName())
+                .last_name(currentuser.getLastName())
+                .email(currentuser.getEmail())
+                .phone(currentuser.getPhone())
+                .dob(currentuser.getDob())
+                .gender_id(currentuser.getGender().getGenderid())
+                .username(currentuser.getUsername())
+                .build();
+
+
     }
 }
 

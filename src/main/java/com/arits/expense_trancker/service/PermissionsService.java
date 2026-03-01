@@ -1,5 +1,6 @@
 package com.arits.expense_trancker.service;
 
+import com.arits.expense_trancker.dto.PermissionRequestDto;
 import com.arits.expense_trancker.dto.PermissionResponseDto;
 import com.arits.expense_trancker.dto.SetPermissionDto;
 import com.arits.expense_trancker.dto.UpdatePermssionResponseDto;
@@ -175,6 +176,8 @@ public class PermissionsService {
         }
     }
 
+
+
     @Transactional
     public UpdatePermssionResponseDto updatePermission(String roleName, List<Long> replacedTo, List<Long> replacedWith) {
 
@@ -195,6 +198,10 @@ public class PermissionsService {
                 .collect(Collectors.toList());
         return new UpdatePermssionResponseDto(roleName, updatedPermissionIds);
     }
+
+
+
+
 
     public SetPermissionDto setPermissionSubUser(User user, Long roleId, List<Long> permissionId) {
 
@@ -224,6 +231,21 @@ public class PermissionsService {
         userRepo.saveAll(subUsersToUpdate);
 
         return new SetPermissionDto(roleId, permissionId);
+
+    }
+
+    public List<PermissionResponseDto> subUsersPermission(User user , PermissionRequestDto permissionRequestDto) {
+
+        List<User> subUser= userRepo.findOneSubUserPerRole(user.getUserId());
+
+        User targetSubUser = subUser.stream().filter(u->u.getRole().getRoleId()==permissionRequestDto.getRoleId()).findFirst().orElseThrow(()->new RuntimeException("No subUser found"));
+
+
+        return targetSubUser.getRole().getPermission().stream().map(p->new PermissionResponseDto(
+                p.getPermissionId(),
+                p.getPermissionName(),
+                p.getDescription())).collect(Collectors.toList());
+
 
     }
 

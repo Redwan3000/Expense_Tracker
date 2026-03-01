@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Entity
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 @Builder
 @SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE user_id=?")
 @SQLRestriction("is_deleted = false")
-public class User implements UserDetails {
+public class User implements UserDetails{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -68,6 +69,7 @@ public class User implements UserDetails {
                     joinColumns = @JoinColumn(name = "user_id"),
                     inverseJoinColumns = @JoinColumn(name = "permission_id")
             )
+    @SQLRestriction("is_deleted = false")
     private Set<Permission> permissions = new HashSet<>();
 
 

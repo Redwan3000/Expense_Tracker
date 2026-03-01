@@ -2,6 +2,8 @@ package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.Set;
 
@@ -11,7 +13,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
+//@SQLDelete(sql = "UPDATE gender SET is_deleted = true WHERE gender_id=?")
+//@SQLRestriction("is_deleted = false")
 public class Gender {
 
     @Id
@@ -22,7 +25,8 @@ public class Gender {
 
     @Column(nullable = false,unique = true)
     private String name;
-
+//
+//    private boolean isDeleted = false;
 
     @OneToMany(mappedBy = "gender")
     private Set<User> user;

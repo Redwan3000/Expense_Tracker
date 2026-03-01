@@ -45,47 +45,40 @@ public class UserController {
         return ResponseEntity.ok(userDetails);
     }
 
-    @GetMapping("/get-user-info/{keyword}")
-    @PreAuthorize("hasAuthority('get any user')")
-    public ResponseEntity<List<UserDetailResponseDto>> getUserInfo(@PathVariable("keyword") String keyword) {
-
-        List<UserDetailResponseDto> userDetailResponseDtos = userService.getUserBySearch(keyword);
-        return ResponseEntity.ok(userDetailResponseDtos);
-
-    }
-
 
     @GetMapping("/subusers-list")
     @PreAuthorize("hasAuthority('subuser list')")
-    public ResponseEntity<List<SubuserListDto>> getUserUserList(@AuthenticationPrincipal User currentUser){
+    public ResponseEntity<List<SubuserListDto>> getUserUserList(@AuthenticationPrincipal User currentUser) {
 
-        List<SubuserListDto> subusers= userService.getSubuserList(currentUser);
+        List<SubuserListDto> subusers = userService.getSubuserList(currentUser);
         return ResponseEntity.ok(subusers);
 
-}
+    }
 
     @PostMapping("/create-subuser")
-    @PreAuthorize("hasAuthority('create subuser')")
+    @PreAuthorize("hasAuthority('create subuser') or hasRole('OWNER')")
     public ResponseEntity<UserRegisterResponseDto> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
-
 
         UserRegisterResponseDto userRegisterResponseDto = userService.createSubUser(userRegisterRequestDto, user.getUserId());
         return ResponseEntity.ok(userRegisterResponseDto);
     }
 
 
-    @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('delete users') or hasRole('ADMIN')")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        userService.softDeleteUser(id);
-        return ResponseEntity.ok("User and associated sub-users have been soft-deleted successfully.");
+    @DeleteMapping("/delete-subUser/{id}")
+    @PreAuthorize("hasAuthority('delete subUsers') or hasRole('OWNER')")
+    public ResponseEntity<?> deleteSubUser(@AuthenticationPrincipal User user, @PathVariable Long id) {
+        userService.softDeleteSubUser(user, id);
+        return ResponseEntity.ok("SubUser and associated sub-users have been soft-deleted successfully.");
     }
 
-public ResponseEntity<?> getALlUser(){
 
-        return ResponseEntity.ok(userService.getAllUsers());
-}
+    @PutMapping("/update-Profile")
 
+    public ResponseEntity<?> updateProfileDetail(@AuthenticationPrincipal User user, @RequestBody UserRegisterRequestDto userRegisterRequestDto) {
+
+
+        return ResponseEntity.ok(userService.updateProfile(user, userRegisterRequestDto));
+    }
 
 }
 
