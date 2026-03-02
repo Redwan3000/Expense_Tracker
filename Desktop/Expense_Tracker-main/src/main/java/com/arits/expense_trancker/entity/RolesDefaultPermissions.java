@@ -1,0 +1,41 @@
+package com.arits.expense_trancker.entity;
+
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.processing.SQL;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "default_roles_permission")
+@SQLDelete(sql="update default_roles_permission set is_deleted=true where id=?")
+@SQLRestriction("is_deleted=false")
+public class RolesDefaultPermissions {
+
+
+@Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+@ManyToOne
+@JoinColumn(name = "role_id")
+private Role role;
+
+@ManyToOne
+@JoinColumn(name = "permission_id")
+private Permission permission;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+@Column(name = "is_deleted")
+    private boolean isDeleted = false;
+}
