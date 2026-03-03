@@ -28,7 +28,7 @@ public class AdminController {
 
 
     @GetMapping("/get-user-info/{keyword}")
-    @PreAuthorize("hasAuthority('get any user') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('Get Any User') or hasAuthority('ADMIN')")
     public ResponseEntity<List<UserDetailResponseDto>> getUserInfo(@PathVariable("keyword") String keyword) {
 
         List<UserDetailResponseDto> userDetailResponseDtos = userService.getUserBySearch(keyword);
@@ -38,7 +38,7 @@ public class AdminController {
 
 
     @DeleteMapping("/delete-user/{id}")
-    @PreAuthorize("hasAuthority('delete users') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('Delete Users') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         userService.softDeleteUser(id);
         return ResponseEntity.ok("User and associated sub-users have been soft-deleted successfully.");
@@ -46,19 +46,25 @@ public class AdminController {
 
 
     @GetMapping("/get-users-list")
-    @PreAuthorize("hasAuthority('get users list') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('Get Users List') or hasRole('ADMIN')")
     public ResponseEntity<?> getALlUser() {
 
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/get-deleted-users-list")
-    @PreAuthorize("hasAuthority('get deleted users list') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('Get Deleted Users List') or hasRole('ADMIN')")
     public ResponseEntity<?> getDeletedUsersList() {
 
         return ResponseEntity.ok(userService.getAllDeletedUsers());
     }
 
+    @PutMapping("/retrive-users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> retrieveUser(@PathVariable("id") Long UserId) {
 
+        return ResponseEntity.ok(userService.retriveUser(UserId));
+
+    }
 
 }

@@ -2,16 +2,14 @@ package com.arits.expense_trancker.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class alluserListDto {
+public class RetriveUserResponseDto {
 
-    private Long id;
+    private Long userId;
     private String username;
 
 }

@@ -15,7 +15,7 @@ public class GenderService {
     public Gender genderSeeding( String name) {
         return genderRepo.findByName(name).orElseGet(() -> {
                     return genderRepo.save(Gender.builder()
-                                    .name(name)
+                            .name(name)
                             .build());
                 }
         );

@@ -18,7 +18,7 @@ public interface roleRepo extends JpaRepository<Role, Long> {
     Optional<Role> findByRoleName(String roleName);
 
     @Query(value = "select * from role where role_name=:name",nativeQuery = true)
-Optional<Role>findByNameIncludingDeleted(@Param("name") String name);
+    Optional<Role>findByNameIncludingDeleted(@Param("name") String name);
 
 
     @Modifying

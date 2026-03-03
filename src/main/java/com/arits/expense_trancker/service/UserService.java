@@ -1,14 +1,8 @@
 package com.arits.expense_trancker.service;
 
 import com.arits.expense_trancker.dto.*;
-import com.arits.expense_trancker.entity.Gender;
-import com.arits.expense_trancker.entity.Permission;
-import com.arits.expense_trancker.entity.Role;
-import com.arits.expense_trancker.entity.User;
-import com.arits.expense_trancker.repository.genderRepo;
-import com.arits.expense_trancker.repository.permissionRepo;
-import com.arits.expense_trancker.repository.roleRepo;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.entity.*;
+import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +26,9 @@ public class UserService {
     private final permissionRepo permissionRepo;
     private final genderRepo genderRepo;
     private final PasswordEncoder passwordEncoder;
+    private final transactionTypeRepo transactionTypeRepo;
+    private  final transactionMethodRepo transactionMethodRepo;
+    private final invoiceRepo invoiceRepo;
 
 
     public UserDetailResponseDto getUserDetails(User currentUser) {
@@ -50,14 +46,6 @@ public class UserService {
         response.setGender(currentUser.getGender().getName());
         response.setRole(currentUser.getRole().getRoleName());
 
-//        if (currentUser.getGender() != null) {
-//            response.setGender(currentUser.getGender().getName());
-//        }
-
-
-//        if (currentUser.getRole() != null) {
-//            response.setRole(currentUser.getRole().getRoleName());
-//        }
 
         return response;
     }
@@ -71,7 +59,6 @@ public class UserService {
 
             Gender userGender = genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Invalid Gender"));
             Role userRole = roleRepo.findByRoleName("ADMIN").orElseThrow(() -> new RuntimeException("role not found"));
-            Set<Permission> defaultPermission = userRole.getPermission();
 
             User newUser = userRepo.save(User.builder()
                     .firstName(userRegisterRequestDto.getFirst_name())
@@ -84,18 +71,21 @@ public class UserService {
                     .password(passwordEncoder.encode(userRegisterRequestDto.getPassword()))
                     .username(userRegisterRequestDto.getUsername())
                     .parent(null)
-                    .permissions(new HashSet<>(defaultPermission))
+                    .usersPermissions(new HashSet<>())
                     .build());
 
+            Set<UsersPermissions> defaultPermission = userRole.getDefaultPermissions().stream()
+                    .map(rolesPermission -> UsersPermissions.builder()
+                            .user(newUser)
+                            .permission(rolesPermission.getPermission())
+                            .isDeleted(false).build()).collect(Collectors.toSet());
+
+            newUser.setUsersPermissions(defaultPermission);
+            userRepo.save(newUser);
             return ResponseEntity.ok(new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername()));
         }
-    return ResponseEntity.ok().build();
+        return ResponseEntity.ok().build();
     }
-
-
-
-
-
 
 
     public UserRegisterResponseDto createSubUser(UserRegisterRequestDto userRegisterRequestDto, Long userId) {
@@ -108,7 +98,7 @@ public class UserService {
             Gender userGender = genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Invalid Gender"));
             Role userRole = roleRepo.findById(userRegisterRequestDto.getRole_id()).orElse(roleRepo.findByRoleName("SUBOWNER").orElseThrow());
             User currentUser = userRepo.findById(userId).orElseThrow();
-            Set<Permission> defaultPermissions = userRole.getPermission();
+
             User newUser = userRepo.save(User.builder()
                     .firstName(userRegisterRequestDto.getFirst_name())
                     .lastName(userRegisterRequestDto.getLast_name())
@@ -117,13 +107,21 @@ public class UserService {
                     .role(userRole)
                     .phone(userRegisterRequestDto.getPhone())
                     .gender(userGender)
-                    .permissions(new HashSet<>(defaultPermissions))
+                    .usersPermissions(new HashSet<>())
                     .password(passwordEncoder.encode(userRegisterRequestDto.getPassword()))
                     .username(userRegisterRequestDto.getUsername())
                     .parent(currentUser)
                     .build());
 
 
+            Set<UsersPermissions> defaultPermission = userRole.getDefaultPermissions().stream()
+                    .map(rolesPermission -> UsersPermissions.builder()
+                            .user(newUser)
+                            .permission(rolesPermission.getPermission())
+                            .isDeleted(false).build()).collect(Collectors.toSet());
+
+            newUser.setUsersPermissions(defaultPermission);
+            userRepo.save(newUser);
             return new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername());
         }
 
@@ -131,6 +129,7 @@ public class UserService {
     }
 
 
+    @Transactional
     public List<UserDetailResponseDto> getUserBySearch(String keyword) {
 
 
@@ -149,77 +148,78 @@ public class UserService {
 
     public List<SubuserListDto> getSubuserList(User currentUser) {
 
-      List<User> subusers= userRepo.getUserByParentId(currentUser);
-      return subusers.stream().map(n-> new SubuserListDto(n.getUsername(),n.getFirstName()+n.getLastName())).collect(Collectors.toList());
+        List<User> subusers = userRepo.getUserByParentId(currentUser);
+        return subusers.stream().map(n -> new SubuserListDto(n.getUsername(), n.getFirstName() + n.getLastName())).collect(Collectors.toList());
 
     }
 
 
+    @Transactional
+    public void softDeleteUser(Long userId) {
 
-        @Transactional
-        public void softDeleteUser(Long userId) {
-            User user = userRepo.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-
-            List<User> subUsers = userRepo.getUserByParentId(user);
-
-
-            for (User sub : subUsers) {
-                userRepo.delete(sub);
-            }
-
-
-            userRepo.delete(user);
+        if (!userRepo.existsById(userId)) {
+            throw new RuntimeException("User not found");
         }
+
+        userRepo.softDeleteById(userId);
+        userRepo.softDeleteSubUsers(userId);
+
+
+    }
 
 
     @Transactional
-    public void softDeleteSubUser(User user,Long userId) {
-        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(()-> new RuntimeException("current user not found"));
+    public void softDeleteSubUser(User user, Long userId) {
+        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(() -> new RuntimeException("current user not found"));
 
-        User subUser= userRepo.findById(userId).orElseThrow(()-> new RuntimeException("subuser not found"));
+        User subUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("subuser not found"));
 
-        if(subUser.getParent()==currentuser){
+        if (subUser.getParent() == currentuser) {
 
-            userRepo.delete(subUser);
+            userRepo.softDeleteSubUsersId(subUser.getUserId());
 
-        }
-        else {
-            throw  new RuntimeException("subuser do not exist under your account");
+        } else {
+            throw new RuntimeException("subuser do not exist under your account");
         }
     }
 
 
     public List<alluserListDto> getAllUsers() {
 
-        List<User>allUser= userRepo.findAll();
+        List<User> allUser = userRepo.findAll();
 
-        List<alluserListDto> users =allUser.stream().map(u->new alluserListDto(u.getUserId(), u.getUsername())).collect(Collectors.toList());
+        List<alluserListDto> users = allUser.stream().map(u -> new alluserListDto(u.getUserId(), u.getUsername())).collect(Collectors.toList());
         return users;
     }
-    public List<alluserListDto> getAllDeletedUsers() {
+
+
+    public List<DeletedUsersListDto> getAllDeletedUsers() {
 
         List<User> deletedUsers = userRepo.findAllDeletedUsers();
 
+        if (deletedUsers.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        return deletedUsers.stream()
-                .map(user -> new alluserListDto(
-                        user.getUserId(),
-                        user.getUsername()
-                ))
-                .collect(Collectors.toList());
+        return deletedUsers.stream().filter(Objects::nonNull).map(user -> {
+            DeletedUsersListDto dto = new DeletedUsersListDto();
+            dto.setId(user.getUserId());
+            dto.setUsername(user.getUsername());
+            dto.setDeletedAt(user.getDeletedAt());
+            return dto;
+        }).collect(Collectors.toList());
     }
 
-    public UserRegisterRequestDto updateProfile(User user,UserRegisterRequestDto userRegisterRequestDto) {
 
-        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(()->new RuntimeException("user not found"));
+    public UserRegisterRequestDto updateProfile(User user, UserRegisterRequestDto userRegisterRequestDto) {
+
+        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(() -> new RuntimeException("user not found"));
 
         currentuser.setFirstName(userRegisterRequestDto.getFirst_name());
         currentuser.setLastName(userRegisterRequestDto.getLast_name());
 
         currentuser.setDob(userRegisterRequestDto.getDob());
-        currentuser.setGender(genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(()->new RuntimeException("gender not found ")));
+        currentuser.setGender(genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("gender not found ")));
         currentuser.setPhone(userRegisterRequestDto.getPhone());
 
         currentuser.setPassword(passwordEncoder.encode(userRegisterRequestDto.getPassword()));
@@ -236,6 +236,40 @@ public class UserService {
                 .username(currentuser.getUsername())
                 .build();
 
+
+    }
+
+    public RetriveUserResponseDto retriveUser(Long userId) {
+
+        User user = userRepo.findUserFromSoftDelete(userId).orElseThrow(() -> new RuntimeException("USER NOT FOUND IN SOFT DELETE"));
+        List<User> subusers = userRepo.findSubUserByParentId(userId);
+
+        user.setDeleted(false);
+        user.setDeletedAt(null);
+        subusers.forEach(p -> {
+            p.setDeleted(false);
+            p.setDeletedAt(null);
+        });
+        log.info("user and his subusers retrieved");
+        return new RetriveUserResponseDto(user.getUserId(), user.getUsername());
+    }
+
+    @Transactional
+    public AddTransactionRequestDTO addTransaction(User user, AddTransactionRequestDTO addTransactionRequestDTO) {
+
+        Transactions.builder()
+                .amount(addTransactionRequestDTO.getAmount())
+                .itemName(addTransactionRequestDTO.getItemName())
+                .description(addTransactionRequestDTO.getDescription())
+                .date(LocalDate.now())
+                .user(user)
+                .transactionType(transactionTypeRepo.findById(addTransactionRequestDTO.getTType()).orElseThrow(()->new RuntimeException("transaction Type not found")))
+                .transactionMethods(transactionMethodRepo.findByMethodId(addTransactionRequestDTO.getTMethod()).orElseThrow(()->new RuntimeException("method not found")))
+                .invoice(invoiceRepo.findById(addTransactionRequestDTO.getInvoiceId()).orElseThrow(()->new RuntimeException("invoice not found")))
+                .build();
+
+
+    return new AddTransactionRequestDTO();
 
     }
 }

@@ -5,10 +5,7 @@ import com.arits.expense_trancker.dto.UserLoginRequestDto;
 import com.arits.expense_trancker.dto.UserLoginResponseDto;
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
 import com.arits.expense_trancker.dto.UserRegisterResponseDto;
-import com.arits.expense_trancker.entity.Gender;
-import com.arits.expense_trancker.entity.Permission;
-import com.arits.expense_trancker.entity.Role;
-import com.arits.expense_trancker.entity.User;
+import com.arits.expense_trancker.entity.*;
 
 import com.arits.expense_trancker.repository.genderRepo;
 import com.arits.expense_trancker.repository.roleRepo;
@@ -21,7 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +43,7 @@ public class AuthService {
 
             Gender userGender = genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Invalid Gender"));
             Role userRole = roleRepo.findByRoleName("OWNER").orElseThrow(() -> new RuntimeException("role not found"));
-            Set<Permission> defaultPermission = userRole.getPermission();
+
 
             User newUser = userRepo.save(User.builder()
                     .firstName(userRegisterRequestDto.getFirst_name())
@@ -57,16 +56,23 @@ public class AuthService {
                     .password(passwordEncoder.encode(userRegisterRequestDto.getPassword()))
                     .username(userRegisterRequestDto.getUsername())
                     .parent(null)
-                    .permissions(new HashSet<>(defaultPermission))
+                    .usersPermissions(new HashSet<>())
                     .build());
 
+            List<UsersPermissions> defailtPermission = userRole.getDefaultPermissions().stream()
+                    .map(rolesPermission -> UsersPermissions.builder()
+                            .user(newUser)
+                            .permission(rolesPermission.getPermission()) // Extract the actual Permission
+                            .isDeleted(false)
+                            .build())
+                    .toList();
 
+            newUser.getUsersPermissions().addAll(defailtPermission);
+            userRepo.save(newUser);
             return new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername());
         }
 
-
     }
-
 
     public UserLoginResponseDto login(UserLoginRequestDto userLoginRequestDto) {
 

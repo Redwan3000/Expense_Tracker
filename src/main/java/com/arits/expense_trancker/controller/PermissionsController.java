@@ -26,7 +26,7 @@ public class PermissionsController {
 
     //modifying role's permission
     @PostMapping("/modify-roles-permission")
-    @PreAuthorize("hasAuthority('modify role permission') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('Modify Role Permission') or hasRole('ADMIN')")
     public ResponseEntity<SetPermissionDto> addPermissionsToRole(@RequestBody SetPermissionDto setPermissionDto) {
 
         return ResponseEntity.ok(permissionsService.assigningPermissions(
@@ -35,7 +35,7 @@ public class PermissionsController {
     }
 
     @PostMapping("/modify-subusers-permission")
-    @PreAuthorize("hasAuthority('modify subusers permission') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('Modify Subuser Permission') or hasRole('OWNER')")
     public ResponseEntity<SetPermissionDto> addPermissionsTosubUsersRole(@AuthenticationPrincipal User user, @RequestBody SetPermissionDto setPermissionDto) {
 
         return ResponseEntity.ok(permissionsService.setPermissionSubUser(user,setPermissionDto.getRoleId(),setPermissionDto.getPermissionId()));
@@ -56,7 +56,7 @@ public class PermissionsController {
 
     //updating or replaceing roles permissions
     @PutMapping("/modify-roles-permission")
-    @PreAuthorize("hasAuthority('modify subuser permission')")
+    @PreAuthorize("hasAuthority('Modify Subuser Permission')")
     public ResponseEntity<UpdatePermssionResponseDto> updatePermissionsToRole(@RequestBody UpdatePermissionRequestDto updatePermissionRequestDto) {
 
         return ResponseEntity.ok(permissionsService.updatePermission(

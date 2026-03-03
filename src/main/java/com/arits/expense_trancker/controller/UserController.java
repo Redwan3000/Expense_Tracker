@@ -1,9 +1,6 @@
 package com.arits.expense_trancker.controller;
 
-import com.arits.expense_trancker.dto.SubuserListDto;
-import com.arits.expense_trancker.dto.UserDetailResponseDto;
-import com.arits.expense_trancker.dto.UserRegisterRequestDto;
-import com.arits.expense_trancker.dto.UserRegisterResponseDto;
+import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.repository.genderRepo;
 import com.arits.expense_trancker.repository.roleRepo;
@@ -35,11 +32,9 @@ public class UserController {
 
 
     @GetMapping("/user-info")
-    @PreAuthorize("hasAuthority('user info')")
+    @PreAuthorize("hasAuthority('User Info') or hasAnyRole('OWNER','ADMIN')")
 
     public ResponseEntity<UserDetailResponseDto> getCurrentUserDetails(@AuthenticationPrincipal User currentUser) {
-
-        log.info("current user info : {}", currentUser.getUsername());
 
         UserDetailResponseDto userDetails = userService.getUserDetails(currentUser);
         return ResponseEntity.ok(userDetails);
@@ -47,7 +42,7 @@ public class UserController {
 
 
     @GetMapping("/subusers-list")
-    @PreAuthorize("hasAuthority('subuser list')")
+    @PreAuthorize("hasAuthority('Subuser List') or hasRole('OWNER')")
     public ResponseEntity<List<SubuserListDto>> getUserUserList(@AuthenticationPrincipal User currentUser) {
 
         List<SubuserListDto> subusers = userService.getSubuserList(currentUser);
@@ -56,7 +51,7 @@ public class UserController {
     }
 
     @PostMapping("/create-subuser")
-    @PreAuthorize("hasAuthority('create subuser') or hasRole('OWNER')")
+    @PreAuthorize("hasAuthority('Create Subuser') or hasRole('OWNER')")
     public ResponseEntity<UserRegisterResponseDto> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
 
         UserRegisterResponseDto userRegisterResponseDto = userService.createSubUser(userRegisterRequestDto, user.getUserId());
@@ -65,7 +60,7 @@ public class UserController {
 
 
     @DeleteMapping("/delete-subUser/{id}")
-    @PreAuthorize("hasAuthority('delete subUsers') or hasRole('OWNER')")
+    @PreAuthorize("hasAuthority('Delete Subusers') or hasRole('OWNER')")
     public ResponseEntity<?> deleteSubUser(@AuthenticationPrincipal User user, @PathVariable Long id) {
         userService.softDeleteSubUser(user, id);
         return ResponseEntity.ok("SubUser and associated sub-users have been soft-deleted successfully.");
@@ -73,11 +68,19 @@ public class UserController {
 
 
     @PutMapping("/update-Profile")
-
+    @PreAuthorize("hasAuthority('Update Profile') or hasAnyRole('OWNER','SUBOWNER','ADMIN','TERTIARY')")
     public ResponseEntity<?> updateProfileDetail(@AuthenticationPrincipal User user, @RequestBody UserRegisterRequestDto userRegisterRequestDto) {
 
 
         return ResponseEntity.ok(userService.updateProfile(user, userRegisterRequestDto));
+    }
+
+    @PostMapping("/add-transaction")
+    public ResponseEntity<?>addTransaction(@AuthenticationPrincipal User user , @RequestBody AddTransactionRequestDTO addTransactionRequestDTO){
+
+        return ResponseEntity.ok(userService.addTransaction(user, addTransactionRequestDTO));
+
+
     }
 
 }

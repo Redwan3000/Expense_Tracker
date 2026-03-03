@@ -12,7 +12,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RoleService {
 
-public final roleRepo roleRepo;
+    public final roleRepo roleRepo;
 
     public void roleSeeding(String name) {
 

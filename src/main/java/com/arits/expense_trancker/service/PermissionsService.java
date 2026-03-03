@@ -4,16 +4,13 @@ import com.arits.expense_trancker.dto.PermissionRequestDto;
 import com.arits.expense_trancker.dto.PermissionResponseDto;
 import com.arits.expense_trancker.dto.SetPermissionDto;
 import com.arits.expense_trancker.dto.UpdatePermssionResponseDto;
-import com.arits.expense_trancker.entity.Permission;
-import com.arits.expense_trancker.entity.Role;
-import com.arits.expense_trancker.entity.User;
-import com.arits.expense_trancker.repository.permissionRepo;
-import com.arits.expense_trancker.repository.roleRepo;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.entity.*;
+import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +26,9 @@ public class PermissionsService {
     public final permissionRepo permissionRepo;
     public final roleRepo roleRepo;
     public final userRepo userRepo;
+    public final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
+    public final UsersPermissionsRepo usersPermissionsRepo;
+
 
     public void permissionsSeeding(String name, String des) {
         Optional<Permission> existingPermission = permissionRepo.findByNameIncludingDeleted(name);
@@ -50,113 +50,81 @@ public class PermissionsService {
     }
 
 
+
     @Transactional
-    public SetPermissionDto assigningPermissions(Long roleId, List<Long> permissionId) {
+    public SetPermissionDto assigningPermissions(Long roleId, List<Long> permissionIds) {
+        Role role = roleRepo.findById(roleId).orElseThrow(() -> new RuntimeException("role not found"));
+        List<RolesDefaultPermissions> currentPermissions = rolesDefaultPermissionsRepo.findCurrentPermissionsByRoleId(roleId);
 
-        if (permissionId == null) {
-            throw new IllegalArgumentException("Permission ID list must not be null");
+        currentPermissions.forEach(permission -> {
+
+            boolean status = permissionIds.contains(permission.getPermission().getPermissionId());
+            permission.setDeleted(!status);
+            permission.setDeletedAt(!status ? LocalDateTime.now() : null);
+
+        });
+        Set<Long> oldPermissionId = currentPermissions.stream().map(r -> r.getPermission().getPermissionId()).collect(Collectors.toSet());
+
+        permissionIds.stream().filter(id -> !oldPermissionId.contains(id)).forEach(newId -> {
+
+            Permission p = permissionRepo.findById(newId).orElseThrow(() -> new RuntimeException("permission not found"));
+            rolesDefaultPermissionsRepo.save(RolesDefaultPermissions.builder()
+                    .role(role)
+                    .permission(p)
+                    .isDeleted(false)
+                    .build());
+
+        });
+        rolesDefaultPermissionsRepo.flush();
+        List<User> allUsers= userRepo.findUsersByRole(role);
+
+        for (User user : allUsers) {
+
+            List<UsersPermissions> usersPermissions = usersPermissionsRepo.findPermissionsByUserId(user.getUserId());
+
+            Set<Long> usersPermissionsIds = usersPermissions.stream()
+                    .map(p -> p.getPermission().getPermissionId())
+                    .collect(Collectors.toSet());
+
+
+            usersPermissions.stream()
+                    .filter(up -> !permissionIds.contains(up.getPermission().getPermissionId()))
+                    .forEach(up -> {
+                        up.setDeleted(true);
+                        up.setDeletedAt(LocalDateTime.now());
+                    });
+
+            usersPermissions.stream()
+                    .filter(up -> permissionIds.contains(up.getPermission().getPermissionId()))
+                    .forEach(up -> {up.setDeleted(false);
+                        up.setDeletedAt(null);
+                    } );
+
+            permissionIds.stream()
+                    .filter(id -> !usersPermissionsIds.contains(id))
+                    .forEach(newId -> {
+                        Permission permission = permissionRepo.findById(newId)
+                                .orElseThrow(() -> new RuntimeException("permission not found"));
+
+                        usersPermissionsRepo.save(UsersPermissions.builder()
+                                .user(user)
+                                .permission(permission)
+                                .isDeleted(false)
+                                .build());
+                    });
+
         }
 
-        Set<Long> uniqueIds = new HashSet<>(permissionId);
-
-        Role role = roleRepo.findById(roleId)
-                .orElseThrow(() -> new RuntimeException("Role not found ID: " + roleId));
-
-
-        List<Permission> permissions = permissionRepo.findAllById(uniqueIds);
-
-        role.getPermission().clear();
-        role.getPermission().addAll(permissions);
-        roleRepo.saveAndFlush(role);
-
-
-        List<User> allUser = userRepo.findUsersByRole(role);
-        Set<Permission> uniquePermissionSet = new HashSet<>(permissions);
-
-        for (User user : allUser) {
-            user.getPermissions().clear();
-            user.getPermissions().addAll(uniquePermissionSet);
-        }
-
-        userRepo.saveAll(allUser);
-
-        List<Long> permissionList = role.getPermission().stream().map(Permission::getPermissionId).toList();
-
-        return new SetPermissionDto(role.getRoleId(), permissionList);
+        return new SetPermissionDto(roleId, permissionIds);
     }
-
-
-//    @Transactional
-//    public SetPermissionDto assigningPermissionsToUser(Long id,String roleName, List<Long> permissionId) {
-//
-//
-//        if (permissionId == null) {
-//            throw new IllegalArgumentException("Permission ID list must not be null");
-//        }
-//
-//        if (id == null) {
-//            throw new IllegalArgumentException("user id must nto be null");
-//        }
-//
-//        Set<Long> uniqueIds = new HashSet<>(permissionId);
-//
-//        List<Permission> permissions = permissionRepo.findAllById(uniqueIds);
-//
-//
-//        User user = userRepo.findById(id)
-//                .orElseThrow(() -> new RuntimeException("user not found: " + id));
-//
-//
-//        user.getPermissions().addAll(permissions);
-//        userRepo.saveAndFlush(user);
-//
-//        List<Long>permissionList=user.getPermissions().stream().map(Permission::getPermissionId).toList();
-//
-//
-//
-//        return new SetPermissionDto(user.getUser_id(),user.getRole().getRoleName(), permissionList);
-//    }
-
-
-//    @Transactional
-//    public SetPermissionDto deletePermissionFromRole(String roleName, List<Long> permissionId) {
-//
-//
-//        Set<Long> uniqueIds = new HashSet<>(permissionId);
-//
-//        Role role = roleRepo.findByRoleName(roleName)
-//                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
-//
-//
-//        List<Permission> permissions = permissionRepo.findAllById(uniqueIds);
-//
-//
-//        role.getPermission().removeAll(permissions);
-//        roleRepo.saveAndFlush(role);
-//
-//
-//        List<User> allUser = userRepo.findUsersByRole(role);
-//        Set<Permission> uniquePermissionSet = new HashSet<>(permissions);
-//
-//        for (User user : allUser) {
-//            user.getPermissions().removeAll(uniquePermissionSet);
-//        }
-//
-//        userRepo.saveAll(allUser);
-//
-//        List<Long>permissionList=role.getPermission().stream().map(Permission::getPermissionId).toList();
-//
-//        return new SetPermissionDto(roleName, permissionList);
-//    }
-
 
     public List<PermissionResponseDto> permissionList(Long roleId) {
 
-        List<Permission> permissionsByRole = permissionRepo.findByRole_RoleId(roleId);
+        List<Permission> permissionsByRole = permissionRepo.findPermissionsByRoleId(roleId);
 
         if (!permissionsByRole.isEmpty()) {
 
-            return permissionRepo.findByRole_RoleId(roleId)
+            return permissionRepo.findPermissionsByRoleId(roleId)
                     .stream()
                     .map(
                             Permission -> new PermissionResponseDto(
@@ -177,36 +145,41 @@ public class PermissionsService {
     }
 
 
-
     @Transactional
     public UpdatePermssionResponseDto updatePermission(String roleName, List<Long> replacedTo, List<Long> replacedWith) {
 
-        if (!roleRepo.findByRoleName(roleName).isPresent()) {
-            throw new IllegalArgumentException("role does not exist");
-        }
-        List<Permission> validateNewPermission = replacedWith.stream().map(
-                p -> permissionRepo.findById(p).orElseThrow(() -> new IllegalArgumentException("permission does not exist"))).collect(Collectors.toList());
+        Role role = roleRepo.findByRoleName(roleName)
+                .orElseThrow(() -> new IllegalArgumentException("role does not exist"));
 
-        List<Permission> validateOldPermission = replacedTo.stream().map(p -> permissionRepo.findById(p).orElseThrow(() -> new IllegalArgumentException("permission does not exist"))).collect(Collectors.toList());
+        Set<RolesDefaultPermissions> validateNewPermission = replacedWith.stream()
+                .map(p -> permissionRepo.findById(p).orElseThrow(() -> new IllegalArgumentException("permission does not exist")))
+                .map(permission -> RolesDefaultPermissions.builder()
+                        .role(role)
+                        .permission(permission)
+                        .isDeleted(false)
+                        .build())
+                .collect(Collectors.toSet());
 
-        Role role = roleRepo.findByRoleName(roleName).orElseThrow();
-        role.getPermission().removeAll(validateOldPermission);
-        role.getPermission().addAll(validateNewPermission);
+        Set<RolesDefaultPermissions> validateOldPermission = role.getDefaultPermissions().stream()
+                .filter(rolePerm -> replacedTo.contains(rolePerm.getPermission().getPermissionId()))
+                .collect(Collectors.toSet());
 
-        List<Long> updatedPermissionIds = role.getPermission().stream()
-                .map(p -> p.getPermissionId())
+
+        role.getDefaultPermissions().removeAll(validateOldPermission);
+        role.getDefaultPermissions().addAll(validateNewPermission);
+
+        List<Long> updatedPermissionIds = role.getDefaultPermissions().stream()
+                .map(p -> p.getPermission().getPermissionId())
                 .collect(Collectors.toList());
+
         return new UpdatePermssionResponseDto(roleName, updatedPermissionIds);
     }
 
 
-
-
-
     public SetPermissionDto setPermissionSubUser(User user, Long roleId, List<Long> permissionId) {
 
-
         List<User> subUsers = userRepo.getUserByParentId(user);
+
         if (permissionId == null) {
             throw new IllegalArgumentException("Permission ID list must not be null");
         }
@@ -224,8 +197,16 @@ public class PermissionsService {
         }
 
         for (User subUser : subUsersToUpdate) {
-            subUser.getPermissions().clear();
-            subUser.getPermissions().addAll(permissions);
+            subUser.getUsersPermissions().clear();
+            Set<UsersPermissions> usersPermissions = permissions.stream()
+                    .map(p -> UsersPermissions.builder()
+                            .user(subUser)
+                            .permission(p)
+                            .isDeleted(false)
+                            .build())
+                    .collect(Collectors.toSet());
+
+            subUser.getUsersPermissions().addAll(usersPermissions);
         }
 
         userRepo.saveAll(subUsersToUpdate);
@@ -234,45 +215,22 @@ public class PermissionsService {
 
     }
 
-    public List<PermissionResponseDto> subUsersPermission(User user , PermissionRequestDto permissionRequestDto) {
+    public List<PermissionResponseDto> subUsersPermission(User user, PermissionRequestDto permissionRequestDto) {
 
-        List<User> subUser= userRepo.findOneSubUserPerRole(user.getUserId());
+        List<User> subUser = userRepo.findOneSubUserPerRole(user.getUserId());
 
-        User targetSubUser = subUser.stream().filter(u->u.getRole().getRoleId()==permissionRequestDto.getRoleId()).findFirst().orElseThrow(()->new RuntimeException("No subUser found"));
+        User targetSubUser = subUser.stream().filter(u -> u.getRole().getRoleId() == permissionRequestDto.getRoleId()).findFirst().orElseThrow(() -> new RuntimeException("No subUser found"));
 
 
-        return targetSubUser.getRole().getPermission().stream().map(p->new PermissionResponseDto(
-                p.getPermissionId(),
-                p.getPermissionName(),
-                p.getDescription())).collect(Collectors.toList());
+        return targetSubUser.getRole().getDefaultPermissions().stream().map(p -> new PermissionResponseDto(
+                p.getPermission().getPermissionId(),
+                p.getPermission().getPermissionName(),
+                p.getPermission().getDescription())).collect(Collectors.toList());
 
 
     }
 
-//
-//    @Transactional
-//    public SetPermissionDto deletePermissionFromUser(Long id, List<Long> permissionId) {
-//
-//        Set<Long> uniqueIds = new HashSet<>(permissionId);
-//
-//        User user = userRepo.findById(id)
-//                .orElseThrow(() -> new RuntimeException("user not found: " + id));
-//
-//
-//        List<Permission> permissions = permissionRepo.findAllById(uniqueIds);
-//
-//
-//        user.getPermissions().removeAll(permissions);
-//        userRepo.saveAndFlush(user);
-//
-//
-//
-//        List<Long>permissionList=user.getPermissions().stream().map(Permission::getPermissionId).toList();
-//
-//        return new SetPermissionDto(user.getUser_id(), user.getRole().getRoleName(), permissionList);
-//
-//
-//    }
+
 
 
 }

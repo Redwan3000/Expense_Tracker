@@ -4,6 +4,7 @@ package com.arits.expense_trancker.entity;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,7 +28,7 @@ import java.util.stream.Collectors;
 @Builder
 @SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE user_id=?")
 @SQLRestriction("is_deleted = false")
-public class User implements UserDetails{
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,7 +45,11 @@ public class User implements UserDetails{
     private String phone;
     private String password;
     private LocalDate dob;
+
+    @Builder.Default
     private boolean isDeleted = false;
+
+    private LocalDateTime deletedAt;
 
     @ManyToOne
     @JoinColumn(name = "gender_id")
@@ -58,19 +64,13 @@ public class User implements UserDetails{
     @JoinColumn(name = "role_id")
     private Role role;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user")
     private Set<Transactions> transactions;
 
-    @ManyToMany(fetch = FetchType.EAGER)
 
-    @JoinTable
-            (
-                    name = "users_permissions",
-                    joinColumns = @JoinColumn(name = "user_id"),
-                    inverseJoinColumns = @JoinColumn(name = "permission_id")
-            )
-    @SQLRestriction("is_deleted = false")
-    private Set<Permission> permissions = new HashSet<>();
+    @Builder.Default
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UsersPermissions> usersPermissions = new HashSet<>();
 
 
 
@@ -78,11 +78,15 @@ public class User implements UserDetails{
     public Collection<? extends GrantedAuthority> getAuthorities() {
 
         Set<SimpleGrantedAuthority> authorities = new java.util.HashSet<>();
+        if (role != null) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
+        }
 
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
+        Set<SimpleGrantedAuthority> userPermissionAuth= this.usersPermissions.stream()
+                .map(usersPermissions -> new SimpleGrantedAuthority(usersPermissions.getPermission().getPermissionName()))
+                .collect(Collectors.toSet());
 
-        Set<SimpleGrantedAuthority> userPermission = this.permissions.stream().map(permission -> new SimpleGrantedAuthority(permission.getPermissionName())).collect(Collectors.toSet());
-        authorities.addAll(userPermission);
+        authorities.addAll(userPermissionAuth);
 
 
         return authorities;

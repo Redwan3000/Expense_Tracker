@@ -16,7 +16,10 @@ public interface permissionRepo extends JpaRepository<Permission, Long> {
     Optional<Permission> findByPermissionName(String name);
 
 
-    List<Permission> findByRole_RoleId(Long roleId);
+
+
+    @Query("SELECT defaultPermission.permission FROM RolesDefaultPermissions defaultPermission WHERE defaultPermission.role.roleId = :roleId")
+    List<Permission> findPermissionsByRoleId(@Param("roleId") Long roleId);
 
     @Query(value = "select * from permission where permission_name=:name", nativeQuery = true)
     Optional<Permission>findByNameIncludingDeleted(@Param("name")String name);

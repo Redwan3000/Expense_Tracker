@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,25 +25,21 @@ public class Role {
     @Column(name = "role_name")
     private String roleName;
 
-    @OneToMany(mappedBy = "role" , fetch = FetchType.EAGER)
-    private Set<User>user;
+    @OneToMany(mappedBy = "role")
+    private Set<User> users;
 
-    @ManyToMany(fetch = FetchType.EAGER)
     @Builder.Default
-    @JoinTable
-            (
-                    name = "roles_default_permission",
-                    joinColumns = @JoinColumn(name = "role_id"),
-                    inverseJoinColumns = @JoinColumn(name = "permission_id")
-            )
-    private Set<Permission>permission= new HashSet<>();
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<RolesDefaultPermissions> defaultPermissions = new HashSet<>();
 
+    @Builder.Default
     private boolean isDeleted = false;
 
+    private LocalDateTime deletedAt;
 
-    public Role (long roleId , String roleName){
-        this.roleId=roleId;
-        this.roleName=roleName;
+    public Role(long roleId, String roleName) {
+        this.roleId = roleId;
+        this.roleName = roleName;
     }
 
 }

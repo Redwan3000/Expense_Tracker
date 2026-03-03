@@ -1,12 +1,13 @@
 package com.arits.expense_trancker.entity;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.processing.SQL;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -14,25 +15,26 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE gender SET is_deleted = true WHERE gender_id=?")
+@Table(name = "default_roles_permission")
+@SQLDelete(sql="update default_roles_permission set is_deleted=true ,deleted_at=NOW() where id=?")
 @SQLRestriction("is_deleted=false")
-public class Gender {
+public class RolesDefaultPermissions {
 
-    @Id
+
+@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "gender_id")
-    private Long genderid;
+    private long id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+@ManyToOne
+@JoinColumn(name = "role_id")
+private Role role;
 
+@ManyToOne
+@JoinColumn(name = "permission_id")
+private Permission permission;
 
     @Builder.Default
     private boolean isDeleted = false;
+
     private LocalDateTime deletedAt;
-
-    @OneToMany(mappedBy = "gender")
-    private Set<User> user;
-
-
 }

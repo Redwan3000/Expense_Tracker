@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,12 +31,17 @@ public class Permission {
     private String description;
 
     @Builder.Default
-    @ManyToMany(mappedBy = "permission",fetch = FetchType.EAGER)
-    private Set<Role> role = new HashSet<>();
+    @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<RolesDefaultPermissions> defaultPermissions = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UsersPermissions> usersPermissions = new HashSet<>();
 
 
-    @ManyToMany(mappedBy = "permissions",fetch = FetchType.EAGER)
-    private Set<User> user = new HashSet<>();
-
+    @Builder.Default
     private boolean isDeleted = false;
+
+    private LocalDateTime deletedAt;
+
 }

@@ -17,13 +17,26 @@ import java.util.Optional;
 @Repository
 public interface userRepo extends JpaRepository<User, Long> {
 
-    Optional<User> findByEmail(String email);
 
     @Query("SELECT u FROM User u " +
             "LEFT JOIN FETCH u.role r " +
-            "LEFT JOIN FETCH u.permissions p where u.username=:username")
-
+            "LEFT JOIN FETCH u.usersPermissions p where u.username=:username")
     Optional<User> findByUsername(@Param("username") String username);
+
+    @Modifying
+    @Transactional
+    @Query(value = "update users set is_deleted = true, deleted_at = NOW() where user_id = :id", nativeQuery = true)
+    void softDeleteById(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query(value = "update users set is_deleted = true, deleted_at = NOW() where parent_id = :parentId", nativeQuery = true)
+    void softDeleteSubUsers(@Param("parentId") Long parentId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "update users set is_deleted = true, deleted_at = NOW() where user_id = :user_id", nativeQuery = true)
+    void softDeleteSubUsersId(@Param("user_id") Long user_id);
 
     @Query("select u from User u where lower(u.username)=lower(:keyword) or lower(u.firstName) =lower(:keyword) or lower(u.lastName)=lower(:keyword)  or lower(u.email)=lower(:keyword) ")
     List<User> getUserBySearch(@Param("keyword") String keyword);
@@ -33,12 +46,6 @@ public interface userRepo extends JpaRepository<User, Long> {
 
 
     List<User> findUsersByRole(Role role);
-
-//    @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
-//    Optional<User> findByUsernameIncludingDeleted(@Param("username") String username);
-//
-//    @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
-//    Optional<User> findByEmailIncludingDeleted(@Param("email") String email);
 
     @Query(value = "select * from users where is_deleted = true", nativeQuery = true)
     List<User> findAllDeletedUsers();
@@ -50,6 +57,10 @@ public interface userRepo extends JpaRepository<User, Long> {
             "GROUP BY role_id)", nativeQuery = true)
     List<User> findOneSubUserPerRole(@Param("parentId") Long parentId);
 
+    @Query(value = "select * from users where is_deleted= true and user_id=:user_id", nativeQuery = true)
+    Optional<User> findUserFromSoftDelete(@Param("user_id") Long user_id);
 
+    @Query(value = "SELECT * FROM users WHERE is_deleted=true and parent_id = :parentId ", nativeQuery = true)
+    List<User> findSubUserByParentId(@Param("parentId") Long parentId);
 
 }

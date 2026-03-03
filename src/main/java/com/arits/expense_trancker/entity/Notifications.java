@@ -3,12 +3,17 @@ package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@Builder
 @AllArgsConstructor
+@SQLRestriction("is_deleted=false")
 public class Notifications {
 
     @Id
@@ -28,5 +33,9 @@ public class Notifications {
     @JoinColumn(name = "status_id")
     private NotificationStatus notificationStatus;
 
+
+    @Builder.Default
+    private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
 
 }
