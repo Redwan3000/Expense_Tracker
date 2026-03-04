@@ -9,7 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,8 +34,8 @@ public class UserService {
     private final genderRepo genderRepo;
     private final PasswordEncoder passwordEncoder;
     private final transactionTypeRepo transactionTypeRepo;
-    private  final transactionMethodRepo transactionMethodRepo;
-    private final invoiceRepo invoiceRepo;
+    private final transactionMethodRepo transactionMethodRepo;
+    private final transactionsRepo transactionsRepo;
 
 
     public UserDetailResponseDto getUserDetails(User currentUser) {
@@ -255,21 +262,44 @@ public class UserService {
     }
 
     @Transactional
-    public AddTransactionRequestDTO addTransaction(User user, AddTransactionRequestDTO addTransactionRequestDTO) {
+    public AddTransactionRequestDTO addTransaction(User user, AddTransactionRequestDTO addTransactionRequestDTO, MultipartFile multipartFile) {
 
-        Transactions.builder()
+        String savedFilePath = null;
+        if (multipartFile != null && !multipartFile.isEmpty()) {
+
+            try {
+
+                String uploadDir = "uploads/invoices/";
+                File dir = new File(uploadDir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                String fileName = System.currentTimeMillis() + "_" + multipartFile.getOriginalFilename();
+
+                Path filePath = Paths.get(uploadDir + fileName);
+
+                Files.write(filePath, multipartFile.getBytes());
+
+                savedFilePath = filePath.toString();
+
+            } catch (IOException e) {
+                throw new RuntimeException("failed to store the invoices" + e.getMessage());
+            }
+        }
+        Transactions transactions = Transactions.builder()
                 .amount(addTransactionRequestDTO.getAmount())
                 .itemName(addTransactionRequestDTO.getItemName())
                 .description(addTransactionRequestDTO.getDescription())
                 .date(LocalDate.now())
                 .user(user)
-                .transactionType(transactionTypeRepo.findById(addTransactionRequestDTO.getTType()).orElseThrow(()->new RuntimeException("transaction Type not found")))
-                .transactionMethods(transactionMethodRepo.findByMethodId(addTransactionRequestDTO.getTMethod()).orElseThrow(()->new RuntimeException("method not found")))
-                .invoice(invoiceRepo.findById(addTransactionRequestDTO.getInvoiceId()).orElseThrow(()->new RuntimeException("invoice not found")))
+                .transactionType(transactionTypeRepo.findById(addTransactionRequestDTO.getTType()).orElseThrow(() -> new RuntimeException("transaction Type not found")))
+                .transactionMethods(transactionMethodRepo.findByMethodId(addTransactionRequestDTO.getTMethod()).orElseThrow(() -> new RuntimeException("method not found")))
+                .invoicePath(savedFilePath)
                 .build();
 
+        transactionsRepo.save(transactions);
 
-    return new AddTransactionRequestDTO();
+        return new AddTransactionResponseDTO(transactions.getAmount(),transactions.getTransactionMethods().getMethodName(),transactions.getTransactionType().getTypeName(),transactions.getDescription(),transactions.getItemName(),transactions.getInvoicePath());
 
     }
 }

@@ -8,14 +8,12 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class AddTransactionRequestDTO {
-
+    private String itemName;
     private BigDecimal amount;
     private Long tMethod;
     private Long tType;
     private String description;
-    private String itemName;
-    private Long invoiceId;
+
 
 }

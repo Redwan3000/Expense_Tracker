@@ -50,7 +50,6 @@ public class Transactions {
     @JoinColumn(name = "transaction_methods", nullable = false)
     private TransactionMethods transactionMethods;
 
-    @OneToOne(mappedBy = "transactions")
-    private Invoice invoice;
+    private String invoicePath;
 
 }

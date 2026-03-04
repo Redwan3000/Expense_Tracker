@@ -9,11 +9,13 @@ import com.arits.expense_trancker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.repository.cdi.Eager;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -75,13 +77,18 @@ public class UserController {
         return ResponseEntity.ok(userService.updateProfile(user, userRegisterRequestDto));
     }
 
-    @PostMapping("/add-transaction")
-    public ResponseEntity<?>addTransaction(@AuthenticationPrincipal User user , @RequestBody AddTransactionRequestDTO addTransactionRequestDTO){
+    @PostMapping(value = "/add-transaction", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('Add Transaction') or hasRole('OWNER')")
+    public ResponseEntity<?>addTransaction(
+            @AuthenticationPrincipal User user,
+            @RequestPart("data") AddTransactionRequestDTO addTransactionRequestDTO,
+            @RequestPart(value = "file", required = false) MultipartFile file){
 
-        return ResponseEntity.ok(userService.addTransaction(user, addTransactionRequestDTO));
 
+        return ResponseEntity.ok(userService.addTransaction(user, addTransactionRequestDTO,file));
 
     }
+
 
 }
 
