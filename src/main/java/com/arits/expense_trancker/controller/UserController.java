@@ -5,6 +5,7 @@ import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.repository.genderRepo;
 import com.arits.expense_trancker.repository.roleRepo;
 import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.service.TransactionService;
 import com.arits.expense_trancker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
     private final genderRepo genderRepo;
     private final roleRepo roleRepo;
+    private final TransactionService transactionService;
 
 
     @GetMapping("/user-info")
@@ -78,17 +80,36 @@ public class UserController {
     }
 
     @PostMapping(value = "/add-transaction", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('Add Transaction') or hasRole('OWNER')")
+    @PreAuthorize("hasAuthority('Add Transaction') or hasAnyRole('OWNER','SUBOWNER')")
     public ResponseEntity<?>addTransaction(
             @AuthenticationPrincipal User user,
             @RequestPart("data") AddTransactionRequestDTO addTransactionRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file){
 
-
-        return ResponseEntity.ok(userService.addTransaction(user, addTransactionRequestDTO,file));
+        return ResponseEntity.ok(transactionService.addTransaction(user, addTransactionRequestDTO,file));
 
     }
 
+
+    @GetMapping("/see-expenses")
+    @PreAuthorize("hasAuthority('See Expenses') or hasAnyRole('OWNER','SUBOWNER')")
+    public ResponseEntity<?> showExpenses(@AuthenticationPrincipal User user, @RequestBody(required = false) GetTransactionHistoryRequestDto getTransactionHistoryRequestDto){
+        return ResponseEntity.ok(transactionService.showExpenses(user,getTransactionHistoryRequestDto));
+    }
+
+    @PutMapping(value = "/modify-transaction/{tId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('Modify Transaction') or hasRole('OWNER')")
+    public ResponseEntity<?> modifyTransaction(@AuthenticationPrincipal User user ,
+                                               @RequestPart("data") AddTransactionRequestDTO addTransactionRequestDTO,
+                                               @RequestPart(value = "file", required = false) MultipartFile file,
+                                               @PathVariable("tId") Long tId
+                                               )
+
+    {
+
+
+        return ResponseEntity.ok(transactionService.modifyTransaction(user,addTransactionRequestDTO , file, tId));
+    }
 
 }
 

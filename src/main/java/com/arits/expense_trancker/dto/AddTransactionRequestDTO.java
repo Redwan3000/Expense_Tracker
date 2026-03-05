@@ -5,9 +5,9 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Data
-@RequiredArgsConstructor
-@Builder
 @AllArgsConstructor
+@Builder
+@NoArgsConstructor
 public class AddTransactionRequestDTO {
     private String itemName;
     private BigDecimal amount;

@@ -79,9 +79,9 @@ public class LoadData implements CommandLineRunner {
         permissionsService.permissionsSeeding("Get Users List", "Where the admin can see users list");
         permissionsService.permissionsSeeding("Delete SubUser", "Where the user can delete any user");
         permissionsService.permissionsSeeding("Get Deleted Users List", "Where the admin can see all deleted users list");
-        permissionsService.permissionsSeeding("See SubUser Permission List", "Where the user can see the permissions that are assigned to the subusers rolewise");
+        permissionsService.permissionsSeeding("See Subuser Permission List", "Where the user can see the permissions that are assigned to the subusers rolewise");
         permissionsService.permissionsSeeding("Update Profile", "Where any user can update his profile");
-
+        permissionsService.permissionsSeeding("Add Transaction", "Where any user can add transactions");
 
         permissionsService.assigningPermissions(1l, List.of(1l, 2l, 3l, 4l,6l,12l,14l));
         permissionsService.assigningPermissions(2l, List.of(1l,2l,3l));

@@ -44,15 +44,7 @@ public class PermissionsController {
 
 
 
-//    //deleteing roles permission
-//    @DeleteMapping("/modify-roles-permission")
-//    @PreAuthorize("hasAuthority('modify role permission')")
-//    public ResponseEntity<?> deletePermissionFromRole(@RequestBody SetPermissionDto setPermissionDto) {
-//
-//        return ResponseEntity.ok(permissionsService.deletePermissionFromRole(
-//                setPermissionDto.getRoleName(),
-//                setPermissionDto.getPermissionId()));
-//    }
+
 
     //updating or replaceing roles permissions
     @PutMapping("/modify-roles-permission")
@@ -66,25 +58,6 @@ public class PermissionsController {
     }
 
 
-//    //adding users specific permission
-//    @PostMapping("/modify-users-permission")
-//    @PreAuthorize("hasAuthority('modify user permission')")
-//    public ResponseEntity<?> modifyUsersPermission(@RequestBody SetPermissionDto setPermissionDto) {
-//        return ResponseEntity.ok(permissionsService.assigningPermissionsToUser(
-//                setPermissionDto.getId(),
-//                setPermissionDto.getRoleName(),
-//                setPermissionDto.getPermissionId()));
-//    }
-//    //deleteing user permission
-//    @DeleteMapping("/modify-users-permission")
-//    @PreAuthorize("hasAuthority('modify user permission')")
-//    public ResponseEntity<?> deletePermissionFromUser(@RequestBody SetPermissionDto setPermissionDto) {
-//
-//        return ResponseEntity.ok(permissionsService.deletePermissionFromUser(
-//                setPermissionDto.getId(),
-//                setPermissionDto.getPermissionId()));
-//    }
-
 
     @GetMapping("/modify-permissions")
     @PreAuthorize("hasAuthority('see permission list') or hasRole('ADMIN')")
@@ -96,7 +69,7 @@ public class PermissionsController {
 
     // Check your Controller for this:
     @GetMapping("/subuser-permission-list")
-    @PreAuthorize("hasAuthority('see subUser permission list') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('See Subuser Permission List') or hasRole('ADMIN')")
     public ResponseEntity<?> permissionList(@AuthenticationPrincipal User user, @RequestBody PermissionRequestDto permissionRequestDto) {
         return ResponseEntity.ok(permissionsService.subUsersPermission(user, permissionRequestDto));
     }

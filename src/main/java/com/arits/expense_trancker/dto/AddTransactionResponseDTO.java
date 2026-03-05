@@ -1,16 +1,13 @@
 package com.arits.expense_trancker.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 
 @Data
-@RequiredArgsConstructor
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class AddTransactionResponseDTO {
     private String itemName;
     private BigDecimal amount;
