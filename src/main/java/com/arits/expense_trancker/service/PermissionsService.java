@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
 public class PermissionsService {
 
 
-    public final permissionRepo permissionRepo;
-    public final roleRepo roleRepo;
-    public final userRepo userRepo;
+    public final PermissionRepo permissionRepo;
+    public final RoleRepo roleRepo;
+    public final UserRepo userRepo;
     public final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
     public final UsersPermissionsRepo usersPermissionsRepo;
 

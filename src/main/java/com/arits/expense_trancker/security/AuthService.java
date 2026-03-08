@@ -7,9 +7,10 @@ import com.arits.expense_trancker.dto.UserRegisterRequestDto;
 import com.arits.expense_trancker.dto.UserRegisterResponseDto;
 import com.arits.expense_trancker.entity.*;
 
-import com.arits.expense_trancker.repository.genderRepo;
-import com.arits.expense_trancker.repository.roleRepo;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.repository.AccountRepo;
+import com.arits.expense_trancker.repository.GenderRepo;
+import com.arits.expense_trancker.repository.RoleRepo;
+import com.arits.expense_trancker.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,21 +18,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final userRepo userRepo;
-    private final genderRepo genderRepo;
-    private final roleRepo roleRepo;
+    private final UserRepo userRepo;
+    private final GenderRepo genderRepo;
+    private final RoleRepo roleRepo;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
+    private final AccountRepo accountRepo;
 
 
     public UserRegisterResponseDto register(UserRegisterRequestDto userRegisterRequestDto) {
@@ -39,6 +41,7 @@ public class AuthService {
         if (userRepo.findByUsername(userRegisterRequestDto.getUsername()).isPresent()) {
 
             throw new IllegalArgumentException("user already exist ,,,,please login");
+
         } else {
 
             Gender userGender = genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Invalid Gender"));
@@ -69,8 +72,25 @@ public class AuthService {
 
             newUser.getUsersPermissions().addAll(defailtPermission);
             userRepo.save(newUser);
+
+            if (accountRepo.findByUser(newUser).isPresent()) {
+
+
+                throw new IllegalArgumentException("user's account already exist");
+
+            } else {
+
+                Account newAccount = Account.builder().user(userRepo.findByUsername(newUser.getUsername()).orElseThrow(() -> new RuntimeException("user not found")))
+                        .currentBalance(BigDecimal.ZERO)
+                        .totalIncome(BigDecimal.ZERO)
+                        .totalExpense(BigDecimal.ZERO)
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+                accountRepo.save(newAccount);
+            }
             return new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername());
         }
+
 
     }
 

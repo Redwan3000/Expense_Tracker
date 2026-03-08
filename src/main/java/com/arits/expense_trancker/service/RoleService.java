@@ -1,18 +1,17 @@
 package com.arits.expense_trancker.service;
 
 import com.arits.expense_trancker.entity.Role;
-import com.arits.expense_trancker.repository.roleRepo;
+import com.arits.expense_trancker.repository.RoleRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class RoleService {
 
-    public final roleRepo roleRepo;
+    public final RoleRepo roleRepo;
 
     public void roleSeeding(String name) {
 

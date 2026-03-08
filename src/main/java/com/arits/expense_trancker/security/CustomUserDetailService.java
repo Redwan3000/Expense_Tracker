@@ -1,6 +1,6 @@
 package com.arits.expense_trancker.security;
 
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
 
-    private final userRepo userRepo;
+    private final UserRepo userRepo;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

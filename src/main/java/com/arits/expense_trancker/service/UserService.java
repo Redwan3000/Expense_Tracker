@@ -9,14 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,10 +20,10 @@ import java.util.stream.Collectors;
 public class UserService {
 
 
-    private final userRepo userRepo;
-    private final roleRepo roleRepo;
-    private final permissionRepo permissionRepo;
-    private final genderRepo genderRepo;
+    private final UserRepo userRepo;
+    private final RoleRepo roleRepo;
+    private final PermissionRepo permissionRepo;
+    private final GenderRepo genderRepo;
     private final PasswordEncoder passwordEncoder;
 
 
@@ -129,6 +122,7 @@ public class UserService {
         }
 
 
+
     }
 
 
@@ -187,11 +181,11 @@ public class UserService {
     }
 
 
-    public List<alluserListDto> getAllUsers() {
+    public List<AlluserListDto> getAllUsers() {
 
         List<User> allUser = userRepo.findAll();
 
-        List<alluserListDto> users = allUser.stream().map(u -> new alluserListDto(u.getUserId(), u.getUsername())).collect(Collectors.toList());
+        List<AlluserListDto> users = allUser.stream().map(u -> new AlluserListDto(u.getUserId(), u.getUsername())).collect(Collectors.toList());
         return users;
     }
 

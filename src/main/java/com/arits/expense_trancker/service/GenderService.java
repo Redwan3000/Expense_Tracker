@@ -1,7 +1,7 @@
 package com.arits.expense_trancker.service;
 
 import com.arits.expense_trancker.entity.Gender;
-import com.arits.expense_trancker.repository.genderRepo;
+import com.arits.expense_trancker.repository.GenderRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GenderService {
 
-    public final genderRepo genderRepo;
+    public final GenderRepo genderRepo;
 
 
     public Gender genderSeeding( String name) {

@@ -4,7 +4,7 @@ import com.arits.expense_trancker.dto.UserLoginRequestDto;
 import com.arits.expense_trancker.dto.UserLoginResponseDto;
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
 import com.arits.expense_trancker.dto.UserRegisterResponseDto;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.repository.UserRepo;
 import com.arits.expense_trancker.security.AuthService;
 import com.arits.expense_trancker.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
-    private final userRepo userRepo;
+    private final UserRepo userRepo;
 
     @PostMapping("/register")
     public ResponseEntity<UserRegisterResponseDto> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {

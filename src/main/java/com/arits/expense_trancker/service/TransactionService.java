@@ -2,10 +2,7 @@ package com.arits.expense_trancker.service;
 
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.*;
-import com.arits.expense_trancker.repository.transactionMethodRepo;
-import com.arits.expense_trancker.repository.transactionRepo;
-import com.arits.expense_trancker.repository.transactionTypeRepo;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,11 +10,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,10 +24,11 @@ import java.util.stream.Collectors;
 public class TransactionService {
 
 
-    private final transactionTypeRepo transactionTypeRepo;
-    private final transactionMethodRepo transactionMethodRepo;
-    private final transactionRepo transactionRepo;
-    private final userRepo userRepo;
+    private final TransactionTypeRepo transactionTypeRepo;
+    private final TransactionMethodRepo transactionMethodRepo;
+    private final TransactionRepo transactionRepo;
+    private final UserRepo userRepo;
+    private final AccountRepo accountRepo;
 
 
     public TransactionMethods tmSeedding(String name) {
@@ -95,6 +94,29 @@ public class TransactionService {
 
         transactionRepo.save(transactions);
 
+
+        Account currentAccount = accountRepo.findByUser(user).orElseThrow(() -> new RuntimeException("users account does not exist"));
+
+        BigDecimal totalIncome = currentAccount.getTotalIncome() != null ? currentAccount.getTotalIncome() : BigDecimal.ZERO;
+        BigDecimal totalExpense = currentAccount.getTotalExpense() != null ? currentAccount.getTotalExpense() : BigDecimal.ZERO;
+        BigDecimal transactionAmount = transactions.getAmount();
+
+
+        if (transactions.getTransactionType().getTypeName().contains("EXPENSE")) {
+            totalExpense = totalExpense.add(transactionAmount);
+            currentAccount.setTotalExpense(totalExpense);
+        }
+
+        if (transactions.getTransactionType().getTypeName().contains("INCOME")) {
+            totalIncome = totalIncome.add(transactionAmount);
+            currentAccount.setTotalIncome(totalIncome);
+        }
+
+        currentAccount.setCurrentBalance(totalIncome.subtract(totalExpense));
+        currentAccount.setUpdatedAt(LocalDateTime.now());
+        accountRepo.save(currentAccount);
+
+
         return AddTransactionResponseDTO.builder()
                 .itemName(transactions.getItemName())
                 .amount(transactions.getAmount())
@@ -145,9 +167,11 @@ public class TransactionService {
 
     }
 
-    public AddTransactionResponseDTO modifyTransaction(User user, AddTransactionRequestDTO addTransactionRequestDTO, MultipartFile file, long id) {
+    public AddTransactionResponseDTO modifyTransaction(User user, AddTransactionRequestDTO addTransactionRequestDTO, MultipartFile multipartFile, long id) {
 
-        Transactions transactions = transactionRepo.findById(id).orElseThrow(() -> new RuntimeException("transaction not found"));
+
+        List<Transactions> transactionsList = transactionRepo.findTransactionsByUserIDAndParentID(user.getUserId());
+        Transactions transactions = transactionsList.stream().filter(t -> t.getTransactionId().equals(id)).findFirst().orElseThrow(() -> new RuntimeException("transaction not found"));
 
         transactions.setAmount((addTransactionRequestDTO.getAmount() != null) ? addTransactionRequestDTO.getAmount() : transactions.getAmount());
 
@@ -169,7 +193,52 @@ public class TransactionService {
                                 : transactions.getTransactionType()
                                 .getTtId()).orElseThrow(() -> new RuntimeException("transaction type not found")));
 
-        transactions.setInvoicePath();
+        if (multipartFile != null && !multipartFile.isEmpty()) {
+
+            try {
+                if (transactions.getInvoicePath() != null) {
+                    Files.deleteIfExists(Paths.get(transactions.getInvoicePath()));
+                }
+                String uploadDir = "uploads/invoices/";
+                File dir = new File(uploadDir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                String fileName = System.currentTimeMillis() + "_" + multipartFile.getOriginalFilename();
+
+                Path filePath = Paths.get(uploadDir + fileName);
+
+                Files.write(filePath, multipartFile.getBytes());
+                transactions.setInvoicePath(filePath.toString());
+            } catch (IOException e) {
+                throw new RuntimeException("failed to add invoice file" + e.getMessage());
+            }
+
+        }
+
+
+        Account currentAccount = accountRepo.findByUser(user).orElseThrow(() -> new RuntimeException("users account does not exist"));
+
+        BigDecimal totalIncome = currentAccount.getTotalIncome() != null ? currentAccount.getTotalIncome() : BigDecimal.ZERO;
+        BigDecimal totalExpense = currentAccount.getTotalExpense() != null ? currentAccount.getTotalExpense() : BigDecimal.ZERO;
+        BigDecimal transactionAmount = transactions.getAmount();
+
+
+        if (transactions.getTransactionType().getTypeName().contains("EXPENSE")) {
+            totalExpense = totalExpense.add(transactionAmount);
+            currentAccount.setTotalExpense(totalExpense);
+        }
+
+        if (transactions.getTransactionType().getTypeName().contains("INCOME")) {
+            totalIncome = totalIncome.add(transactionAmount);
+            currentAccount.setTotalIncome(totalIncome);
+        }
+
+        currentAccount.setCurrentBalance(totalIncome.subtract(totalExpense));
+        currentAccount.setUpdatedAt(LocalDateTime.now());
+        accountRepo.save(currentAccount);
+
+
         transactionRepo.save(transactions);
         return AddTransactionResponseDTO.builder()
                 .itemName(transactions.getItemName())
@@ -179,5 +248,48 @@ public class TransactionService {
                 .description(transactions.getDescription())
                 .invoicePath(transactions.getInvoicePath())
                 .build();
+    }
+
+    public String deleteTransaction(User user, Long tId) {
+
+
+        Account currentAccount = accountRepo.findByUser(user).orElseThrow(()-> new RuntimeException("user not found"));
+
+        List<Transactions> transactionsList = transactionRepo.findTransactionsByUserIDAndParentID(user.getUserId());
+
+        Transactions transactions= transactionsList.stream().filter(p->p.getTransactionId().equals(tId)).findFirst().orElseThrow(()->new RuntimeException("transaction not found"));
+
+        BigDecimal totalIncome = currentAccount.getTotalIncome() != null ? currentAccount.getTotalIncome() : BigDecimal.ZERO;
+        BigDecimal totalExpense = currentAccount.getTotalExpense() != null ? currentAccount.getTotalExpense() : BigDecimal.ZERO;
+        BigDecimal transactionAmount = transactions.getAmount();
+
+        if(transactions.getTransactionType().getTypeName().contains("EXPENSE")){
+            totalExpense= totalExpense.subtract(transactions.getAmount());
+            currentAccount.setTotalExpense(totalExpense);
+        }
+        if(transactions.getTransactionType().getTypeName().contains("INCOME")){
+            totalIncome=totalIncome.subtract(transactions.getAmount());
+            currentAccount.setTotalExpense(totalIncome);
+        }
+
+        currentAccount.setCurrentBalance(totalIncome.subtract(totalExpense));
+        currentAccount.setUpdatedAt(LocalDateTime.now());
+
+        transactionRepo.delete(transactions);
+
+        return " transaction deleted successfully";
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }

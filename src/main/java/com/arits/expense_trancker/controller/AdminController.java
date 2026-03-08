@@ -1,9 +1,9 @@
 package com.arits.expense_trancker.controller;
 
 import com.arits.expense_trancker.dto.UserDetailResponseDto;
-import com.arits.expense_trancker.repository.genderRepo;
-import com.arits.expense_trancker.repository.roleRepo;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.repository.GenderRepo;
+import com.arits.expense_trancker.repository.RoleRepo;
+import com.arits.expense_trancker.repository.UserRepo;
 import com.arits.expense_trancker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +21,10 @@ import java.util.List;
 public class AdminController {
 
     private final UserService userService;
-    private final userRepo userRepo;
+    private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
-    private final genderRepo genderRepo;
-    private final roleRepo roleRepo;
+    private final GenderRepo genderRepo;
+    private final RoleRepo roleRepo;
 
 
     @GetMapping("/get-user-info/{keyword}")

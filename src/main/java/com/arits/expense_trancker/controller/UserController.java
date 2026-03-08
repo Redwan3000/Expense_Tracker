@@ -2,14 +2,13 @@ package com.arits.expense_trancker.controller;
 
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.User;
-import com.arits.expense_trancker.repository.genderRepo;
-import com.arits.expense_trancker.repository.roleRepo;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.repository.GenderRepo;
+import com.arits.expense_trancker.repository.RoleRepo;
+import com.arits.expense_trancker.repository.UserRepo;
 import com.arits.expense_trancker.service.TransactionService;
 import com.arits.expense_trancker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.repository.cdi.Eager;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,10 +27,10 @@ public class UserController {
 
 
     private final UserService userService;
-    private final userRepo userRepo;
+    private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
-    private final genderRepo genderRepo;
-    private final roleRepo roleRepo;
+    private final GenderRepo genderRepo;
+    private final RoleRepo roleRepo;
     private final TransactionService transactionService;
 
 
@@ -79,8 +78,8 @@ public class UserController {
         return ResponseEntity.ok(userService.updateProfile(user, userRegisterRequestDto));
     }
 
-    @PostMapping(value = "/add-transaction", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('Add Transaction') or hasAnyRole('OWNER','SUBOWNER')")
+    @PostMapping(value = "/add-expenses", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('Add Expenses') or hasAnyRole('OWNER','SUBOWNER')")
     public ResponseEntity<?>addTransaction(
             @AuthenticationPrincipal User user,
             @RequestPart("data") AddTransactionRequestDTO addTransactionRequestDTO,
@@ -97,8 +96,8 @@ public class UserController {
         return ResponseEntity.ok(transactionService.showExpenses(user,getTransactionHistoryRequestDto));
     }
 
-    @PutMapping(value = "/modify-transaction/{tId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('Modify Transaction') or hasRole('OWNER')")
+    @PutMapping(value = "/modify-expenses/{tId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('Modify Expenses') or hasRole('OWNER')")
     public ResponseEntity<?> modifyTransaction(@AuthenticationPrincipal User user ,
                                                @RequestPart("data") AddTransactionRequestDTO addTransactionRequestDTO,
                                                @RequestPart(value = "file", required = false) MultipartFile file,
@@ -106,10 +105,20 @@ public class UserController {
                                                )
 
     {
-
-
         return ResponseEntity.ok(transactionService.modifyTransaction(user,addTransactionRequestDTO , file, tId));
     }
+
+    @PutMapping(value = "/modify-transaction/{tId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('Delete Expenses') or hasRole('OWNER')")
+    public ResponseEntity<?> deleteTransaction(@AuthenticationPrincipal User user ,
+                                               @PathVariable("tId") Long tId
+    )
+
+    {
+        return ResponseEntity.ok(transactionService.deleteTransaction(user,tId));
+    }
+
+
 
 }
 

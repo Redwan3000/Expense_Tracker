@@ -2,16 +2,8 @@ package com.arits.expense_trancker.DatabaseSeeders;
 
 
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
-import com.arits.expense_trancker.entity.Gender;
-import com.arits.expense_trancker.entity.Permission;
-import com.arits.expense_trancker.entity.Role;
-import com.arits.expense_trancker.entity.TransactionType;
-import com.arits.expense_trancker.repository.genderRepo;
-import com.arits.expense_trancker.repository.permissionRepo;
-import com.arits.expense_trancker.repository.roleRepo;
 import com.arits.expense_trancker.service.*;
 import jakarta.transaction.Transactional;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -81,13 +73,15 @@ public class LoadData implements CommandLineRunner {
         permissionsService.permissionsSeeding("Get Deleted Users List", "Where the admin can see all deleted users list");
         permissionsService.permissionsSeeding("See Subuser Permission List", "Where the user can see the permissions that are assigned to the subusers rolewise");
         permissionsService.permissionsSeeding("Update Profile", "Where any user can update his profile");
-        permissionsService.permissionsSeeding("Add Transaction", "Where any user can add transactions");
+        permissionsService.permissionsSeeding("Add Expenses", "Where any user can add Expenses");
+        permissionsService.permissionsSeeding("See Expenses", "Where any user can See Expenses");
+        permissionsService.permissionsSeeding("Modify Expenses", "Where any user can Modify Expenses");
 
-        permissionsService.assigningPermissions(1l, List.of(1l, 2l, 3l, 4l,6l,12l,14l));
-        permissionsService.assigningPermissions(2l, List.of(1l,2l,3l));
-        permissionsService.assigningPermissions(3l, List.of(1l, 2l, 3l, 4l, 5l, 6l,7l,8l,9l));
+        permissionsService.assigningPermissions(1l, List.of(3l,4l,6l,8l,12l,14l,15l,16l,17l,18l));
+        permissionsService.assigningPermissions(2l, List.of(3l,15l,16l,17l,18l));
+        permissionsService.assigningPermissions(3l, List.of(3l,15l));
 
-        permissionsService.assigningPermissions(4l, List.of(1l, 2l, 3l, 4l, 5l, 6l,7l,8l,9l,10l,13l));
+        permissionsService.assigningPermissions(4l, List.of(3l,4l,5l,7l,9l,10l,11l,13l,14l,15l,16l,17l,18l));
 
 
     }

@@ -1,14 +1,14 @@
 package com.arits.expense_trancker.repository;
 
-import com.arits.expense_trancker.entity.TransactionType;
+import com.arits.expense_trancker.entity.Gender;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface transactionTypeRepo extends JpaRepository<TransactionType,Long> {
+public interface GenderRepo extends JpaRepository<Gender,Long> {
 
+    Optional<Gender> findByName(String name);
 
-    Optional<TransactionType> findByTypeName(String name);
 }

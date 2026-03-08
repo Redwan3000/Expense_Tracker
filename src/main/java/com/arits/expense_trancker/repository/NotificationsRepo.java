@@ -1,9 +1,9 @@
 package com.arits.expense_trancker.repository;
 
-import com.arits.expense_trancker.entity.NotificationStatus;
+import com.arits.expense_trancker.entity.Notifications;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface notificationStatusRepo extends JpaRepository<NotificationStatus, Long> {
+public interface NotificationsRepo extends JpaRepository<Notifications, Long> {
 }
