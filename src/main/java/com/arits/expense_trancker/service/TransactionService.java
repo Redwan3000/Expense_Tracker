@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
@@ -253,43 +254,72 @@ public class TransactionService {
     public String deleteTransaction(User user, Long tId) {
 
 
-        Account currentAccount = accountRepo.findByUser(user).orElseThrow(()-> new RuntimeException("user not found"));
+        Account currentAccount = accountRepo.findByUser(user).orElseThrow(() -> new RuntimeException("users account not found"));
 
         List<Transactions> transactionsList = transactionRepo.findTransactionsByUserIDAndParentID(user.getUserId());
 
-        Transactions transactions= transactionsList.stream().filter(p->p.getTransactionId().equals(tId)).findFirst().orElseThrow(()->new RuntimeException("transaction not found"));
+        Transactions transaction = transactionsList.stream().filter(p -> p.getTransactionId().equals(tId)).findFirst().orElseThrow(() -> new RuntimeException("transaction not found"));
 
         BigDecimal totalIncome = currentAccount.getTotalIncome() != null ? currentAccount.getTotalIncome() : BigDecimal.ZERO;
         BigDecimal totalExpense = currentAccount.getTotalExpense() != null ? currentAccount.getTotalExpense() : BigDecimal.ZERO;
-        BigDecimal transactionAmount = transactions.getAmount();
+        BigDecimal transactionAmount = transaction.getAmount();
 
-        if(transactions.getTransactionType().getTypeName().contains("EXPENSE")){
-            totalExpense= totalExpense.subtract(transactions.getAmount());
+        if (transaction.getTransactionType().getTypeName().contains("EXPENSE")) {
+            totalExpense = totalExpense.subtract(transactionAmount);
             currentAccount.setTotalExpense(totalExpense);
         }
-        if(transactions.getTransactionType().getTypeName().contains("INCOME")){
-            totalIncome=totalIncome.subtract(transactions.getAmount());
-            currentAccount.setTotalExpense(totalIncome);
+        if (transaction.getTransactionType().getTypeName().contains("INCOME")) {
+            totalIncome = totalIncome.subtract(transactionAmount);
+            currentAccount.setTotalIncome(totalIncome);
         }
 
         currentAccount.setCurrentBalance(totalIncome.subtract(totalExpense));
         currentAccount.setUpdatedAt(LocalDateTime.now());
 
-        transactionRepo.delete(transactions);
+        transactionRepo.deleteById(transaction.getTransactionId());
 
         return " transaction deleted successfully";
 
 
+    }
+
+    public List<DeletedExpensesResponseDTO> getDeletedList(User user) {
 
 
+        List<Transactions> transactions = transactionRepo.findTransactionsByUserIDAndParentID(user.getUserId());
 
+        return transactions.stream().map(p -> DeletedExpensesResponseDTO.builder()
+                .tId(p.getTransactionId())
+                .itemName(p.getItemName())
+                .amount(p.getAmount())
+                .tMethod(p.getTransactionMethods().getMethodName())
+                .tType(p.getTransactionType().getTypeName())
+                .description(p.getDescription())
+                .invoicePath(p.getInvoicePath())
+                .build()
+        ).collect(Collectors.toList());
+    }
 
+    @Transactional
+    public String reviveTransactionFromDeath(User user, Long tId) {
 
+        Transactions transaction = transactionRepo.findDeletedTransactionsByUserId(user.getUserId(), tId).orElseThrow(() -> new RuntimeException("transaction does not exist in deleted list"));
+        Account currentAccount = accountRepo.findByUser(user).orElseThrow(() -> new RuntimeException("users account not found"));
 
+        BigDecimal amount = transaction.getAmount();
+        if (transaction.getTransactionType().getTypeName().contains("EXPENSE")) {
+            currentAccount.setTotalExpense(currentAccount.getTotalExpense().add(amount));
+        } else if (transaction.getTransactionType().getTypeName().contains("INCOME")) {
+            currentAccount.setTotalIncome(currentAccount.getTotalIncome().add(amount));
+        }
 
+        currentAccount.setCurrentBalance(currentAccount.getTotalIncome().subtract(currentAccount.getTotalExpense()));
 
+        accountRepo.save(currentAccount);
 
-
-
+        transaction.setDeleted(false);
+        transaction.setDeletedAt(null);
+        transactionRepo.save(transaction);
+        return "transaction revived form death";
     }
 }

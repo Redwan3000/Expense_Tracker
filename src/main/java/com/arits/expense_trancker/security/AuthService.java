@@ -73,7 +73,7 @@ public class AuthService {
             newUser.getUsersPermissions().addAll(defailtPermission);
             userRepo.save(newUser);
 
-            if (accountRepo.findByUser(newUser).isPresent()) {
+            if (accountRepo.findById(newUser.getUserId()).isPresent()) {
 
 
                 throw new IllegalArgumentException("user's account already exist");

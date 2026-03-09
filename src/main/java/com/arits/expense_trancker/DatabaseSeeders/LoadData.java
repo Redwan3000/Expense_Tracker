@@ -76,8 +76,9 @@ public class LoadData implements CommandLineRunner {
         permissionsService.permissionsSeeding("Add Expenses", "Where any user can add Expenses");
         permissionsService.permissionsSeeding("See Expenses", "Where any user can See Expenses");
         permissionsService.permissionsSeeding("Modify Expenses", "Where any user can Modify Expenses");
+        permissionsService.permissionsSeeding("Delete Expenses", "Where any user can delete his Expenses");
 
-        permissionsService.assigningPermissions(1l, List.of(3l,4l,6l,8l,12l,14l,15l,16l,17l,18l));
+        permissionsService.assigningPermissions(1l, List.of(3l,4l,6l,8l,12l,14l,15l,16l,17l,18l,19l));
         permissionsService.assigningPermissions(2l, List.of(3l,15l,16l,17l,18l));
         permissionsService.assigningPermissions(3l, List.of(3l,15l));
 

@@ -14,7 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "transaction_methods")
-@SQLDelete(sql = "update transaction_methods set is_deleted=true where tm_id=?")
+@SQLDelete(sql = "update transaction_methods set is_deleted=true ,deleted_at=NOW()where tm_id=?")
 @SQLRestriction("is_deleted=false")
 @Builder
 public class TransactionMethods {

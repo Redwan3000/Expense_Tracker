@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Table(name = "users")
 @Builder
-@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE user_id=?")
+@SQLDelete(sql = "UPDATE users SET is_deleted = true ,deleted_at=NOW() WHERE user_id=?")
 @SQLRestriction("is_deleted = false")
 public class User implements UserDetails {
 

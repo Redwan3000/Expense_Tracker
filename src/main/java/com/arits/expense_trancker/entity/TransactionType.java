@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Table(name = "transaction_type")
-@SQLDelete(sql="update transaction_type set is_deleted=true where tt_id=?")
+@SQLDelete(sql="update transaction_type set is_deleted=true ,deleted_at=NOW() where tt_id=?")
 @SQLRestriction("is_deleted=false")
 public class TransactionType {
 

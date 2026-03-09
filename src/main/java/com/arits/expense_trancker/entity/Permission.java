@@ -15,7 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE permission SET is_deleted = true WHERE permission_id=?")
+@SQLDelete(sql = "UPDATE permission SET is_deleted = true ,deleted_at=NOW() WHERE permission_id=?")
 @SQLRestriction("is_deleted = false")
 public class Permission {
 

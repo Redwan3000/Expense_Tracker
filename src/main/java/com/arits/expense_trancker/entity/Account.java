@@ -3,6 +3,7 @@ package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "account")
+@SQLDelete(sql = "UPDATE account set is_deleted=true , deleted_at=NOW() where id=?")
 public class Account {
 
     @Id
@@ -29,7 +31,6 @@ public class Account {
     private BigDecimal totalIncome;
     private BigDecimal totalExpense;
     private BigDecimal currentBalance;
-
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 

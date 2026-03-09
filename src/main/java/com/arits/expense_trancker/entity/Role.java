@@ -15,7 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE role SET is_deleted = true WHERE role_id=?")
+@SQLDelete(sql = "UPDATE role SET is_deleted = true ,deleted_at=NOW() WHERE role_id=?")
 @SQLRestriction("is_deleted = false")
 public class Role {
 

@@ -80,45 +80,55 @@ public class UserController {
 
     @PostMapping(value = "/add-expenses", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('Add Expenses') or hasAnyRole('OWNER','SUBOWNER')")
-    public ResponseEntity<?>addTransaction(
+    public ResponseEntity<?> addTransaction(
             @AuthenticationPrincipal User user,
             @RequestPart("data") AddTransactionRequestDTO addTransactionRequestDTO,
-            @RequestPart(value = "file", required = false) MultipartFile file){
+            @RequestPart(value = "file", required = false) MultipartFile file) {
 
-        return ResponseEntity.ok(transactionService.addTransaction(user, addTransactionRequestDTO,file));
+        return ResponseEntity.ok(transactionService.addTransaction(user, addTransactionRequestDTO, file));
 
     }
 
 
     @GetMapping("/see-expenses")
     @PreAuthorize("hasAuthority('See Expenses') or hasAnyRole('OWNER','SUBOWNER')")
-    public ResponseEntity<?> showExpenses(@AuthenticationPrincipal User user, @RequestBody(required = false) GetTransactionHistoryRequestDto getTransactionHistoryRequestDto){
-        return ResponseEntity.ok(transactionService.showExpenses(user,getTransactionHistoryRequestDto));
+    public ResponseEntity<?> showExpenses(@AuthenticationPrincipal User user, @RequestBody(required = false) GetTransactionHistoryRequestDto getTransactionHistoryRequestDto) {
+        return ResponseEntity.ok(transactionService.showExpenses(user, getTransactionHistoryRequestDto));
     }
 
-    @PutMapping(value = "/modify-expenses/{tId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/modify-expenses/{tId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('Modify Expenses') or hasRole('OWNER')")
-    public ResponseEntity<?> modifyTransaction(@AuthenticationPrincipal User user ,
+    public ResponseEntity<?> modifyTransaction(@AuthenticationPrincipal User user,
                                                @RequestPart("data") AddTransactionRequestDTO addTransactionRequestDTO,
                                                @RequestPart(value = "file", required = false) MultipartFile file,
                                                @PathVariable("tId") Long tId
-                                               )
-
-    {
-        return ResponseEntity.ok(transactionService.modifyTransaction(user,addTransactionRequestDTO , file, tId));
+    ) {
+        return ResponseEntity.ok(transactionService.modifyTransaction(user, addTransactionRequestDTO, file, tId));
     }
 
-    @PutMapping(value = "/modify-transaction/{tId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @DeleteMapping("/delete-transaction/{tId}")
     @PreAuthorize("hasAuthority('Delete Expenses') or hasRole('OWNER')")
-    public ResponseEntity<?> deleteTransaction(@AuthenticationPrincipal User user ,
+    public ResponseEntity<?> deleteTransaction(@AuthenticationPrincipal User user,
                                                @PathVariable("tId") Long tId
-    )
+    ) {
+        return ResponseEntity.ok(transactionService.deleteTransaction(user, tId));
+    }
 
-    {
-        return ResponseEntity.ok(transactionService.deleteTransaction(user,tId));
+    @GetMapping("/deleted-transaction-list")
+    @PreAuthorize("hasAuthority('Deleted Expense List') or hasRole('OWNER')")
+    public ResponseEntity<?> deletedTransactionList(@AuthenticationPrincipal User user) {
+
+
+        return ResponseEntity.ok(transactionService.getDeletedList(user));
     }
 
 
+
+    @PutMapping("/revive-transation/{id}")
+    public ResponseEntity<?>reviveTransaction(@AuthenticationPrincipal User user , @PathVariable("id") Long id)
+    {
+        return ResponseEntity.ok(transactionService.reviveTransactionFromDeath(user, id));
+    }
 
 }
 

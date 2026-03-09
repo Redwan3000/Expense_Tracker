@@ -1,7 +1,10 @@
 package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.entity.Transactions;
+import com.arits.expense_trancker.entity.User;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -19,6 +22,6 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
             "where u.userId=:userId or u.parent.userId=:userId order by t.date DESC ")
     List<Transactions> findTransactionsByUserIDAndParentID(@Param("userId") Long userId);
 
-    @Query("SELECT t FROM Transactions t WHERE t.user.userId = :userId AND t.transactionId = :tId")
-    Optional<Transactions> findByUserIdAndTransactionId(@Param("userId") Long userId,@Param("tId") Long tId);
+@Query(value = "select * from transactions where user_id=:userId and is_deleted=true and transaction_id=:tId",nativeQuery = true)
+    Optional<Transactions> findDeletedTransactionsByUserId(@Param("userId") Long userId ,@Param("tId") Long tId);
 }
