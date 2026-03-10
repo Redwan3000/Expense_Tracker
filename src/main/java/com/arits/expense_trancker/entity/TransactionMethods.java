@@ -8,15 +8,17 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Table(name = "transaction_methods")
 @SQLDelete(sql = "update transaction_methods set is_deleted=true ,deleted_at=NOW()where tm_id=?")
 @SQLRestriction("is_deleted=false")
-@Builder
+
 public class TransactionMethods {
 
 

@@ -1,6 +1,5 @@
 package com.arits.expense_trancker.DatabaseSeeders;
 
-
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
 import com.arits.expense_trancker.service.*;
 import jakarta.transaction.Transactional;
@@ -26,9 +25,10 @@ public class LoadData implements CommandLineRunner {
 
     private final TransactionService transactionService;
 
+    private final CurrencyService currencyService;
 
-    private UserRegisterRequestDto userRegisterRequestDto= UserRegisterRequestDto.builder()
-            .first_name("ADMIN").last_name("ADMIN").email("admin@gmail.com").phone("123456789").password("ADMIN").dob(LocalDate.of(2001,9,5)).gender_id(1L).username("ADMIN").role_id(4L)
+    private UserRegisterRequestDto userRegisterRequestDto = UserRegisterRequestDto.builder()
+            .first_name("ADMIN").last_name("ADMIN").email("admin@gmail.com").phone("123456789").password("ADMIN").dob(LocalDate.of(2001, 9, 5)).gender_id(1L).username("ADMIN").role_id(4L)
             .build();
 
 
@@ -48,6 +48,10 @@ public class LoadData implements CommandLineRunner {
 
         transactionService.ttSeeding("EXPENSE");
         transactionService.ttSeeding("INCOME");
+
+        currencyService.currencySeeding("BDT");
+        currencyService.currencySeeding("EUR");
+        currencyService.currencySeeding("USD");
 
 
         transactionService.tmSeedding("CASH");
@@ -78,11 +82,11 @@ public class LoadData implements CommandLineRunner {
         permissionsService.permissionsSeeding("Modify Expenses", "Where any user can Modify Expenses");
         permissionsService.permissionsSeeding("Delete Expenses", "Where any user can delete his Expenses");
 
-        permissionsService.assigningPermissions(1l, List.of(3l,4l,6l,8l,12l,14l,15l,16l,17l,18l,19l));
-        permissionsService.assigningPermissions(2l, List.of(3l,15l,16l,17l,18l));
-        permissionsService.assigningPermissions(3l, List.of(3l,15l));
+        permissionsService.assigningPermissions(1l, List.of(3l, 4l, 6l, 8l, 12l, 14l, 15l, 16l, 17l, 18l, 19l));
+        permissionsService.assigningPermissions(2l, List.of(3l, 15l, 16l, 17l, 18l));
+        permissionsService.assigningPermissions(3l, List.of(3l, 15l));
 
-        permissionsService.assigningPermissions(4l, List.of(3l,4l,5l,7l,9l,10l,11l,13l,14l,15l,16l,17l,18l));
+        permissionsService.assigningPermissions(4l, List.of(3l, 4l, 5l, 7l, 9l, 10l, 11l, 13l, 14l, 15l, 16l, 17l, 18l));
 
 
     }

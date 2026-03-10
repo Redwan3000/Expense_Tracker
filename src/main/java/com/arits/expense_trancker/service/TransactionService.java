@@ -29,7 +29,7 @@ public class TransactionService {
     private final TransactionMethodRepo transactionMethodRepo;
     private final TransactionRepo transactionRepo;
     private final UserRepo userRepo;
-    private final AccountRepo accountRepo;
+
 
 
     public TransactionMethods tmSeedding(String name) {
@@ -94,28 +94,6 @@ public class TransactionService {
                 .build();
 
         transactionRepo.save(transactions);
-
-
-        Account currentAccount = accountRepo.findByUser(user).orElseThrow(() -> new RuntimeException("users account does not exist"));
-
-        BigDecimal totalIncome = currentAccount.getTotalIncome() != null ? currentAccount.getTotalIncome() : BigDecimal.ZERO;
-        BigDecimal totalExpense = currentAccount.getTotalExpense() != null ? currentAccount.getTotalExpense() : BigDecimal.ZERO;
-        BigDecimal transactionAmount = transactions.getAmount();
-
-
-        if (transactions.getTransactionType().getTypeName().contains("EXPENSE")) {
-            totalExpense = totalExpense.add(transactionAmount);
-            currentAccount.setTotalExpense(totalExpense);
-        }
-
-        if (transactions.getTransactionType().getTypeName().contains("INCOME")) {
-            totalIncome = totalIncome.add(transactionAmount);
-            currentAccount.setTotalIncome(totalIncome);
-        }
-
-        currentAccount.setCurrentBalance(totalIncome.subtract(totalExpense));
-        currentAccount.setUpdatedAt(LocalDateTime.now());
-        accountRepo.save(currentAccount);
 
 
         return AddTransactionResponseDTO.builder()
@@ -218,27 +196,6 @@ public class TransactionService {
         }
 
 
-        Account currentAccount = accountRepo.findByUser(user).orElseThrow(() -> new RuntimeException("users account does not exist"));
-
-        BigDecimal totalIncome = currentAccount.getTotalIncome() != null ? currentAccount.getTotalIncome() : BigDecimal.ZERO;
-        BigDecimal totalExpense = currentAccount.getTotalExpense() != null ? currentAccount.getTotalExpense() : BigDecimal.ZERO;
-        BigDecimal transactionAmount = transactions.getAmount();
-
-
-        if (transactions.getTransactionType().getTypeName().contains("EXPENSE")) {
-            totalExpense = totalExpense.add(transactionAmount);
-            currentAccount.setTotalExpense(totalExpense);
-        }
-
-        if (transactions.getTransactionType().getTypeName().contains("INCOME")) {
-            totalIncome = totalIncome.add(transactionAmount);
-            currentAccount.setTotalIncome(totalIncome);
-        }
-
-        currentAccount.setCurrentBalance(totalIncome.subtract(totalExpense));
-        currentAccount.setUpdatedAt(LocalDateTime.now());
-        accountRepo.save(currentAccount);
-
 
         transactionRepo.save(transactions);
         return AddTransactionResponseDTO.builder()
@@ -253,30 +210,6 @@ public class TransactionService {
 
     public String deleteTransaction(User user, Long tId) {
 
-
-        Account currentAccount = accountRepo.findByUser(user).orElseThrow(() -> new RuntimeException("users account not found"));
-
-        List<Transactions> transactionsList = transactionRepo.findTransactionsByUserIDAndParentID(user.getUserId());
-
-        Transactions transaction = transactionsList.stream().filter(p -> p.getTransactionId().equals(tId)).findFirst().orElseThrow(() -> new RuntimeException("transaction not found"));
-
-        BigDecimal totalIncome = currentAccount.getTotalIncome() != null ? currentAccount.getTotalIncome() : BigDecimal.ZERO;
-        BigDecimal totalExpense = currentAccount.getTotalExpense() != null ? currentAccount.getTotalExpense() : BigDecimal.ZERO;
-        BigDecimal transactionAmount = transaction.getAmount();
-
-        if (transaction.getTransactionType().getTypeName().contains("EXPENSE")) {
-            totalExpense = totalExpense.subtract(transactionAmount);
-            currentAccount.setTotalExpense(totalExpense);
-        }
-        if (transaction.getTransactionType().getTypeName().contains("INCOME")) {
-            totalIncome = totalIncome.subtract(transactionAmount);
-            currentAccount.setTotalIncome(totalIncome);
-        }
-
-        currentAccount.setCurrentBalance(totalIncome.subtract(totalExpense));
-        currentAccount.setUpdatedAt(LocalDateTime.now());
-
-        transactionRepo.deleteById(transaction.getTransactionId());
 
         return " transaction deleted successfully";
 
@@ -304,18 +237,7 @@ public class TransactionService {
     public String reviveTransactionFromDeath(User user, Long tId) {
 
         Transactions transaction = transactionRepo.findDeletedTransactionsByUserId(user.getUserId(), tId).orElseThrow(() -> new RuntimeException("transaction does not exist in deleted list"));
-        Account currentAccount = accountRepo.findByUser(user).orElseThrow(() -> new RuntimeException("users account not found"));
 
-        BigDecimal amount = transaction.getAmount();
-        if (transaction.getTransactionType().getTypeName().contains("EXPENSE")) {
-            currentAccount.setTotalExpense(currentAccount.getTotalExpense().add(amount));
-        } else if (transaction.getTransactionType().getTypeName().contains("INCOME")) {
-            currentAccount.setTotalIncome(currentAccount.getTotalIncome().add(amount));
-        }
-
-        currentAccount.setCurrentBalance(currentAccount.getTotalIncome().subtract(currentAccount.getTotalExpense()));
-
-        accountRepo.save(currentAccount);
 
         transaction.setDeleted(false);
         transaction.setDeletedAt(null);

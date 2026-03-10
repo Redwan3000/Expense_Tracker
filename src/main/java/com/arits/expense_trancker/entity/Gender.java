@@ -8,12 +8,13 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Getter
+@Setter
 @SQLDelete(sql = "UPDATE gender SET is_deleted = true WHERE gender_id=?")
 @SQLRestriction("is_deleted=false")
 public class Gender {

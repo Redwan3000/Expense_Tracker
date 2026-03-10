@@ -9,12 +9,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Getter
+@Setter
 @Table(name = "transactions")
 @SQLDelete(sql="update transactions set is_deleted=true ,deleted_at=NOW() where transaction_id=?")
 @SQLRestriction("is_deleted = false")

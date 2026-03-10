@@ -9,12 +9,13 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @SQLDelete(sql = "UPDATE role SET is_deleted = true ,deleted_at=NOW() WHERE role_id=?")
 @SQLRestriction("is_deleted = false")
 public class Role {

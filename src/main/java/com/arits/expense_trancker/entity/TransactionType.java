@@ -9,12 +9,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Getter
+@Setter
 @Table(name = "transaction_type")
 @SQLDelete(sql="update transaction_type set is_deleted=true ,deleted_at=NOW() where tt_id=?")
 @SQLRestriction("is_deleted=false")

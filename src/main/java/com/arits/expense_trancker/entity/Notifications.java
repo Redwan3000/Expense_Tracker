@@ -7,12 +7,13 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
+
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
 @SQLRestriction("is_deleted=false")
 public class Notifications {
 

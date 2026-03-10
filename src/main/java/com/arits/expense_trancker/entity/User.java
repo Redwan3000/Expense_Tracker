@@ -19,13 +19,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Table(name = "users")
-@Builder
 @SQLDelete(sql = "UPDATE users SET is_deleted = true ,deleted_at=NOW() WHERE user_id=?")
 @SQLRestriction("is_deleted = false")
 public class User implements UserDetails {

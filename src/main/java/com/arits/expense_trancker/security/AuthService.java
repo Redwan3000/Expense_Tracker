@@ -7,7 +7,6 @@ import com.arits.expense_trancker.dto.UserRegisterRequestDto;
 import com.arits.expense_trancker.dto.UserRegisterResponseDto;
 import com.arits.expense_trancker.entity.*;
 
-import com.arits.expense_trancker.repository.AccountRepo;
 import com.arits.expense_trancker.repository.GenderRepo;
 import com.arits.expense_trancker.repository.RoleRepo;
 import com.arits.expense_trancker.repository.UserRepo;
@@ -18,8 +17,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 
@@ -33,7 +30,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
-    private final AccountRepo accountRepo;
+
 
 
     public UserRegisterResponseDto register(UserRegisterRequestDto userRegisterRequestDto) {
@@ -73,24 +70,9 @@ public class AuthService {
             newUser.getUsersPermissions().addAll(defailtPermission);
             userRepo.save(newUser);
 
-            if (accountRepo.findById(newUser.getUserId()).isPresent()) {
 
-
-                throw new IllegalArgumentException("user's account already exist");
-
-            } else {
-
-                Account newAccount = Account.builder().user(userRepo.findByUsername(newUser.getUsername()).orElseThrow(() -> new RuntimeException("user not found")))
-                        .currentBalance(BigDecimal.ZERO)
-                        .totalIncome(BigDecimal.ZERO)
-                        .totalExpense(BigDecimal.ZERO)
-                        .updatedAt(LocalDateTime.now())
-                        .build();
-                accountRepo.save(newAccount);
-            }
             return new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername());
         }
-
 
     }
 

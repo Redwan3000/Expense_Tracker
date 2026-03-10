@@ -5,6 +5,7 @@ import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.repository.GenderRepo;
 import com.arits.expense_trancker.repository.RoleRepo;
 import com.arits.expense_trancker.repository.UserRepo;
+import com.arits.expense_trancker.service.BankAccountService;
 import com.arits.expense_trancker.service.TransactionService;
 import com.arits.expense_trancker.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class UserController {
     private final GenderRepo genderRepo;
     private final RoleRepo roleRepo;
     private final TransactionService transactionService;
+    private final BankAccountService bankAccountService;
 
 
     @GetMapping("/user-info")
@@ -128,6 +130,13 @@ public class UserController {
     public ResponseEntity<?>reviveTransaction(@AuthenticationPrincipal User user , @PathVariable("id") Long id)
     {
         return ResponseEntity.ok(transactionService.reviveTransactionFromDeath(user, id));
+    }
+
+
+    @PostMapping("/add-account")
+    public ResponseEntity<?>addBankAccount(@AuthenticationPrincipal User user, @RequestBody AddBankAccountRequestDTO addBankAccountRequestDTO){
+
+        return ResponseEntity.ok(bankAccountService.addAccount(user,addBankAccountRequestDTO));
     }
 
 }
