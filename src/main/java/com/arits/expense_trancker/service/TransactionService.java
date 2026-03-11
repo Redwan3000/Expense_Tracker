@@ -10,12 +10,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,7 +56,7 @@ public class TransactionService {
 
 
     @Transactional
-    public AddTransactionResponseDTO addTransaction(User user, AddTransactionRequestDTO addTransactionRequestDTO, MultipartFile multipartFile) {
+    public AddTransactionResponseDto addTransaction(User user, AddTransactionRequestDto addTransactionRequestDTO, MultipartFile multipartFile) {
 
         String savedFilePath = null;
         if (multipartFile != null && !multipartFile.isEmpty()) {
@@ -96,7 +94,7 @@ public class TransactionService {
         transactionRepo.save(transactions);
 
 
-        return AddTransactionResponseDTO.builder()
+        return AddTransactionResponseDto.builder()
                 .itemName(transactions.getItemName())
                 .amount(transactions.getAmount())
                 .tMethod(transactions.getTransactionMethods().getMethodName())
@@ -146,7 +144,7 @@ public class TransactionService {
 
     }
 
-    public AddTransactionResponseDTO modifyTransaction(User user, AddTransactionRequestDTO addTransactionRequestDTO, MultipartFile multipartFile, long id) {
+    public AddTransactionResponseDto modifyTransaction(User user, AddTransactionRequestDto addTransactionRequestDTO, MultipartFile multipartFile, long id) {
 
 
         List<Transactions> transactionsList = transactionRepo.findTransactionsByUserIDAndParentID(user.getUserId());
@@ -198,7 +196,7 @@ public class TransactionService {
 
 
         transactionRepo.save(transactions);
-        return AddTransactionResponseDTO.builder()
+        return AddTransactionResponseDto.builder()
                 .itemName(transactions.getItemName())
                 .amount(transactions.getAmount())
                 .tMethod(transactions.getTransactionMethods().getMethodName())
@@ -216,12 +214,12 @@ public class TransactionService {
 
     }
 
-    public List<DeletedExpensesResponseDTO> getDeletedList(User user) {
+    public List<DeletedExpensesResponseDto> getDeletedList(User user) {
 
 
         List<Transactions> transactions = transactionRepo.findTransactionsByUserIDAndParentID(user.getUserId());
 
-        return transactions.stream().map(p -> DeletedExpensesResponseDTO.builder()
+        return transactions.stream().map(p -> DeletedExpensesResponseDto.builder()
                 .tId(p.getTransactionId())
                 .itemName(p.getItemName())
                 .amount(p.getAmount())

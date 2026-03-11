@@ -25,7 +25,7 @@ public class BankAccount {
     @Enumerated(EnumType.STRING)
     private BankAccountType accountType;
 
-    @ManyToOne(fetch = FetchType.EAGER) // Usually Eager because you always need the currency name
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "currency_id", nullable = false)
     private Currency currency;
 

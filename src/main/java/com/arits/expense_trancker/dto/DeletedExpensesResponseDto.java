@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeletedExpensesResponseDTO {
+public class DeletedExpensesResponseDto {
     private Long tId;
     private String itemName;
     private BigDecimal amount;

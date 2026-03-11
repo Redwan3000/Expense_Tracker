@@ -1,15 +1,11 @@
 package com.arits.expense_trancker.dto;
 
-import com.arits.expense_trancker.entity.Currency;
-import jakarta.persistence.Column;
-import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 
@@ -17,7 +13,7 @@ import java.math.BigDecimal;
 
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddBankAccountRequestDTO {
+public class AddBankAccountRequestDto {
 
 
     @NotBlank(message = "Bank name cannot be null")

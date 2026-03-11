@@ -1,6 +1,7 @@
 package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 @Builder
 @Getter
 @Setter
+@Table(name = "mobile_banking",uniqueConstraints = {@UniqueConstraint(columnNames = {"providerName","phonenumber"})})
 public class MobileBanking {
 
 
@@ -20,7 +22,9 @@ public class MobileBanking {
 
     private String providerName;
 
-    private String accountType;
+    @Enumerated(EnumType.STRING)
+    private MobileBankingAccountType accountType;
+
 
     private String phoneNumber;
 

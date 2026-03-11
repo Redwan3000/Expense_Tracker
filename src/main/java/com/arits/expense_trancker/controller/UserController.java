@@ -2,14 +2,12 @@ package com.arits.expense_trancker.controller;
 
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.User;
-import com.arits.expense_trancker.repository.GenderRepo;
-import com.arits.expense_trancker.repository.RoleRepo;
-import com.arits.expense_trancker.repository.UserRepo;
-import com.arits.expense_trancker.service.BankAccountService;
-import com.arits.expense_trancker.service.TransactionService;
-import com.arits.expense_trancker.service.UserService;
+import com.arits.expense_trancker.handler.ApiResponse;
+import com.arits.expense_trancker.repository.*;
+import com.arits.expense_trancker.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -34,6 +33,8 @@ public class UserController {
     private final RoleRepo roleRepo;
     private final TransactionService transactionService;
     private final BankAccountService bankAccountService;
+    private final CashAccountService cashAccountService;
+    private final MobileBankingService mobileBankingService;
 
 
     @GetMapping("/user-info")
@@ -84,7 +85,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('Add Expenses') or hasAnyRole('OWNER','SUBOWNER')")
     public ResponseEntity<?> addTransaction(
             @AuthenticationPrincipal User user,
-            @RequestPart("data") AddTransactionRequestDTO addTransactionRequestDTO,
+            @RequestPart("data") AddTransactionRequestDto addTransactionRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         return ResponseEntity.ok(transactionService.addTransaction(user, addTransactionRequestDTO, file));
@@ -101,7 +102,7 @@ public class UserController {
     @PutMapping(value = "/modify-expenses/{tId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('Modify Expenses') or hasRole('OWNER')")
     public ResponseEntity<?> modifyTransaction(@AuthenticationPrincipal User user,
-                                               @RequestPart("data") AddTransactionRequestDTO addTransactionRequestDTO,
+                                               @RequestPart("data") AddTransactionRequestDto addTransactionRequestDTO,
                                                @RequestPart(value = "file", required = false) MultipartFile file,
                                                @PathVariable("tId") Long tId
     ) {
@@ -125,20 +126,64 @@ public class UserController {
     }
 
 
-
     @PutMapping("/revive-transation/{id}")
-    public ResponseEntity<?>reviveTransaction(@AuthenticationPrincipal User user , @PathVariable("id") Long id)
-    {
+    public ResponseEntity<?> reviveTransaction(@AuthenticationPrincipal User user, @PathVariable("id") Long id) {
         return ResponseEntity.ok(transactionService.reviveTransactionFromDeath(user, id));
     }
 
 
-    @PostMapping("/add-account")
-    public ResponseEntity<?>addBankAccount(@AuthenticationPrincipal User user, @RequestBody AddBankAccountRequestDTO addBankAccountRequestDTO){
+    @PostMapping("/add-Banking-account")
+    @PreAuthorize("hasAuthority('Add Bank Account') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<AddBankAccountResponseDto>> addBankAccount(@AuthenticationPrincipal User user, @RequestBody AddBankAccountRequestDto addBankAccountRequestDTO) {
 
-        return ResponseEntity.ok(bankAccountService.addAccount(user,addBankAccountRequestDTO));
+        AddBankAccountResponseDto newAccount = bankAccountService.addAccount(user, addBankAccountRequestDTO);
+
+        ApiResponse<AddBankAccountResponseDto> response = ApiResponse.<AddBankAccountResponseDto>builder()
+                .status(201)
+                .message("Bank Account added successfully")
+                .timestamp(LocalDateTime.now())
+                .result(newAccount)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PostMapping("/add-mobile-Banking-account")
+    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<?>> addMobileBanking(@AuthenticationPrincipal User user, @RequestBody AddMobileBankingRequestDto addMobileBankingRequestDto) {
+
+        AddMobileBankingResponseDto newAccount = mobileBankingService.addAccount(user, addMobileBankingRequestDto);
+
+
+        ApiResponse<?> response = ApiResponse.<AddMobileBankingResponseDto>builder()
+                .status(201)
+                .message("Mobile Banking Account added Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(newAccount)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+    }
+
+
+    @PostMapping("/create-cash-wallet-account")
+    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<?>> createCashWallet(@AuthenticationPrincipal User user, @RequestBody CreateCashAccountRequestDto dto) {
+
+        CreateCashAccountResponseDto newWallet = cashAccountService.addAccount(user, dto);
+
+
+        ApiResponse<?> response = ApiResponse.<CreateCashAccountResponseDto>builder()
+                .status(201)
+                .message("Cash Wallet created Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(newWallet)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+    }
 }
 
 
