@@ -56,9 +56,8 @@ public class LoadData implements CommandLineRunner {
 
         transactionService.tmSeedding("CASH");
         transactionService.tmSeedding("BANK");
-        transactionService.tmSeedding("CREDIT");
-        transactionService.tmSeedding("DEBIT");
-        transactionService.tmSeedding("BKASH");
+        transactionService.tmSeedding("MOBILE_BANKING");
+
 
         userService.defaultAdmin(userRegisterRequestDto);
 

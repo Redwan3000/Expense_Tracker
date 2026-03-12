@@ -14,6 +14,7 @@ public class AddTransactionRequestDto {
     private Long tMethod;
     private Long tType;
     private String description;
+    private Long accountId;
 
 
 }

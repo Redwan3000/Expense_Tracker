@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,8 +27,58 @@ public class TransactionService {
     private final TransactionTypeRepo transactionTypeRepo;
     private final TransactionMethodRepo transactionMethodRepo;
     private final TransactionRepo transactionRepo;
-    private final UserRepo userRepo;
+    private final BankAccountRepo bankAccountRepo;
+    private final MobileBankingRepo mobileBankingRepo;
+    private final CashAccountRepo cashAccountRepo;
 
+
+    private void updateBalance(User user, Long accountId, BigDecimal amount, String typeName, String methodName) {
+        boolean isIncome = typeName.equalsIgnoreCase("INCOME");
+
+        switch (methodName.toUpperCase()) {
+            case "BANK" -> updateBankBalance(user, accountId, amount, isIncome);
+            case "MOBILE_BANKING" -> updateMobileBalance(user, accountId, amount, isIncome);
+            case "CASH" -> updateCashBalance(user, amount, isIncome);
+            default -> throw new RuntimeException("Unsupported transaction method: " + methodName);
+        }
+    }
+
+
+    private void updateBankBalance(User user, Long accountId, BigDecimal amount, boolean isIncome) {
+        BankAccount account = bankAccountRepo.findByUserAndId(user, accountId)
+                .orElseThrow(() -> new RuntimeException("Bank account not found."));
+
+        account.setCurrentBalance(calculateNewBalance(account.getCurrentBalance(), amount, isIncome));
+        bankAccountRepo.save(account);
+    }
+
+    private void updateMobileBalance(User user, Long accountId, BigDecimal amount, boolean isIncome) {
+        MobileBanking account = mobileBankingRepo.findByUserAndId(user, accountId)
+                .orElseThrow(() -> new RuntimeException("Mobile banking account not found."));
+
+        account.setCurrentBalance(calculateNewBalance(account.getCurrentBalance(), amount, isIncome));
+        mobileBankingRepo.save(account);
+    }
+
+    private void updateCashBalance(User user, BigDecimal amount, boolean isIncome) {
+        CashAccount account = cashAccountRepo.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Cash wallet not found."));
+
+        account.setCurrentBalance(calculateNewBalance(account.getCurrentBalance(), amount, isIncome));
+        cashAccountRepo.save(account);
+    }
+
+
+    private BigDecimal calculateNewBalance(BigDecimal current, BigDecimal amount, boolean isIncome) {
+        if (isIncome) {
+            return current.add(amount);
+        } else {
+            if (current.compareTo(amount) < 0) {
+                throw new RuntimeException("Insufficient balance for this transaction.");
+            }
+            return current.subtract(amount);
+        }
+    }
 
 
     public TransactionMethods tmSeedding(String name) {
@@ -80,14 +131,22 @@ public class TransactionService {
                 throw new RuntimeException("failed to store the invoices" + e.getMessage());
             }
         }
+
+        TransactionMethods method = transactionMethodRepo.findByMethodId(addTransactionRequestDTO.getTMethod()).orElseThrow(() -> new RuntimeException("Transaction method not found"));
+        TransactionType type = transactionTypeRepo.findById(addTransactionRequestDTO.getTType()).orElseThrow(() -> new RuntimeException("Transaction type not found"));
+
+        updateBalance(user, addTransactionRequestDTO.getAccountId(), addTransactionRequestDTO.getAmount(), type.getTypeName(), method.getMethodName());
+
+
         Transactions transactions = Transactions.builder()
                 .amount(addTransactionRequestDTO.getAmount())
                 .itemName(addTransactionRequestDTO.getItemName())
                 .description(addTransactionRequestDTO.getDescription())
                 .date(LocalDate.now())
                 .user(user)
-                .transactionType(transactionTypeRepo.findById(addTransactionRequestDTO.getTType()).orElseThrow(() -> new RuntimeException("transaction Type not found")))
-                .transactionMethods(transactionMethodRepo.findByMethodId(addTransactionRequestDTO.getTMethod()).orElseThrow(() -> new RuntimeException("method not found")))
+                .accountId(addTransactionRequestDTO.getAccountId())
+                .transactionType(type)
+                .transactionMethods(method)
                 .invoicePath(savedFilePath)
                 .build();
 
@@ -102,7 +161,10 @@ public class TransactionService {
                 .description(transactions.getDescription())
                 .invoicePath(transactions.getInvoicePath())
                 .build();
+
+
     }
+
 
     public GetTransactionHistoryAllDto showExpenses(User user, GetTransactionHistoryRequestDto request) {
 
@@ -192,7 +254,6 @@ public class TransactionService {
             }
 
         }
-
 
 
         transactionRepo.save(transactions);

@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Builder
 @Getter
 @Setter
-@Table(name = "mobile_banking",uniqueConstraints = {@UniqueConstraint(columnNames = {"providerName","phonenumber"})})
+@Table(name = "mobile_banking",uniqueConstraints = {@UniqueConstraint(columnNames = {"providerName", "phoneNumber"})})
 public class MobileBanking {
 
 

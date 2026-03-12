@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Table(name = "transactions")
-@SQLDelete(sql="update transactions set is_deleted=true ,deleted_at=NOW() where transaction_id=?")
+@SQLDelete(sql = "update transactions set is_deleted=true ,deleted_at=NOW() where transaction_id=?")
 @SQLRestriction("is_deleted = false")
 public class Transactions {
 
@@ -53,12 +53,13 @@ public class Transactions {
 
     private String invoicePath;
 
+    private Long accountId;
 
-@PreRemove
-    public void preRemove(){
-       this.deletedAt= LocalDateTime.now();
-        this.isDeleted= true;
-    }
+//@PreRemove
+//    public void preRemove(){
+//       this.deletedAt= LocalDateTime.now();
+//        this.isDeleted= true;
+//    }
 
 
 }
