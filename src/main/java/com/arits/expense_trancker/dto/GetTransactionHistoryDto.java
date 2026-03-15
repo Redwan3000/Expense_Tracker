@@ -17,6 +17,7 @@ private String username;
 private BigDecimal amount;
 private String transactionMethod;
 private String transactionType;
+private long accountId;
 private String itemName;
 private String description;
 private Boolean hasInvoice;

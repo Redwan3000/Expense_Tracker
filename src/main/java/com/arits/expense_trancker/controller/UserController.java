@@ -81,7 +81,7 @@ public class UserController {
             @RequestPart("data") AddTransactionRequestDto addTransactionRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
-        AddTransactionResponseDto newTransaction=transactionService.addTransaction(user, addTransactionRequestDTO, file);
+        AddTransactionResponseDto newTransaction = transactionService.addTransaction(user, addTransactionRequestDTO, file);
         ApiResponse<AddTransactionResponseDto> response = ApiResponse.<AddTransactionResponseDto>builder()
                 .status(HttpStatus.CREATED.value())
                 .message("Transaction added successfully")
@@ -97,9 +97,22 @@ public class UserController {
 
     @GetMapping("/see-expenses")
     @PreAuthorize("hasAuthority('See Expenses') or hasAnyRole('OWNER','SUBOWNER')")
-    public ResponseEntity<?> showExpenses(@AuthenticationPrincipal User user, @RequestBody(required = false) GetTransactionHistoryRequestDto getTransactionHistoryRequestDto) {
-        return ResponseEntity.ok(transactionService.showExpenses(user, getTransactionHistoryRequestDto));
+    public ResponseEntity<ApiResponse<?>> showExpenses(@AuthenticationPrincipal User user, @RequestBody(required = false) GetTransactionHistoryRequestDto getTransactionHistoryRequestDto) {
+
+        GetTransactionHistoryAllDto ExpensesList = transactionService.showExpenses(user, getTransactionHistoryRequestDto);
+        ApiResponse<GetTransactionHistoryAllDto> response = ApiResponse.<GetTransactionHistoryAllDto>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("showing expenses")
+                .timestamp(LocalDateTime.now())
+                .result(ExpensesList)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+
     }
+
 
     @PutMapping(value = "/modify-expenses/{tId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('Modify Expenses') or hasRole('OWNER')")
@@ -108,6 +121,8 @@ public class UserController {
                                                @RequestPart(value = "file", required = false) MultipartFile file,
                                                @PathVariable("tId") Long tId
     ) {
+
+
         return ResponseEntity.ok(transactionService.modifyTransaction(user, addTransactionRequestDTO, file, tId));
     }
 
@@ -118,6 +133,7 @@ public class UserController {
     ) {
         return ResponseEntity.ok(transactionService.deleteTransaction(user, tId));
     }
+
 
     @GetMapping("/deleted-transaction-list")
     @PreAuthorize("hasAuthority('Deleted Expense List') or hasRole('OWNER')")
@@ -187,21 +203,20 @@ public class UserController {
     }
 
 
-
     @GetMapping("/get-overall-balance")
     @PreAuthorize("hasAuthority('Get Overall Balance') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>>getOverallBalance(@AuthenticationPrincipal User user ){
+    public ResponseEntity<ApiResponse<?>> getOverallBalance(@AuthenticationPrincipal User user) {
 
-        OverallBalanceDto overallBalance= accountsService.overallBalance(user);
+        OverallBalanceDto overallBalance = accountsService.overallBalance(user);
 
-        ApiResponse<?> response= ApiResponse.<OverallBalanceDto>builder()
+        ApiResponse<?> response = ApiResponse.<OverallBalanceDto>builder()
                 .status(200)
                 .message("successfully fetch the overall balances")
                 .timestamp(LocalDateTime.now())
                 .result(overallBalance)
                 .error(null)
                 .build();
-return new ResponseEntity<>(response,HttpStatus.valueOf(200));
+        return new ResponseEntity<>(response, HttpStatus.valueOf(200));
     }
 }
 

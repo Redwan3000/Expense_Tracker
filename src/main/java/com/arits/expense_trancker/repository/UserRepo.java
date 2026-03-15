@@ -36,6 +36,8 @@ public interface UserRepo extends JpaRepository<User, Long> {
     @Query(value = "update users set is_deleted = true, deleted_at = NOW() where user_id = :user_id", nativeQuery = true)
     void softDeleteSubUsersId(@Param("user_id") Long user_id);
 
+
+
     @Query("select u from User u where lower(u.username)=lower(:keyword) or lower(u.firstName) =lower(:keyword) or lower(u.lastName)=lower(:keyword)  or lower(u.email)=lower(:keyword) ")
     List<User> getUserBySearch(@Param("keyword") String keyword);
 

@@ -1,10 +1,12 @@
 package com.arits.expense_trancker.repository;
 import com.arits.expense_trancker.entity.Transactions;
+import com.arits.expense_trancker.entity.User;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 
 import java.util.List;
 import java.util.Optional;
@@ -20,4 +22,13 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
 
 @Query(value = "select * from transactions where user_id=:userId and is_deleted=true and transaction_id=:tId",nativeQuery = true)
     Optional<Transactions> findDeletedTransactionsByUserId(@Param("userId") Long userId ,@Param("tId") Long tId);
+
+    Optional<Transactions> findByUserAndTransactionId(User user, long id);
+
+
+
+    @Modifying
+    @Transactional
+    @Query(value = "update transactions set is_deleted = true, deleted_at = NOW() where transaction_id = :transaction_id", nativeQuery = true)
+    void softDeleteTransactions(@Param("transaction_id") Long transaction_id);
 }

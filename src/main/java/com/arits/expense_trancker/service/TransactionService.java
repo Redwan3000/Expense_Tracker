@@ -154,12 +154,14 @@ public class TransactionService {
 
 
         return AddTransactionResponseDto.builder()
+                .trxId(transactions.getTransactionId())
                 .itemName(transactions.getItemName())
                 .amount(transactions.getAmount())
                 .tMethod(transactions.getTransactionMethods().getMethodName())
                 .tType(transactions.getTransactionType().getTypeName())
                 .description(transactions.getDescription())
                 .invoicePath(transactions.getInvoicePath())
+                .accountId(transactions.getAccountId())
                 .build();
 
 
@@ -188,6 +190,7 @@ public class TransactionService {
                         .transactionMethod(t.getTransactionMethods().getMethodName())
                         .transactionType(t.getTransactionType().getTypeName())
                         .itemName(t.getItemName())
+                        .accountId(t.getAccountId())
                         .description(t.getDescription())
                         .userId(t.getUser().getUserId())
                         .hasInvoice(t.getInvoicePath() != null && !t.getInvoicePath().isEmpty())
@@ -203,40 +206,48 @@ public class TransactionService {
 
         return GetTransactionHistoryAllDto.builder().owners(owner).subOwners(subOwner).build();
 
-
     }
+
+
 
     public AddTransactionResponseDto modifyTransaction(User user, AddTransactionRequestDto addTransactionRequestDTO, MultipartFile multipartFile, long id) {
 
+        Transactions transaction = transactionRepo.findByUserAndTransactionId(user, id).orElseThrow(() -> new RuntimeException("Transaction not found"));
 
-        List<Transactions> transactionsList = transactionRepo.findTransactionsByUserIDAndParentID(user.getUserId());
-        Transactions transactions = transactionsList.stream().filter(t -> t.getTransactionId().equals(id)).findFirst().orElseThrow(() -> new RuntimeException("transaction not found"));
 
-        transactions.setAmount((addTransactionRequestDTO.getAmount() != null) ? addTransactionRequestDTO.getAmount() : transactions.getAmount());
+        if (addTransactionRequestDTO.getAmount() != null) {
+            String inverseTtype = transaction.getTransactionType().getTypeName().equalsIgnoreCase("EXPENSE") ? "INCOME" : "EXPENSE";
+            updateBalance(user, transaction.getAccountId(), transaction.getAmount(), inverseTtype, transaction.getTransactionMethods().getMethodName());
 
-        transactions.setItemName((addTransactionRequestDTO.getItemName() != null) ? addTransactionRequestDTO.getItemName() : transactions.getItemName());
+        }
 
-        transactions.setDescription((addTransactionRequestDTO.getDescription() != null) ? addTransactionRequestDTO.getDescription() : transactions.getDescription());
+        transaction.setAmount((addTransactionRequestDTO.getAmount() != null) ? addTransactionRequestDTO.getAmount() : transaction.getAmount());
 
-        transactions.setTransactionMethods(transactionMethodRepo.findById
+        transaction.setItemName((addTransactionRequestDTO.getItemName() != null) ? addTransactionRequestDTO.getItemName() : transaction.getItemName());
+
+        transaction.setDescription((addTransactionRequestDTO.getDescription() != null) ? addTransactionRequestDTO.getDescription() : transaction.getDescription());
+
+        transaction.setTransactionMethods(transactionMethodRepo.findById
                 (
                         (addTransactionRequestDTO.getTMethod() != null)
                                 ? addTransactionRequestDTO.getTMethod()
-                                : transactions.getTransactionMethods()
+                                : transaction.getTransactionMethods()
                                 .getTmId()).orElseThrow(() -> new RuntimeException("transaction method not found")));
 
-        transactions.setTransactionType(transactionTypeRepo.findById
+        transaction.setAccountId(addTransactionRequestDTO.getAccountId());
+        transaction.setTransactionType(transactionTypeRepo.findById
                 (
                         (addTransactionRequestDTO.getTType() != null)
                                 ? addTransactionRequestDTO.getTType()
-                                : transactions.getTransactionType()
+                                : transaction.getTransactionType()
                                 .getTtId()).orElseThrow(() -> new RuntimeException("transaction type not found")));
+
 
         if (multipartFile != null && !multipartFile.isEmpty()) {
 
             try {
-                if (transactions.getInvoicePath() != null) {
-                    Files.deleteIfExists(Paths.get(transactions.getInvoicePath()));
+                if (transaction.getInvoicePath() != null) {
+                    Files.deleteIfExists(Paths.get(transaction.getInvoicePath()));
                 }
                 String uploadDir = "uploads/invoices/";
                 File dir = new File(uploadDir);
@@ -248,7 +259,7 @@ public class TransactionService {
                 Path filePath = Paths.get(uploadDir + fileName);
 
                 Files.write(filePath, multipartFile.getBytes());
-                transactions.setInvoicePath(filePath.toString());
+                transaction.setInvoicePath(filePath.toString());
             } catch (IOException e) {
                 throw new RuntimeException("failed to add invoice file" + e.getMessage());
             }
@@ -256,22 +267,36 @@ public class TransactionService {
         }
 
 
-        transactionRepo.save(transactions);
+        transactionRepo.save(transaction);
+
+
+        updateBalance(user, transaction.getAccountId(), transaction.getAmount(), transaction.getTransactionType().getTypeName(), transaction.getTransactionMethods().getMethodName());
+
+
         return AddTransactionResponseDto.builder()
-                .itemName(transactions.getItemName())
-                .amount(transactions.getAmount())
-                .tMethod(transactions.getTransactionMethods().getMethodName())
-                .tType(transactions.getTransactionType().getTypeName())
-                .description(transactions.getDescription())
-                .invoicePath(transactions.getInvoicePath())
+                .trxId(transaction.getTransactionId())
+                .itemName(transaction.getItemName())
+                .amount(transaction.getAmount())
+                .tMethod(transaction.getTransactionMethods().getMethodName())
+                .tType(transaction.getTransactionType().getTypeName())
+                .accountId(transaction.getAccountId())
+                .description(transaction.getDescription())
+                .invoicePath(transaction.getInvoicePath())
                 .build();
     }
 
-    public String deleteTransaction(User user, Long tId) {
 
+    public DeleteTransactionResponseDTO deleteTransaction(User user, Long tId) {
 
-        return " transaction deleted successfully";
+        Transactions transactions = transactionRepo.findByUserAndTransactionId(user, tId).orElseThrow(() -> new RuntimeException("transaction not found"));
+        DeleteTransactionResponseDTO response=  DeleteTransactionResponseDTO.builder()
+                .trxId(transactions.getTransactionId())
+                .description(transactions.getDescription())
+                .deletedBy(user.getUserId())
+                .build();
+        transactionRepo.softDeleteTransactions(transactions.getTransactionId());
 
+   return response;
 
     }
 
