@@ -27,7 +27,7 @@ public class LoadData implements CommandLineRunner {
 
     private final CurrencyService currencyService;
 
-    private UserRegisterRequestDto userRegisterRequestDto = UserRegisterRequestDto.builder()
+    private  UserRegisterRequestDto userRegisterRequestDto = UserRegisterRequestDto.builder()
             .first_name("ADMIN").last_name("ADMIN").email("admin@gmail.com").phone("123456789").password("ADMIN").dob(LocalDate.of(2001, 9, 5)).gender_id(1L).username("ADMIN").role_id(4L)
             .build();
 

@@ -122,7 +122,6 @@ public class UserService {
         }
 
 
-
     }
 
 
@@ -152,24 +151,32 @@ public class UserService {
 
 
     @Transactional
-    public void softDeleteUser(Long userId) {
+    public DeletedUserResponseDto softDeleteUser(Long userId) {
 
-        if (!userRepo.existsById(userId)) {
-            throw new RuntimeException("User not found");
-        }
+        User user= userRepo.findById(userId).orElseThrow(()->new RuntimeException("user not found"));
+
+        DeletedUserResponseDto deletedUser= DeletedUserResponseDto.builder()
+                .id(user.getUserId())
+                .username(user.getUsername())
+                .build();
 
         userRepo.softDeleteById(userId);
         userRepo.softDeleteSubUsers(userId);
 
-
+return deletedUser;
     }
 
 
     @Transactional
-    public void softDeleteSubUser(User user, Long userId) {
+    public DeletedUserResponseDto softDeleteSubUser(User user, Long userId) {
         User currentuser = userRepo.findById(user.getUserId()).orElseThrow(() -> new RuntimeException("current user not found"));
 
         User subUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("subuser not found"));
+
+        DeletedUserResponseDto deletedUser = DeletedUserResponseDto.builder()
+                .id(subUser.getUserId())
+                .username(subUser.getUsername())
+                .build();
 
         if (subUser.getParent() == currentuser) {
 
@@ -178,6 +185,8 @@ public class UserService {
         } else {
             throw new RuntimeException("subuser do not exist under your account");
         }
+
+        return deletedUser;
     }
 
 

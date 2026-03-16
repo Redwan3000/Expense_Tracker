@@ -4,7 +4,6 @@ package com.arits.expense_trancker.security;
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.*;
 
-import com.arits.expense_trancker.repository.CashAccountRepo;
 import com.arits.expense_trancker.repository.GenderRepo;
 import com.arits.expense_trancker.repository.RoleRepo;
 import com.arits.expense_trancker.repository.UserRepo;
@@ -15,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 
@@ -29,7 +27,6 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
-    private final CashAccountRepo cashAccountRepo;
 
 
     public UserRegisterResponseDto register(UserRegisterRequestDto userRegisterRequestDto) {

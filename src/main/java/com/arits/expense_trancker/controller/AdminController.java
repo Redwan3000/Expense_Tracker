@@ -1,17 +1,16 @@
 package com.arits.expense_trancker.controller;
 
-import com.arits.expense_trancker.dto.UserDetailResponseDto;
-import com.arits.expense_trancker.repository.GenderRepo;
-import com.arits.expense_trancker.repository.RoleRepo;
-import com.arits.expense_trancker.repository.UserRepo;
+import com.arits.expense_trancker.dto.*;
+import com.arits.expense_trancker.handler.ApiResponse;
 import com.arits.expense_trancker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -21,18 +20,24 @@ import java.util.List;
 public class AdminController {
 
     private final UserService userService;
-    private final UserRepo userRepo;
-    private final PasswordEncoder passwordEncoder;
-    private final GenderRepo genderRepo;
-    private final RoleRepo roleRepo;
 
 
-    @GetMapping("/get-user-info/{keyword}")
+    @GetMapping("/get-user-info/{key}")
     @PreAuthorize("hasAuthority('Get Any User') or hasAuthority('ADMIN')")
-    public ResponseEntity<List<UserDetailResponseDto>> getUserInfo(@PathVariable("keyword") String keyword) {
+    public ResponseEntity<ApiResponse<?>> getUserInfo(@PathVariable("key") String keyword) {
 
         List<UserDetailResponseDto> userDetailResponseDtos = userService.getUserBySearch(keyword);
-        return ResponseEntity.ok(userDetailResponseDtos);
+
+
+        ApiResponse<List<UserDetailResponseDto>> response= ApiResponse.<List<UserDetailResponseDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("fetched user info successfully")
+                .timestamp(LocalDateTime.now())
+                .result(userDetailResponseDtos)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(response,HttpStatus.OK);
 
     }
 
@@ -40,30 +45,62 @@ public class AdminController {
     @DeleteMapping("/delete-user/{id}")
     @PreAuthorize("hasAuthority('Delete Users') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        userService.softDeleteUser(id);
-        return ResponseEntity.ok("User and associated sub-users have been soft-deleted successfully.");
+        DeletedUserResponseDto deletedUser= userService.softDeleteUser(id);
+        ApiResponse<?> response= ApiResponse.<DeletedUserResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("User deleted successfully")
+                .timestamp(LocalDateTime.now())
+                .result(deletedUser)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
 
     @GetMapping("/get-users-list")
     @PreAuthorize("hasAuthority('Get Users List') or hasRole('ADMIN')")
     public ResponseEntity<?> getALlUser() {
+        List<AlluserListDto> usersList= userService.getAllUsers();
 
-        return ResponseEntity.ok(userService.getAllUsers());
+        ApiResponse<List<AlluserListDto>> response= ApiResponse.<List<AlluserListDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("fateched all users list successfully")
+                .timestamp(LocalDateTime.now())
+                .result(usersList)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
     @GetMapping("/get-deleted-users-list")
     @PreAuthorize("hasAuthority('Get Deleted Users List') or hasRole('ADMIN')")
-    public ResponseEntity<?> getDeletedUsersList() {
-
-        return ResponseEntity.ok(userService.getAllDeletedUsers());
+    public ResponseEntity<ApiResponse<List<DeletedUsersListDto>>> getDeletedUsersList() {
+        List<DeletedUsersListDto> deletedUsers= userService.getAllDeletedUsers();
+        ApiResponse<List<DeletedUsersListDto>>response= ApiResponse.<List<DeletedUsersListDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("fetched deleted users list succressfully")
+                .timestamp(LocalDateTime.now())
+                .result(deletedUsers)
+                .error(null)
+                .build();
+    return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
     @PutMapping("/retrive-users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> retrieveUser(@PathVariable("id") Long UserId) {
+    public ResponseEntity<?> retrieveUser(@PathVariable("id") Long userId) {
+        RetriveUserResponseDto reviveUser= userService.retriveUser(userId);
+        ApiResponse<?> response= ApiResponse.<RetriveUserResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("restore user successfully")
+                .timestamp(LocalDateTime.now())
+                .result(reviveUser)
+                .error(null)
+                .build();
 
-        return ResponseEntity.ok(userService.retriveUser(UserId));
+        return new ResponseEntity<>(response,HttpStatus.OK);
 
     }
 

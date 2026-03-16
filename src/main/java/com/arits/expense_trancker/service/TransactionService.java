@@ -318,14 +318,21 @@ public class TransactionService {
     }
 
     @Transactional
-    public String reviveTransactionFromDeath(User user, Long tId) {
+    public ReviveTransactionResponseDto reviveTransactionFromDeath(User user, Long tId) {
 
         Transactions transaction = transactionRepo.findDeletedTransactionsByUserId(user.getUserId(), tId).orElseThrow(() -> new RuntimeException("transaction does not exist in deleted list"));
 
+ReviveTransactionResponseDto revivedTransaction= ReviveTransactionResponseDto.builder()
+        .trxId(transaction.getTransactionId())
+        .userId(transaction.getUser().getUserId())
+        .transactionMethod(transaction.getTransactionMethods().getMethodName())
+        .transactionType(transaction.getTransactionType().getTypeName())
+        .description(transaction.getDescription())
+        .build();
 
         transaction.setDeleted(false);
         transaction.setDeletedAt(null);
         transactionRepo.save(transaction);
-        return "transaction revived form death";
+        return revivedTransaction;
     }
 }

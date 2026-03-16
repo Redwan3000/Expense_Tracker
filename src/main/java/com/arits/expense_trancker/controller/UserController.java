@@ -32,36 +32,73 @@ public class UserController {
     @GetMapping("/user-info")
     @PreAuthorize("hasAuthority('User Info') or hasAnyRole('OWNER','ADMIN')")
 
-    public ResponseEntity<UserDetailResponseDto> getCurrentUserDetails(@AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<ApiResponse<?>> getCurrentUserDetails(@AuthenticationPrincipal User currentUser) {
 
         UserDetailResponseDto userDetails = userService.getUserDetails(currentUser);
-        return ResponseEntity.ok(userDetails);
+
+        ApiResponse<UserDetailResponseDto> response = ApiResponse.<UserDetailResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("User info fetched")
+                .timestamp(LocalDateTime.now())
+                .result(userDetails)
+                .error(null)
+                .build();
+
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+
     }
 
 
     @GetMapping("/subusers-list")
     @PreAuthorize("hasAuthority('Subuser List') or hasRole('OWNER')")
-    public ResponseEntity<List<SubuserListDto>> getUserUserList(@AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<ApiResponse<List<SubuserListDto>>> getUserUserList(@AuthenticationPrincipal User currentUser) {
 
         List<SubuserListDto> subusers = userService.getSubuserList(currentUser);
-        return ResponseEntity.ok(subusers);
+
+        ApiResponse<List<SubuserListDto>> responses = ApiResponse.<List<SubuserListDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Fetched user's subUsers list")
+                .timestamp(LocalDateTime.now())
+                .result(subusers)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(responses, HttpStatus.CREATED);
+
 
     }
 
     @PostMapping("/create-subuser")
     @PreAuthorize("hasAuthority('Create Subuser') or hasRole('OWNER')")
-    public ResponseEntity<UserRegisterResponseDto> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponse<?>> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
 
         UserRegisterResponseDto userRegisterResponseDto = userService.createSubUser(userRegisterRequestDto, user.getUserId());
-        return ResponseEntity.ok(userRegisterResponseDto);
+
+        ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("SubUser Created successfully")
+                .timestamp(LocalDateTime.now())
+                .result(userRegisterResponseDto)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
 
     @DeleteMapping("/delete-subUser/{id}")
     @PreAuthorize("hasAuthority('Delete Subusers') or hasRole('OWNER')")
-    public ResponseEntity<?> deleteSubUser(@AuthenticationPrincipal User user, @PathVariable Long id) {
-        userService.softDeleteSubUser(user, id);
-        return ResponseEntity.ok("SubUser and associated sub-users have been soft-deleted successfully.");
+    public ResponseEntity<ApiResponse<?>> deleteSubUser(@AuthenticationPrincipal User user, @PathVariable Long id) {
+        DeletedUserResponseDto deleteSubuser = userService.softDeleteSubUser(user, id);
+        ApiResponse<?> response = ApiResponse.<DeletedUserResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("SubUser deleted successfully")
+                .timestamp(LocalDateTime.now())
+                .result(deleteSubuser)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 
@@ -69,8 +106,17 @@ public class UserController {
     @PreAuthorize("hasAuthority('Update Profile') or hasAnyRole('OWNER','SUBOWNER','ADMIN','TERTIARY')")
     public ResponseEntity<?> updateProfileDetail(@AuthenticationPrincipal User user, @RequestBody UserRegisterRequestDto userRegisterRequestDto) {
 
+        UserRegisterRequestDto updateProfile = userService.updateProfile(user, userRegisterRequestDto);
 
-        return ResponseEntity.ok(userService.updateProfile(user, userRegisterRequestDto));
+        ApiResponse<?> response= ApiResponse.<UserRegisterRequestDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("User profile updated Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(updateProfile)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 
@@ -114,24 +160,42 @@ public class UserController {
     }
 
 
-    @PutMapping(value = "/modify-expenses/{tId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/modify-expenses/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('Modify Expenses') or hasRole('OWNER')")
     public ResponseEntity<?> modifyTransaction(@AuthenticationPrincipal User user,
                                                @RequestPart("data") AddTransactionRequestDto addTransactionRequestDTO,
                                                @RequestPart(value = "file", required = false) MultipartFile file,
-                                               @PathVariable("tId") Long tId
+                                               @PathVariable("id") Long tId
     ) {
 
+        AddTransactionResponseDto modifyExpense= transactionService.modifyTransaction(user, addTransactionRequestDTO, file, tId);
 
-        return ResponseEntity.ok(transactionService.modifyTransaction(user, addTransactionRequestDTO, file, tId));
+        ApiResponse<?> response= ApiResponse.<AddTransactionResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("transaction modified successfully")
+                .timestamp(LocalDateTime.now())
+                .result(modifyExpense)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete-transaction/{tId}")
+    @DeleteMapping("/delete-transaction/{id}")
     @PreAuthorize("hasAuthority('Delete Expenses') or hasRole('OWNER')")
     public ResponseEntity<?> deleteTransaction(@AuthenticationPrincipal User user,
-                                               @PathVariable("tId") Long tId
+                                               @PathVariable("id") Long tId
     ) {
-        return ResponseEntity.ok(transactionService.deleteTransaction(user, tId));
+
+        DeleteTransactionResponseDTO deteTransaction= transactionService.deleteTransaction(user, tId);
+
+        ApiResponse<?> response= ApiResponse.<DeleteTransactionResponseDTO>builder()
+                .status(HttpStatus.OK.value())
+                .message("deleted transaction successfully")
+                .timestamp(LocalDateTime.now())
+                .result(deteTransaction)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
 
@@ -139,14 +203,32 @@ public class UserController {
     @PreAuthorize("hasAuthority('Deleted Expense List') or hasRole('OWNER')")
     public ResponseEntity<?> deletedTransactionList(@AuthenticationPrincipal User user) {
 
+        List<DeletedExpensesResponseDto> deletedTransactionList= transactionService.getDeletedList(user);
 
-        return ResponseEntity.ok(transactionService.getDeletedList(user));
+    ApiResponse<List<DeletedExpensesResponseDto>> response= ApiResponse.<List<DeletedExpensesResponseDto>>builder()
+            .status(HttpStatus.OK.value())
+            .message("fetched deleted transaction list successfully")
+            .timestamp(LocalDateTime.now())
+            .result(deletedTransactionList)
+            .error(null)
+            .build();
+    return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
 
     @PutMapping("/revive-transation/{id}")
-    public ResponseEntity<?> reviveTransaction(@AuthenticationPrincipal User user, @PathVariable("id") Long id) {
-        return ResponseEntity.ok(transactionService.reviveTransactionFromDeath(user, id));
+    public ResponseEntity<?> reviveTransaction(@AuthenticationPrincipal User user, @PathVariable("id") Long tId) {
+
+        ReviveTransactionResponseDto revivedTransaction= transactionService.reviveTransactionFromDeath(user, tId);
+        ApiResponse<?>response= ApiResponse.<ReviveTransactionResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("revived transaction successfully")
+                .timestamp(LocalDateTime.now())
+                .result(revivedTransaction)
+                .error(null)
+                .build();
+
+    return ResponseEntity.ok(response);
     }
 
 
@@ -218,6 +300,10 @@ public class UserController {
                 .build();
         return new ResponseEntity<>(response, HttpStatus.valueOf(200));
     }
+
+
+
+
 }
 
 
