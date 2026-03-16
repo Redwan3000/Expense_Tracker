@@ -3,6 +3,7 @@ package com.arits.expense_trancker.controller;
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
+import com.arits.expense_trancker.repository.BankAccountRepo;
 import com.arits.expense_trancker.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class UserController {
     private final UserService userService;
     private final TransactionService transactionService;
     private final AccountsService accountsService;
+    private final BankAccountRepo bankAccountRepo;
 
 
     @GetMapping("/user-info")
@@ -301,6 +303,23 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.valueOf(200));
     }
 
+    @PutMapping("/modify-bank-details/{id}")
+    @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<?>> modifyBankDetails(@AuthenticationPrincipal User user , @PathVariable("id") long id, @RequestBody ModifyBankAccountDetailsRequestDto modifyBankAccountDetailsRequestDto) {
+
+        ModifyBankAccountDetailsResponseDto modifyBankAccount = accountsService.modifyAccountDetails(user,id, modifyBankAccountDetailsRequestDto);
+
+        ApiResponse<?> response= ApiResponse.<ModifyBankAccountDetailsResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("modified bank details successfully")
+                .timestamp(LocalDateTime.now())
+                .result(modifyBankAccount)
+                .error(null)
+                .build();
+
+        return ResponseEntity.ok(response);
+
+    }
 
 
 

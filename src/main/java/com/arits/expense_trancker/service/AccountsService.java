@@ -9,8 +9,6 @@ import com.arits.expense_trancker.repository.MobileBankingRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-
 
 @Service
 @RequiredArgsConstructor
@@ -96,7 +94,7 @@ public class AccountsService {
 
         BankAccount bankAccount = bankAccountRepo.findByUser(user);
         CashAccount cashAccount = cashAccountRepo.findByUser(user).orElseThrow();
-        MobileBanking mobileBanking= mobileBankingRepo.findByUser(user);
+        MobileBanking mobileBanking = mobileBankingRepo.findByUser(user);
 
 
         return OverallBalanceDto.builder()
@@ -107,5 +105,28 @@ public class AccountsService {
                 .build();
 
 
+    }
+
+    public ModifyBankAccountDetailsResponseDto modifyAccountDetails(User user, long id, ModifyBankAccountDetailsRequestDto dto) {
+
+        BankAccount account = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
+
+        account.setAccountNumber(dto.getAccountNumber() == null ? account.getAccountNumber() : dto.getAccountNumber());
+        account.setAccountType(dto.getAccountNumber() == null ? BankAccountType.valueOf(account.getAccountType().toString()) : BankAccountType.valueOf(dto.getAccountType()));
+        account.setCurrency(dto.getAccountNumber() == null ? account.getCurrency() : currencyRepo.findByCurrencyName(dto.getCurrencyId()).orElseThrow(() -> new RuntimeException()));
+        account.setBankName(dto.getBankName() == null ? account.getBankName() : dto.getBankName());
+        account.setCurrentBalance(dto.getBalance() == null ? account.getCurrentBalance() : dto.getBalance());
+
+
+        bankAccountRepo.save(account);
+        return ModifyBankAccountDetailsResponseDto.builder()
+                .bankId(account.getId())
+                .accountNumber(account.getAccountNumber())
+                .currencyId(account.getCurrency().getCurrencyName())
+                .bankName(account.getBankName())
+                .bankBranch(account.getBankBranch())
+                .accountType(account.getAccountType().toString())
+                .balance(account.getCurrentBalance())
+                .build();
     }
 }
