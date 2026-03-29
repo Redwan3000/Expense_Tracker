@@ -2,8 +2,11 @@ package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor
@@ -11,6 +14,8 @@ import java.math.BigDecimal;
 @Builder
 @Getter
 @Setter
+@SQLDelete(sql= "update bank_account set is_deleted=true , deleted_at = NOW() where id= ?")
+@SQLRestriction("is_deleted=false")
 public class BankAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,5 +40,7 @@ public class BankAccount {
     @JoinColumn(name = "user_id",nullable = false)
     private User user;
 
+    private Boolean isDeleted;
+    private LocalDateTime deletedAt;
 
 }

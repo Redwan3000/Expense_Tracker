@@ -52,6 +52,7 @@ public class AuthService {
                     .password(passwordEncoder.encode(userRegisterRequestDto.getPassword()))
                     .username(userRegisterRequestDto.getUsername())
                     .parent(null)
+                    .isDeleted(false)
                     .usersPermissions(new HashSet<>())
                     .build());
 

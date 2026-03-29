@@ -1,4 +1,5 @@
 package com.arits.expense_trancker.repository;
+import com.arits.expense_trancker.entity.TransactionMethods;
 import com.arits.expense_trancker.entity.Transactions;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
@@ -31,4 +32,8 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
     @Transactional
     @Query(value = "update transactions set is_deleted = true, deleted_at = NOW() where transaction_id = :transaction_id", nativeQuery = true)
     void softDeleteTransactions(@Param("transaction_id") Long transaction_id);
+
+
+    List<Transactions> findByTransactionMethodsAndAccountId(TransactionMethods transactionMethods, Long accountId);
+
 }
