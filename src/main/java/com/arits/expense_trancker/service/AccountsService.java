@@ -175,4 +175,7 @@ public class AccountsService {
         return response;
 
     }
+
+    public AddBankAccountResponseDto deleteMobileBankingAccount(User user, long id) {
+    }
 }

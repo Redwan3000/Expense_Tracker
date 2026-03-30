@@ -101,7 +101,7 @@ public class AccountController {
 
     @DeleteMapping("/delete-bank-account/{id}")
     @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>>DeleteBankAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id){
+    public ResponseEntity<ApiResponse<?>> deleteBankAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id){
 
         AddBankAccountResponseDto deletedBankAccount = accountsService.deleteBankAccount(user, id);
 
@@ -116,7 +116,22 @@ public class AccountController {
 
     }
 
+    @DeleteMapping("/delete-mobile-bank-account/{id}")
+    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<?>>deleteMobileBankingAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id){
 
+        AddBankAccountResponseDto deletedBankAccount = accountsService.deleteMobileBankingAccount(user, id);
+
+        ApiResponse<?> response = ApiResponse.<AddBankAccountResponseDto>builder()
+                .status(HttpStatus.NO_CONTENT.value())
+                .message("bank account deleted sucessfully along with the transactions")
+                .timestamp(LocalDateTime.now())
+                .result(deletedBankAccount)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+
+    }
 
 
 }
