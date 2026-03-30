@@ -52,7 +52,7 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    public String getJwtHeader(HttpServletRequest request) {
+    public String getJwtToken(HttpServletRequest request) {
         String beararToken = request.getHeader("Authorization");
         if (beararToken != null && beararToken.startsWith("Bearer ")) {
             return beararToken.substring(7);

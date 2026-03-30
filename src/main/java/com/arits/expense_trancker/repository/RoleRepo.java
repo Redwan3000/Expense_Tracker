@@ -19,20 +19,4 @@ public interface RoleRepo extends JpaRepository<Role, Long> {
     Optional<Role>findByNameIncludingDeleted(@Param("name") String name);
 
 
-    @Modifying
-    @Transactional
-    @Query(value = "UPDATE roles_permissions SET is_deleted = true " +
-            "WHERE role_id = :roleId AND permission_id = :permissionId",
-            nativeQuery = true)
-    void softDeletePermissionFromRole(@Param("roleId") Long roleId, @Param("permissionId") Long permissionId);
-
-
-    @Modifying
-    @Transactional
-    @Query(value = "INSERT INTO roles_permissions (role_id, permission_id, is_deleted) " +
-            "VALUES (:roleId, :permissionId, false) " +
-            "ON CONFLICT (role_id, permission_id) DO UPDATE SET is_deleted = false",
-            nativeQuery = true)
-    void addPermissionToRoleSoftAware(@Param("roleId") Long roleId, @Param("permissionId") Long permissionId);
-
 }

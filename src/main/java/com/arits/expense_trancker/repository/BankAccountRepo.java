@@ -17,7 +17,7 @@ public interface BankAccountRepo extends JpaRepository<BankAccount,Long> {
 
     BankAccount findByUser(User user);
 
-    Optional<BankAccount> findByUserAndId(User user, Long bankAccountId);
+    Optional<BankAccount> findByUserAndId(User user, long id);
 
     @Modifying
     @Transactional
@@ -25,4 +25,5 @@ public interface BankAccountRepo extends JpaRepository<BankAccount,Long> {
     void softDeleteBankAccount(@Param("id") Long id);
 
 
+    Optional<BankAccount> findByUserAndIdAndIsDeletedFalse(User user, long id);
 }

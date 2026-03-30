@@ -44,8 +44,8 @@ public class TransactionService {
     }
 
 
-    private void updateBankBalance(User user, Long accountId, BigDecimal amount, boolean isIncome) {
-        BankAccount account = bankAccountRepo.findByUserAndId(user, accountId)
+    private void updateBankBalance(User user, long id, BigDecimal amount, boolean isIncome) {
+        BankAccount account = bankAccountRepo.findByUserAndId(user, id)
                 .orElseThrow(() -> new RuntimeException("Bank account not found."));
 
         account.setCurrentBalance(calculateNewBalance(account.getCurrentBalance(), amount, isIncome));

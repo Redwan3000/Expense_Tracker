@@ -3,6 +3,7 @@ package com.arits.expense_trancker.service;
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.*;
 import com.arits.expense_trancker.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -150,11 +151,13 @@ public class AccountsService {
                 .build();
     }
 
+    @Transactional
     public AddBankAccountResponseDto deleteBankAccount(User user, long id) {
 
         List<Transactions> deletedAccountTransactions= transactionRepo.findByTransactionMethodsAndAccountId(transactionMethodRepo.findByMethodId(2).orElseThrow(()->new RuntimeException("transaction method not found")),id);
 
-        BankAccount bankAccount = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
+
+        BankAccount bankAccount = bankAccountRepo.findByUserAndIdAndIsDeletedFalse(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
 
         AddBankAccountResponseDto response = AddBankAccountResponseDto.builder()
                 .id(bankAccount.getId())

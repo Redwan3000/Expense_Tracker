@@ -23,23 +23,7 @@ public class AccountController {
 
 
 
-    @PutMapping("/modify-mobile-banking-details/{id}")
-    @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>> modifyBankDetails(@AuthenticationPrincipal User user , @PathVariable("id") long id, @RequestBody ModifyBankAccountDetailsRequestDto modifyBankAccountDetailsRequestDto) {
 
-        ModifyBankAccountDetailsResponseDto modifyBankAccount = accountsService.modifyBankAccountDetails(user,id, modifyBankAccountDetailsRequestDto);
-
-        ApiResponse<?> response= ApiResponse.<ModifyBankAccountDetailsResponseDto>builder()
-                .status(HttpStatus.OK.value())
-                .message("modified bank details successfully")
-                .timestamp(LocalDateTime.now())
-                .result(modifyBankAccount)
-                .error(null)
-                .build();
-
-        return ResponseEntity.ok(response);
-
-    }
 
 
     @PutMapping("modify-bank-details/{id}")
