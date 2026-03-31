@@ -23,11 +23,11 @@ import java.util.stream.Collectors;
 public class PermissionsService {
 
 
-    public final permissionRepo permissionRepo;
-    public final roleRepo roleRepo;
-    public final userRepo userRepo;
+    public final PermissionRepo permissionRepo;
+    public final RoleRepo roleRepo;
+    public final UserRepo userRepo;
     public final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
-public final UsersPermissionsRepo usersPermissionsRepo;
+    public final UsersPermissionsRepo usersPermissionsRepo;
 
 
     public void permissionsSeeding(String name, String des) {
@@ -59,9 +59,8 @@ public final UsersPermissionsRepo usersPermissionsRepo;
         currentPermissions.forEach(permission -> {
 
             boolean status = permissionIds.contains(permission.getPermission().getPermissionId());
-
             permission.setDeleted(!status);
-
+            permission.setDeletedAt(!status ? LocalDateTime.now() : null);
 
         });
         Set<Long> oldPermissionId = currentPermissions.stream().map(r -> r.getPermission().getPermissionId()).collect(Collectors.toSet());
@@ -90,12 +89,15 @@ public final UsersPermissionsRepo usersPermissionsRepo;
 
             usersPermissions.stream()
                     .filter(up -> !permissionIds.contains(up.getPermission().getPermissionId()))
-                    .forEach(up -> up.setDeleted(true));
+                    .forEach(up -> {
+                        up.setDeleted(true);
+                        up.setDeletedAt(LocalDateTime.now());
+                    });
 
             usersPermissions.stream()
                     .filter(up -> permissionIds.contains(up.getPermission().getPermissionId()))
                     .forEach(up -> {up.setDeleted(false);
-                    up.setDeletedAt(null);
+                        up.setDeletedAt(null);
                     } );
 
             permissionIds.stream()

@@ -7,14 +7,15 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
+
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Getter
+@Setter
 @Table(name = "users_permissions")
-@SQLDelete(sql = "UPDATE users_permissions SET is_deleted = true WHERE id=?")
+@SQLDelete(sql = "UPDATE users_permissions SET is_deleted = true , deleted_at = NOW() WHERE id=?")
 @SQLRestriction("is_deleted = false")
 public class UsersPermissions {
 
@@ -31,11 +32,9 @@ public class UsersPermissions {
     @JoinColumn(name = "permission_id")
     private Permission permission;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
-    @Column(name = "is_deleted")
+    @Builder.Default
     private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
 
 
 }

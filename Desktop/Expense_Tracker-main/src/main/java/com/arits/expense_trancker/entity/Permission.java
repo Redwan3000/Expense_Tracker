@@ -5,16 +5,18 @@ import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@SQLDelete(sql = "UPDATE permission SET is_deleted = true WHERE permission_id=?")
+@Getter
+@Setter
+@SQLDelete(sql = "UPDATE permission SET is_deleted = true ,deleted_at=NOW() WHERE permission_id=?")
 @SQLRestriction("is_deleted = false")
 public class Permission {
 
@@ -38,5 +40,8 @@ public class Permission {
     private Set<UsersPermissions> usersPermissions = new HashSet<>();
 
 
+    @Builder.Default
     private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
+
 }

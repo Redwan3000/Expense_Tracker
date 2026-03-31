@@ -1,6 +1,5 @@
 package com.arits.expense_trancker.repository;
 
-import com.arits.expense_trancker.dto.SubuserListDto;
 import com.arits.expense_trancker.entity.Role;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
@@ -10,12 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface userRepo extends JpaRepository<User, Long> {
+public interface UserRepo extends JpaRepository<User, Long> {
 
 
     @Query("SELECT u FROM User u " +
@@ -38,6 +36,8 @@ public interface userRepo extends JpaRepository<User, Long> {
     @Query(value = "update users set is_deleted = true, deleted_at = NOW() where user_id = :user_id", nativeQuery = true)
     void softDeleteSubUsersId(@Param("user_id") Long user_id);
 
+
+
     @Query("select u from User u where lower(u.username)=lower(:keyword) or lower(u.firstName) =lower(:keyword) or lower(u.lastName)=lower(:keyword)  or lower(u.email)=lower(:keyword) ")
     List<User> getUserBySearch(@Param("keyword") String keyword);
 
@@ -57,5 +57,10 @@ public interface userRepo extends JpaRepository<User, Long> {
             "GROUP BY role_id)", nativeQuery = true)
     List<User> findOneSubUserPerRole(@Param("parentId") Long parentId);
 
+    @Query(value = "select * from users where is_deleted= true and user_id=:user_id", nativeQuery = true)
+    Optional<User> findUserFromSoftDelete(@Param("user_id") Long user_id);
+
+    @Query(value = "SELECT * FROM users WHERE is_deleted=true and parent_id = :parentId ", nativeQuery = true)
+    List<User> findSubUserByParentId(@Param("parentId") Long parentId);
 
 }

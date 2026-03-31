@@ -9,14 +9,15 @@ import org.hibernate.annotations.processing.SQL;
 
 import java.time.LocalDateTime;
 
+
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Getter
+@Setter
 @Table(name = "default_roles_permission")
-@SQLDelete(sql="update default_roles_permission set is_deleted=true where id=?")
+@SQLDelete(sql="update default_roles_permission set is_deleted=true ,deleted_at=NOW() where id=?")
 @SQLRestriction("is_deleted=false")
 public class RolesDefaultPermissions {
 
@@ -33,9 +34,7 @@ private Role role;
 @JoinColumn(name = "permission_id")
 private Permission permission;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
-@Column(name = "is_deleted")
+    @Builder.Default
     private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
 }

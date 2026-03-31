@@ -1,23 +1,21 @@
 package com.arits.expense_trancker.controller;
 
-import com.arits.expense_trancker.dto.SubuserListDto;
-import com.arits.expense_trancker.dto.UserDetailResponseDto;
-import com.arits.expense_trancker.dto.UserRegisterRequestDto;
-import com.arits.expense_trancker.dto.UserRegisterResponseDto;
+import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.User;
-import com.arits.expense_trancker.repository.genderRepo;
-import com.arits.expense_trancker.repository.roleRepo;
-import com.arits.expense_trancker.repository.userRepo;
-import com.arits.expense_trancker.service.UserService;
+import com.arits.expense_trancker.handler.ApiResponse;
+import com.arits.expense_trancker.repository.BankAccountRepo;
+import com.arits.expense_trancker.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.repository.cdi.Eager;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -28,55 +26,100 @@ public class UserController {
 
 
     private final UserService userService;
-    private final userRepo userRepo;
-    private final PasswordEncoder passwordEncoder;
-    private final genderRepo genderRepo;
-    private final roleRepo roleRepo;
 
 
     @GetMapping("/user-info")
     @PreAuthorize("hasAuthority('User Info') or hasAnyRole('OWNER','ADMIN')")
 
-    public ResponseEntity<UserDetailResponseDto> getCurrentUserDetails(@AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<ApiResponse<?>> getCurrentUserDetails(@AuthenticationPrincipal User currentUser) {
 
         UserDetailResponseDto userDetails = userService.getUserDetails(currentUser);
-        return ResponseEntity.ok(userDetails);
+
+        ApiResponse<UserDetailResponseDto> response = ApiResponse.<UserDetailResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("User info fetched")
+                .timestamp(LocalDateTime.now())
+                .result(userDetails)
+                .error(null)
+                .build();
+
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+
     }
 
 
     @GetMapping("/subusers-list")
-    @PreAuthorize("hasAuthority('Subuser List')")
-    public ResponseEntity<List<SubuserListDto>> getUserUserList(@AuthenticationPrincipal User currentUser) {
+    @PreAuthorize("hasAuthority('Subuser List') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<List<SubuserListDto>>> getUserUserList(@AuthenticationPrincipal User currentUser) {
 
         List<SubuserListDto> subusers = userService.getSubuserList(currentUser);
-        return ResponseEntity.ok(subusers);
+
+        ApiResponse<List<SubuserListDto>> responses = ApiResponse.<List<SubuserListDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Fetched user's subUsers list")
+                .timestamp(LocalDateTime.now())
+                .result(subusers)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(responses, HttpStatus.CREATED);
+
 
     }
 
     @PostMapping("/create-subuser")
     @PreAuthorize("hasAuthority('Create Subuser') or hasRole('OWNER')")
-    public ResponseEntity<UserRegisterResponseDto> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponse<?>> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
 
         UserRegisterResponseDto userRegisterResponseDto = userService.createSubUser(userRegisterRequestDto, user.getUserId());
-        return ResponseEntity.ok(userRegisterResponseDto);
+
+        ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("SubUser Created successfully")
+                .timestamp(LocalDateTime.now())
+                .result(userRegisterResponseDto)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
 
     @DeleteMapping("/delete-subUser/{id}")
     @PreAuthorize("hasAuthority('Delete Subusers') or hasRole('OWNER')")
-    public ResponseEntity<?> deleteSubUser(@AuthenticationPrincipal User user, @PathVariable Long id) {
-        userService.softDeleteSubUser(user, id);
-        return ResponseEntity.ok("SubUser and associated sub-users have been soft-deleted successfully.");
+    public ResponseEntity<ApiResponse<?>> deleteSubUser(@AuthenticationPrincipal User user, @PathVariable Long id) {
+        DeletedUserResponseDto deleteSubuser = userService.softDeleteSubUser(user, id);
+        ApiResponse<?> response = ApiResponse.<DeletedUserResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("SubUser deleted successfully")
+                .timestamp(LocalDateTime.now())
+                .result(deleteSubuser)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 
     @PutMapping("/update-Profile")
-@PreAuthorize("hasAuthority('Update Profile') or hasAnyRole('OWNER','SUBOWNER','ADMIN','TERTIARY')")
+    @PreAuthorize("hasAuthority('Update Profile') or hasAnyRole('OWNER','SUBOWNER','ADMIN','TERTIARY')")
     public ResponseEntity<?> updateProfileDetail(@AuthenticationPrincipal User user, @RequestBody UserRegisterRequestDto userRegisterRequestDto) {
 
+        UserRegisterRequestDto updateProfile = userService.updateProfile(user, userRegisterRequestDto);
 
-        return ResponseEntity.ok(userService.updateProfile(user, userRegisterRequestDto));
+        ApiResponse<?> response= ApiResponse.<UserRegisterRequestDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("User profile updated Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(updateProfile)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+
+
 
 }
 

@@ -2,14 +2,23 @@ package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
+@Table(name = "transactions")
+@SQLDelete(sql = "update transactions set is_deleted=true ,deleted_at=NOW() where transaction_id=?")
+@SQLRestriction("is_deleted = false")
 public class Transactions {
 
 
@@ -19,10 +28,14 @@ public class Transactions {
     private Long transactionId;
 
 
-    private double amount;
+    private BigDecimal amount;
     private String itemName;
     private String description;
     private LocalDate date;
+
+    @Builder.Default
+    private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
 
 
     @ManyToOne
@@ -37,7 +50,15 @@ public class Transactions {
     @JoinColumn(name = "transaction_methods", nullable = false)
     private TransactionMethods transactionMethods;
 
-    @OneToOne(mappedBy = "transactions")
-    private Invoice invoice;
+    private String invoicePath;
+
+    private Long accountId;
+
+//@PreRemove
+//    public void preRemove(){
+//       this.deletedAt= LocalDateTime.now();
+//        this.isDeleted= true;
+//    }
+
 
 }

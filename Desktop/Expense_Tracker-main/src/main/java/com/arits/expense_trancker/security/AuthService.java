@@ -1,15 +1,12 @@
 package com.arits.expense_trancker.security;
 
 
-import com.arits.expense_trancker.dto.UserLoginRequestDto;
-import com.arits.expense_trancker.dto.UserLoginResponseDto;
-import com.arits.expense_trancker.dto.UserRegisterRequestDto;
-import com.arits.expense_trancker.dto.UserRegisterResponseDto;
+import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.*;
 
-import com.arits.expense_trancker.repository.genderRepo;
-import com.arits.expense_trancker.repository.roleRepo;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.repository.GenderRepo;
+import com.arits.expense_trancker.repository.RoleRepo;
+import com.arits.expense_trancker.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,16 +16,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final userRepo userRepo;
-    private final genderRepo genderRepo;
-    private final roleRepo roleRepo;
+    private final UserRepo userRepo;
+    private final GenderRepo genderRepo;
+    private final RoleRepo roleRepo;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
@@ -39,6 +34,7 @@ public class AuthService {
         if (userRepo.findByUsername(userRegisterRequestDto.getUsername()).isPresent()) {
 
             throw new IllegalArgumentException("user already exist ,,,,please login");
+
         } else {
 
             Gender userGender = genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Invalid Gender"));
@@ -56,6 +52,7 @@ public class AuthService {
                     .password(passwordEncoder.encode(userRegisterRequestDto.getPassword()))
                     .username(userRegisterRequestDto.getUsername())
                     .parent(null)
+                    .isDeleted(false)
                     .usersPermissions(new HashSet<>())
                     .build());
 
@@ -69,6 +66,7 @@ public class AuthService {
 
             newUser.getUsersPermissions().addAll(defailtPermission);
             userRepo.save(newUser);
+
             return new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername());
         }
 

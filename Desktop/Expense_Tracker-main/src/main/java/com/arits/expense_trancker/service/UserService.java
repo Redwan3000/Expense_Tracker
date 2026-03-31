@@ -2,10 +2,7 @@ package com.arits.expense_trancker.service;
 
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.*;
-import com.arits.expense_trancker.repository.genderRepo;
-import com.arits.expense_trancker.repository.permissionRepo;
-import com.arits.expense_trancker.repository.roleRepo;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,10 +20,10 @@ import java.util.stream.Collectors;
 public class UserService {
 
 
-    private final userRepo userRepo;
-    private final roleRepo roleRepo;
-    private final permissionRepo permissionRepo;
-    private final genderRepo genderRepo;
+    private final UserRepo userRepo;
+    private final RoleRepo roleRepo;
+    private final PermissionRepo permissionRepo;
+    private final GenderRepo genderRepo;
     private final PasswordEncoder passwordEncoder;
 
 
@@ -44,7 +41,6 @@ public class UserService {
         response.setDob(currentUser.getDob());
         response.setGender(currentUser.getGender().getName());
         response.setRole(currentUser.getRole().getRoleName());
-
 
 
         return response;
@@ -75,7 +71,7 @@ public class UserService {
                     .build());
 
             Set<UsersPermissions> defaultPermission = userRole.getDefaultPermissions().stream()
-                    .map(rolesPermission-> UsersPermissions.builder()
+                    .map(rolesPermission -> UsersPermissions.builder()
                             .user(newUser)
                             .permission(rolesPermission.getPermission())
                             .isDeleted(false).build()).collect(Collectors.toSet());
@@ -84,13 +80,8 @@ public class UserService {
             userRepo.save(newUser);
             return ResponseEntity.ok(new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername()));
         }
-    return ResponseEntity.ok().build();
+        return ResponseEntity.ok().build();
     }
-
-
-
-
-
 
 
     public UserRegisterResponseDto createSubUser(UserRegisterRequestDto userRegisterRequestDto, Long userId) {
@@ -120,7 +111,7 @@ public class UserService {
 
 
             Set<UsersPermissions> defaultPermission = userRole.getDefaultPermissions().stream()
-                    .map(rolesPermission-> UsersPermissions.builder()
+                    .map(rolesPermission -> UsersPermissions.builder()
                             .user(newUser)
                             .permission(rolesPermission.getPermission())
                             .isDeleted(false).build()).collect(Collectors.toSet());
@@ -153,89 +144,88 @@ public class UserService {
 
     public List<SubuserListDto> getSubuserList(User currentUser) {
 
-      List<User> subusers= userRepo.getUserByParentId(currentUser);
-      return subusers.stream().map(n-> new SubuserListDto(n.getUsername(),n.getFirstName()+n.getLastName())).collect(Collectors.toList());
+        List<User> subusers = userRepo.getUserByParentId(currentUser);
+        return subusers.stream().map(n -> new SubuserListDto(n.getUsername(), n.getFirstName() + n.getLastName())).collect(Collectors.toList());
 
     }
 
 
-
-
-
     @Transactional
-    public void softDeleteUser(Long userId) {
+    public DeletedUserResponseDto softDeleteUser(Long userId) {
 
-        if (!userRepo.existsById(userId)) {
-            throw new RuntimeException("User not found");
-        }
+        User user= userRepo.findById(userId).orElseThrow(()->new RuntimeException("user not found"));
+
+        DeletedUserResponseDto deletedUser= DeletedUserResponseDto.builder()
+                .id(user.getUserId())
+                .username(user.getUsername())
+                .build();
 
         userRepo.softDeleteById(userId);
         userRepo.softDeleteSubUsers(userId);
 
-
-
+return deletedUser;
     }
-
-
 
 
     @Transactional
-    public void softDeleteSubUser(User user,Long userId) {
-        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(()-> new RuntimeException("current user not found"));
+    public DeletedUserResponseDto softDeleteSubUser(User user, Long userId) {
+        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(() -> new RuntimeException("current user not found"));
 
-        User subUser= userRepo.findById(userId).orElseThrow(()-> new RuntimeException("subuser not found"));
+        User subUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("subuser not found"));
 
-        if(subUser.getParent()==currentuser){
+        DeletedUserResponseDto deletedUser = DeletedUserResponseDto.builder()
+                .id(subUser.getUserId())
+                .username(subUser.getUsername())
+                .build();
+
+        if (subUser.getParent() == currentuser) {
 
             userRepo.softDeleteSubUsersId(subUser.getUserId());
 
+        } else {
+            throw new RuntimeException("subuser do not exist under your account");
         }
-        else {
-            throw  new RuntimeException("subuser do not exist under your account");
-        }
+
+        return deletedUser;
     }
 
 
-    public List<alluserListDto> getAllUsers() {
+    public List<AlluserListDto> getAllUsers() {
 
-        List<User>allUser= userRepo.findAll();
+        List<User> allUser = userRepo.findAll();
 
-        List<alluserListDto> users =allUser.stream().map(u->new alluserListDto(u.getUserId(), u.getUsername())).collect(Collectors.toList());
+        List<AlluserListDto> users = allUser.stream().map(u -> new AlluserListDto(u.getUserId(), u.getUsername())).collect(Collectors.toList());
         return users;
     }
 
 
+    public List<DeletedUsersListDto> getAllDeletedUsers() {
 
+        List<User> deletedUsers = userRepo.findAllDeletedUsers();
 
-        public List<DeletedUsersListDto> getAllDeletedUsers() {
-
-            List<User> deletedUsers = userRepo.findAllDeletedUsers();
-
-            if (deletedUsers.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            return deletedUsers.stream().filter(Objects::nonNull) .map(user -> {
-                DeletedUsersListDto dto = new DeletedUsersListDto();
-                dto.setId(user.getUserId());
-                dto.setUsername(user.getUsername());
-                dto.setDeletedAt(user.getDeletedAt());
-                return dto;
-            }).collect(Collectors.toList());
+        if (deletedUsers.isEmpty()) {
+            return Collections.emptyList();
         }
 
+        return deletedUsers.stream().filter(Objects::nonNull).map(user -> {
+            DeletedUsersListDto dto = new DeletedUsersListDto();
+            dto.setId(user.getUserId());
+            dto.setUsername(user.getUsername());
+            dto.setDeletedAt(user.getDeletedAt());
+            return dto;
+        }).collect(Collectors.toList());
+    }
 
 
+    public UserRegisterRequestDto updateProfile(User user, UserRegisterRequestDto userRegisterRequestDto) {
 
-    public UserRegisterRequestDto updateProfile(User user,UserRegisterRequestDto userRegisterRequestDto) {
-
-        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(()->new RuntimeException("user not found"));
+        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(() -> new RuntimeException("user not found"));
 
         currentuser.setFirstName(userRegisterRequestDto.getFirst_name());
         currentuser.setLastName(userRegisterRequestDto.getLast_name());
 
         currentuser.setDob(userRegisterRequestDto.getDob());
-        currentuser.setGender(genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(()->new RuntimeException("gender not found ")));
+        currentuser.setGender(genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("gender not found ")));
         currentuser.setPhone(userRegisterRequestDto.getPhone());
 
         currentuser.setPassword(passwordEncoder.encode(userRegisterRequestDto.getPassword()));
@@ -254,6 +244,23 @@ public class UserService {
 
 
     }
+
+    public RetriveUserResponseDto retriveUser(Long userId) {
+
+        User user = userRepo.findUserFromSoftDelete(userId).orElseThrow(() -> new RuntimeException("USER NOT FOUND IN SOFT DELETE"));
+        List<User> subusers = userRepo.findSubUserByParentId(userId);
+
+        user.setDeleted(false);
+        user.setDeletedAt(null);
+        subusers.forEach(p -> {
+            p.setDeleted(false);
+            p.setDeletedAt(null);
+        });
+        log.info("user and his subusers retrieved");
+        return new RetriveUserResponseDto(user.getUserId(), user.getUsername());
+    }
+
+
 }
 
 

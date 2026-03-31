@@ -13,11 +13,8 @@ import java.util.Optional;
 @Repository
 public interface RolesDefaultPermissionsRepo extends JpaRepository<RolesDefaultPermissions, Long> {
 
-@Query(value = "select * from default_roles_permission where role_id=:role_id and permission_id= :permission_id",nativeQuery = true)
-    Optional<RolesDefaultPermissions>findExistingPermission(@Param("role_id") long role_id, @Param("permission_id") long permission_id);
 
-
-    @Query(value = "select * from default_roles_permission where role_id=:role_id",nativeQuery = true)
+    @Query(value = "select * from default_roles_permission where role_id=:role_id", nativeQuery = true)
     List<RolesDefaultPermissions> findCurrentPermissionsByRoleId(@Param("role_id") Long role_id);
 
 

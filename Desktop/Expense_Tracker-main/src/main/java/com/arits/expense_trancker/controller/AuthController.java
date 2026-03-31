@@ -4,12 +4,14 @@ import com.arits.expense_trancker.dto.UserLoginRequestDto;
 import com.arits.expense_trancker.dto.UserLoginResponseDto;
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
 import com.arits.expense_trancker.dto.UserRegisterResponseDto;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.handler.ApiResponse;
 import com.arits.expense_trancker.security.AuthService;
-import com.arits.expense_trancker.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,20 +20,36 @@ public class AuthController {
 
 
     private final AuthService authService;
-    private final UserService userService;
-
-    private final userRepo userRepo;
 
     @PostMapping("/register")
-    public ResponseEntity<UserRegisterResponseDto> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {
+    public ResponseEntity<ApiResponse<?>> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {
+        UserRegisterResponseDto registers = authService.register(userRegisterRequestDto);
 
-        return ResponseEntity.ok(authService.register(userRegisterRequestDto));
+        ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("Registered Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(registers)
+                .error(null)
+                .build();
+        return ResponseEntity.ok(response);
     }
 
 
     @PostMapping("/login")
-    public ResponseEntity<UserLoginResponseDto> login(@RequestBody UserLoginRequestDto userLoginRequestDto) {
-        return ResponseEntity.ok(authService.login(userLoginRequestDto));
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody UserLoginRequestDto userLoginRequestDto) {
+
+        UserLoginResponseDto login = authService.login(userLoginRequestDto);
+
+        ApiResponse<?> response = ApiResponse.<UserLoginResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Logged in Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(login)
+                .error(null)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
 

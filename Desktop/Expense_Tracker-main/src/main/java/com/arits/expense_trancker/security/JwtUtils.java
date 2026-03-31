@@ -41,6 +41,7 @@ public class JwtUtils {
 
     }
 
+
     public String getUsernameFromToken(String token) {
 
         return Jwts.parser()
@@ -51,7 +52,7 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    public String getJwtHeader(HttpServletRequest request) {
+    public String getJwtToken(HttpServletRequest request) {
         String beararToken = request.getHeader("Authorization");
         if (beararToken != null && beararToken.startsWith("Bearer ")) {
             return beararToken.substring(7);
@@ -60,7 +61,6 @@ public class JwtUtils {
         }
 
     }
-
 
     public boolean validateJwtToken(String authToken) {
         try {

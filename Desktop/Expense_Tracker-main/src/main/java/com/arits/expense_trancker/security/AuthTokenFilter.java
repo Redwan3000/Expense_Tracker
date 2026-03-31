@@ -1,7 +1,7 @@
 package com.arits.expense_trancker.security;
 
 import com.arits.expense_trancker.entity.User;
-import com.arits.expense_trancker.repository.userRepo;
+import com.arits.expense_trancker.repository.UserRepo;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,15 +20,14 @@ import java.io.IOException;
 public class AuthTokenFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
-    private final userRepo userRepo;
-
+    private final UserRepo userRepo;
 
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         try {
-            String token = jwtUtils.getJwtHeader(request);
+            String token = jwtUtils.getJwtToken(request);
             if (token != null && jwtUtils.validateJwtToken(token)) {
                 String username = jwtUtils.getUsernameFromToken(token);
                 User user = userRepo.findByUsername(username).orElseThrow();

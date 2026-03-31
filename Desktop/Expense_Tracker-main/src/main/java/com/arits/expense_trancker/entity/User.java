@@ -15,18 +15,20 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+
 @Entity
-@Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Table(name = "users")
-@Builder
-@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE user_id=?")
+@SQLDelete(sql = "UPDATE users SET is_deleted = true ,deleted_at=NOW() WHERE user_id=?")
 @SQLRestriction("is_deleted = false")
 public class User implements UserDetails {
 
@@ -45,9 +47,12 @@ public class User implements UserDetails {
     private String phone;
     private String password;
     private LocalDate dob;
+
+    @Builder.Default
     private boolean isDeleted = false;
-    @Column(name = "deleted_at")
+
     private LocalDateTime deletedAt;
+
     @ManyToOne
     @JoinColumn(name = "gender_id")
     private Gender gender;
