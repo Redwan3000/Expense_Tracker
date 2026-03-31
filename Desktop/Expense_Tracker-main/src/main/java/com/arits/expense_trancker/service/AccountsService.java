@@ -109,6 +109,8 @@ public class AccountsService {
 
     }
 
+
+
     public ModifyBankAccountDetailsResponseDto modifyBankAccountDetails(User user, long id, ModifyBankAccountDetailsRequestDto dto) {
 
         BankAccount account = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
@@ -132,7 +134,10 @@ public class AccountsService {
                 .build();
     }
 
-    public ModifyMobileBankingDetailsResponseDto modifyMobileBankingAccountDetails(User user, long id, ModifyMobileBankingDetailsRequestDto Dto) {
+
+
+
+    public ModifyMobileBankingDetailsResponseDto modifyMobileBankingAccountDetails(User user, long id, ModifyBankAccountDetailsRequestsDTo Dto) {
 
         MobileBanking mobileBankAccount = mobileBankingRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("mobile banking account not found"));
 
@@ -154,7 +159,7 @@ public class AccountsService {
     @Transactional
     public AddBankAccountResponseDto deleteBankAccount(User user, long id) {
 
-        List<Transactions> deletedAccountTransactions= transactionRepo.findByTransactionMethodsAndAccountId(transactionMethodRepo.findByMethodId(2).orElseThrow(()->new RuntimeException("transaction method not found")),id);
+        List<Transactions> deletedAccountTransactions = transactionRepo.findByTransactionMethodsAndAccountId(transactionMethodRepo.findByMethodId(2).orElseThrow(() -> new RuntimeException("transaction method not found")), id);
 
 
         BankAccount bankAccount = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
@@ -169,12 +174,38 @@ public class AccountsService {
                 .currentBalance(bankAccount.getCurrentBalance())
                 .build();
 
-        deletedAccountTransactions.forEach(e->transactionRepo.softDeleteTransactions(e.getTransactionId()));
+        deletedAccountTransactions.forEach(e -> transactionRepo.softDeleteTransactions(e.getTransactionId()));
         bankAccountRepo.softDeleteBankAccount(bankAccount.getId());
 
         return response;
 
     }
 
+    @Transactional
+    public AddMobileBankingResponseDto deleteMobileBankingAccount(User user, long id) {
 
+        List<Transactions> deletedAccountTransactions = transactionRepo.findByTransactionMethodsAndAccountId(transactionMethodRepo.findByMethodId(2).orElseThrow(() -> new RuntimeException("transaction method not found")), id);
+
+
+        MobileBanking mobileBankingAccount = mobileBankingRepo.findByUserAndId(user, id).orElseThrow(()->new RuntimeException("mobile banking not found"));
+
+        AddMobileBankingResponseDto response = AddMobileBankingResponseDto.builder()
+                .id(mobileBankingAccount.getId())
+                .providerName(mobileBankingAccount.getProviderName())
+                .accountType(mobileBankingAccount.getAccountType().toString())
+                .phoneNumber(mobileBankingAccount.getPhoneNumber())
+                .currentBalance(mobileBankingAccount.getCurrentBalance())
+                .build();
+
+        deletedAccountTransactions.forEach(e -> transactionRepo.softDeleteTransactions(e.getTransactionId()));
+        mobileBankingRepo.softDeleteMobileBankingAccount(mobileBankingAccount.getId());
+
+        return response;
+    }
+
+    @Transactional
+    public AllAccountBalanceDto getAccountsBalance(User user) {
+
+return new AllAccountBalanceDto();
+    }
 }

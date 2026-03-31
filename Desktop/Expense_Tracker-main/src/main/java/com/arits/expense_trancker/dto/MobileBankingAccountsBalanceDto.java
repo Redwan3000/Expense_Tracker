@@ -1,8 +1,5 @@
 package com.arits.expense_trancker.dto;
 
-import com.arits.expense_trancker.entity.MobileBankingAccountType;
-import com.arits.expense_trancker.entity.User;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,16 +11,12 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ModifyMobileBankingDetailsRequestDto {
+public class MobileBankingAccountsBalanceDto {
 
-
+    private Long id;
     private String providerName;
-
-    private String accountType;
-
     private String phoneNumber;
-
-    private BigDecimal currentBalance;
-
+    private String accountType;
+    private BigDecimal balance;
 
 }

@@ -70,7 +70,7 @@ public class PermissionsController {
 
         ApiResponse<?> response = ApiResponse.<UpdatePermssionResponseDto>builder()
                 .status(HttpStatus.OK.value())
-                .message("modified roles permiossion successfully")
+                .message("modified subusers permiossion successfully")
                 .timestamp(LocalDateTime.now())
                 .result(updatePermission)
                 .error(null)
@@ -79,14 +79,14 @@ public class PermissionsController {
     }
 
 
-    @GetMapping("/modify-permissions")
+    @GetMapping("/all-permission-list/")
     @PreAuthorize("hasAuthority('see permission list') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> permissionList(@RequestBody PermissionRequestDto permissionRequestDto) {
         List<PermissionResponseDto> permissionList = permissionsService.permissionList(permissionRequestDto.getRoleId());
 
         ApiResponse<?> response = ApiResponse.<List<PermissionResponseDto>>builder()
                 .status(HttpStatus.OK.value())
-                .message("modified roles permiossion successfully")
+                .message("fetched permiossions list successfully")
                 .timestamp(LocalDateTime.now())
                 .result(permissionList)
                 .error(null)
@@ -95,12 +95,10 @@ public class PermissionsController {
     }
 
 
-    // Check your Controller for this:
     @GetMapping("/subuser-permission-list")
     @PreAuthorize("hasAuthority('See Subuser Permission List') or hasRole('ADMIN')")
     public ResponseEntity<?> permissionList(@AuthenticationPrincipal User user, @RequestBody PermissionRequestDto permissionRequestDto) {
         List<PermissionResponseDto> subUsersPermissions = permissionsService.subUsersPermission(user, permissionRequestDto);
-
 
         ApiResponse<?> response = ApiResponse.<List<PermissionResponseDto>>builder()
                 .status(HttpStatus.OK.value())

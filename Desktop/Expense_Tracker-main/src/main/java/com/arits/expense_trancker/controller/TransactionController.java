@@ -116,13 +116,13 @@ public class TransactionController {
         List<DeletedExpensesResponseDto> deletedTransactionList= transactionService.getDeletedList(user);
 
         ApiResponse<List<DeletedExpensesResponseDto>> response= ApiResponse.<List<DeletedExpensesResponseDto>>builder()
-                .status(HttpStatus.NO_CONTENT.value())
+                .status(HttpStatus.CREATED.value())
                 .message("fetched deleted transaction list successfully")
                 .timestamp(LocalDateTime.now())
                 .result(deletedTransactionList)
                 .error(null)
                 .build();
-        return new ResponseEntity<>(response,HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(response,HttpStatus.CREATED);
     }
 
 
