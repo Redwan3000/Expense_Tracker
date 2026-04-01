@@ -21,24 +21,24 @@ public class Notifications {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "notification_id")
-    private Long notifId;
+    private Long id;
 
-
-    @Column(name = "massages", nullable = false)
+    @Column(nullable = false)
     private String message;
-
-
-    @ManyToOne
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "status_id")
-    private NotificationStatus notificationStatus;
-
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "status_id", nullable = false)
+    private NotificationStatus notificationStatus;
+
+
 
 }

@@ -22,67 +22,66 @@ import java.util.List;
 public class AuthService {
 
     private final UserRepo userRepo;
-    private final GenderRepo genderRepo;
     private final RoleRepo roleRepo;
-    private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+    private final GenderRepo genderRepo;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
 
-    public UserRegisterResponseDto register(UserRegisterRequestDto userRegisterRequestDto) {
+    public UserRegisterResponseDto register(UserRegisterRequestDto requestDto) {
 
-        if (userRepo.findByUsername(userRegisterRequestDto.getUsername()).isPresent()) {
 
+        if (userRepo.findByUsername(requestDto.getUsername()).isPresent()) {
             throw new IllegalArgumentException("user already exist ,,,,please login");
-
-        } else {
-
-            Gender userGender = genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Invalid Gender"));
-            Role userRole = roleRepo.findByRoleName("OWNER").orElseThrow(() -> new RuntimeException("role not found"));
-
-
-            User newUser = userRepo.save(User.builder()
-                    .firstName(userRegisterRequestDto.getFirst_name())
-                    .lastName(userRegisterRequestDto.getLast_name())
-                    .email(userRegisterRequestDto.getEmail())
-                    .dob(userRegisterRequestDto.getDob())
-                    .role(userRole)
-                    .phone(userRegisterRequestDto.getPhone())
-                    .gender(userGender)
-                    .password(passwordEncoder.encode(userRegisterRequestDto.getPassword()))
-                    .username(userRegisterRequestDto.getUsername())
-                    .parent(null)
-                    .isDeleted(false)
-                    .usersPermissions(new HashSet<>())
-                    .build());
-
-            List<UsersPermissions> defailtPermission = userRole.getDefaultPermissions().stream()
-                    .map(rolesPermission -> UsersPermissions.builder()
-                            .user(newUser)
-                            .permission(rolesPermission.getPermission()) // Extract the actual Permission
-                            .isDeleted(false)
-                            .build())
-                    .toList();
-
-            newUser.getUsersPermissions().addAll(defailtPermission);
-            userRepo.save(newUser);
-
-            return new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername());
         }
+
+
+        Gender gender = genderRepo.findById(requestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
+        Role role = roleRepo.findByName("OWNER").orElseThrow(() -> new RuntimeException("Role does not exist"));
+
+
+        User newUser = userRepo.save(User.builder()
+                .firstName(requestDto.getFirst_name())
+                .lastName(requestDto.getLast_name())
+                .email(requestDto.getEmail())
+                .dob(requestDto.getDob())
+                .role(role)
+                .phone(requestDto.getPhone())
+                .gender(gender)
+                .password(passwordEncoder.encode(requestDto.getPassword()))
+                .username(requestDto.getUsername())
+                .build());
+
+        List<UsersPermissions> defaultPermissions = role.getRolesDefaultPermissions().stream()
+                .map(r -> UsersPermissions.builder()
+                        .user(newUser)
+                        .permission(r.getPermission())
+                        .build())
+                .toList();
+
+        newUser.getUsersPermissions().addAll(defaultPermissions);
+        userRepo.save(newUser);
+
+        return new UserRegisterResponseDto(newUser.getId(), newUser.getUsername());
 
     }
 
+
+
+
     public UserLoginResponseDto login(UserLoginRequestDto userLoginRequestDto) {
 
+        Authentication authentication = authenticationManager
+                .authenticate(
+                        new UsernamePasswordAuthenticationToken(userLoginRequestDto.getUsername(), userLoginRequestDto.getPassword())
+                );
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userLoginRequestDto.getUsername(), userLoginRequestDto.getPassword())
-        );
-        User loginUser = (User) authentication.getPrincipal();
+        User loginUser = (User)authentication.getPrincipal();
 
         String token = jwtUtils.createJwtToken(loginUser);
 
-        return new UserLoginResponseDto(token, loginUser.getUserId());
+        return new UserLoginResponseDto(token, loginUser.getId());
 
     }
 }

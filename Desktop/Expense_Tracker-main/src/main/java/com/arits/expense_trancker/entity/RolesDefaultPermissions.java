@@ -16,25 +16,29 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-@Table(name = "default_roles_permission")
-@SQLDelete(sql="update default_roles_permission set is_deleted=true ,deleted_at=NOW() where id=?")
+
+@SQLDelete(sql = "update roles_default_permissions set is_deleted=true ,deleted_at=NOW() where id=?")
 @SQLRestriction("is_deleted=false")
 public class RolesDefaultPermissions {
 
 
-@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
-@ManyToOne
-@JoinColumn(name = "role_id")
-private Role role;
-
-@ManyToOne
-@JoinColumn(name = "permission_id")
-private Permission permission;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+
+
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private Role role;
+
+    @ManyToOne
+    @JoinColumn(name = "permission_id")
+    private Permission permission;
+
+
 }

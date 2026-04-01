@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class PermissionsService {
+public class PermissionService {
 
 
     public final PermissionRepo permissionRepo;
@@ -58,12 +58,12 @@ public class PermissionsService {
 
         currentPermissions.forEach(permission -> {
 
-            boolean status = permissionIds.contains(permission.getPermission().getPermissionId());
+            boolean status = permissionIds.contains(permission.getPermission().getId());
             permission.setDeleted(!status);
             permission.setDeletedAt(!status ? LocalDateTime.now() : null);
 
         });
-        Set<Long> oldPermissionId = currentPermissions.stream().map(r -> r.getPermission().getPermissionId()).collect(Collectors.toSet());
+        Set<Long> oldPermissionId = currentPermissions.stream().map(r -> r.getPermission().getId()).collect(Collectors.toSet());
 
         permissionIds.stream().filter(id -> !oldPermissionId.contains(id)).forEach(newId -> {
 
@@ -80,22 +80,22 @@ public class PermissionsService {
 
         for (User user : allUsers) {
 
-            List<UsersPermissions> usersPermissions = usersPermissionsRepo.findPermissionsByUserId(user.getUserId());
+            List<UsersPermissions> usersPermissions = usersPermissionsRepo.findPermissionsByUserId(user.getId());
 
             Set<Long> usersPermissionsIds = usersPermissions.stream()
-                    .map(p -> p.getPermission().getPermissionId())
+                    .map(p -> p.getPermission().getId())
                     .collect(Collectors.toSet());
 
 
             usersPermissions.stream()
-                    .filter(up -> !permissionIds.contains(up.getPermission().getPermissionId()))
+                    .filter(up -> !permissionIds.contains(up.getPermission().getId()))
                     .forEach(up -> {
                         up.setDeleted(true);
                         up.setDeletedAt(LocalDateTime.now());
                     });
 
             usersPermissions.stream()
-                    .filter(up -> permissionIds.contains(up.getPermission().getPermissionId()))
+                    .filter(up -> permissionIds.contains(up.getPermission().getId()))
                     .forEach(up -> {up.setDeleted(false);
                         up.setDeletedAt(null);
                     } );
@@ -128,7 +128,7 @@ public class PermissionsService {
                     .stream()
                     .map(
                             Permission -> new PermissionResponseDto(
-                                    Permission.getPermissionId(),
+                                    Permission.getId(),
                                     Permission.getPermissionName(),
                                     Permission.getDescription()))
                     .collect(Collectors.toList());
@@ -137,7 +137,7 @@ public class PermissionsService {
                     .stream()
                     .map(
                             Permission -> new PermissionResponseDto(
-                                    Permission.getPermissionId(),
+                                    Permission.getId(),
                                     Permission.getPermissionName(),
                                     Permission.getDescription()))
                     .collect(Collectors.toList());
@@ -148,7 +148,7 @@ public class PermissionsService {
     @Transactional
     public UpdatePermssionResponseDto updatePermission(String roleName, List<Long> replacedTo, List<Long> replacedWith) {
 
-        Role role = roleRepo.findByRoleName(roleName)
+        Role role = roleRepo.findByName(roleName)
                 .orElseThrow(() -> new IllegalArgumentException("role does not exist"));
 
         Set<RolesDefaultPermissions> validateNewPermission = replacedWith.stream()
@@ -160,16 +160,16 @@ public class PermissionsService {
                         .build())
                 .collect(Collectors.toSet());
 
-        Set<RolesDefaultPermissions> validateOldPermission = role.getDefaultPermissions().stream()
-                .filter(rolePerm -> replacedTo.contains(rolePerm.getPermission().getPermissionId()))
+        Set<RolesDefaultPermissions> validateOldPermission = role.getRolesDefaultPermissions().stream()
+                .filter(rolePerm -> replacedTo.contains(rolePerm.getPermission().getId()))
                 .collect(Collectors.toSet());
 
 
-        role.getDefaultPermissions().removeAll(validateOldPermission);
-        role.getDefaultPermissions().addAll(validateNewPermission);
+        role.getRolesDefaultPermissions().removeAll(validateOldPermission);
+        role.getRolesDefaultPermissions().addAll(validateNewPermission);
 
-        List<Long> updatedPermissionIds = role.getDefaultPermissions().stream()
-                .map(p -> p.getPermission().getPermissionId())
+        List<Long> updatedPermissionIds = role.getRolesDefaultPermissions().stream()
+                .map(p -> p.getPermission().getId())
                 .collect(Collectors.toList());
 
         return new UpdatePermssionResponseDto(roleName, updatedPermissionIds);
@@ -178,7 +178,7 @@ public class PermissionsService {
 
     public SetPermissionDto setPermissionSubUser(User user, Long roleId, List<Long> permissionId) {
 
-        List<User> subUsers = userRepo.getUserByParentId(user);
+        List<User> subUsers = userRepo.getUserByParentId(user.getId());
 
         if (permissionId == null) {
             throw new IllegalArgumentException("Permission ID list must not be null");
@@ -189,7 +189,7 @@ public class PermissionsService {
         List<Permission> permissions = permissionRepo.findAllById(uniqueIds);
 
         List<User> subUsersToUpdate = subUsers.stream()
-                .filter(u -> u.getRole().getRoleId() == roleId)
+                .filter(u -> u.getRole().getId() == roleId)
                 .collect(Collectors.toList());
 
         if (subUsersToUpdate.isEmpty()) {
@@ -217,13 +217,13 @@ public class PermissionsService {
 
     public List<PermissionResponseDto> subUsersPermission(User user, PermissionRequestDto permissionRequestDto) {
 
-        List<User> subUser = userRepo.findOneSubUserPerRole(user.getUserId());
+        List<User> subUser = userRepo.findOneSubUserPerRole(user.getId());
 
-        User targetSubUser = subUser.stream().filter(u -> u.getRole().getRoleId() == permissionRequestDto.getRoleId()).findFirst().orElseThrow(() -> new RuntimeException("No subUser found"));
+        User targetSubUser = subUser.stream().filter(u -> u.getRole().getId() == permissionRequestDto.getId()).findFirst().orElseThrow(() -> new RuntimeException("No subUser found"));
 
 
-        return targetSubUser.getRole().getDefaultPermissions().stream().map(p -> new PermissionResponseDto(
-                p.getPermission().getPermissionId(),
+        return targetSubUser.getRole().getRolesDefaultPermissions().stream().map(p -> new PermissionResponseDto(
+                p.getPermission().getId(),
                 p.getPermission().getPermissionName(),
                 p.getPermission().getDescription())).collect(Collectors.toList());
 

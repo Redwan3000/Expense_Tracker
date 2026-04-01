@@ -1,6 +1,5 @@
 package com.arits.expense_trancker.dto;
 
-import com.arits.expense_trancker.entity.MobileBankingAccountType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

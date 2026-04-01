@@ -25,7 +25,7 @@ public class RoleService {
             }
         }else {
             roleRepo.save(Role.builder()
-                    .roleName(name)
+                    .name(name)
                     .isDeleted(false)
                     .build());
         }

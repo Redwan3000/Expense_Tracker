@@ -6,8 +6,8 @@ import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
-@Builder
 @NoArgsConstructor
+@Builder
 public class AddTransactionRequestDto {
     private String itemName;
     private BigDecimal amount;

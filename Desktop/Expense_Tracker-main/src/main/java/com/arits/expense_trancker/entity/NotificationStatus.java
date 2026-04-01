@@ -23,15 +23,11 @@ public class NotificationStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-
-    @Column(name = "status_name")
     private String statusName;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-
 
 
     @OneToMany(mappedBy = "notificationStatus")

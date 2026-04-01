@@ -15,15 +15,16 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-@SQLDelete(sql = "UPDATE gender SET is_deleted = true WHERE id=?")
+@Table(name = "payment_method")
+@SQLDelete(sql = "update payment_method set is_deleted=true ,deleted_at=NOW()where id=?")
 @SQLRestriction("is_deleted=false")
-public class Gender {
+
+public class PaymentMethod {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
     private String name;
 
     @Builder.Default
@@ -31,9 +32,23 @@ public class Gender {
     private LocalDateTime deletedAt;
 
 
-    @OneToMany(mappedBy = "gender")
-    private Set<User> users;
 
 
+
+    @OneToMany(mappedBy = "paymentMethod")
+    private Set<Transactions> transactions;
+
+    @OneToMany(mappedBy = "paymentMethod")
+    private Set<Bank> banks;
+
+    @OneToMany(mappedBy = "paymentMethod")
+    private Set<MobileBanking> mobileBankings;
+
+    @OneToMany(mappedBy = "paymentMethod")
+    private Set<CashWallet> cashWallets;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
 }

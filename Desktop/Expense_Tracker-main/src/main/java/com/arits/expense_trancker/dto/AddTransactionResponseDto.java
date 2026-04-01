@@ -5,9 +5,9 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class AddTransactionResponseDto {
     private long trxId;
     private String itemName;

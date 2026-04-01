@@ -26,23 +26,28 @@ public class MobileBanking {
     private Long id;
 
     private String providerName;
-
-    @Enumerated(EnumType.STRING)
-    private MobileBankingAccountType accountType;
-
-
     private String phoneNumber;
-
-    private BigDecimal currentBalance;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",nullable = false)
-    private User user;
+    private BigDecimal balance;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
 
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "currency_id", nullable = false)
+    private Currency currency;
+
+    @ManyToOne
+    @JoinColumn(name = "account_type_id", nullable = false)
+    private AccountType accountType;
+
+    @ManyToOne
+    @JoinColumn(name = "payment_method_id", nullable = false)
+    private PaymentMethod paymentMethod;
 
 }

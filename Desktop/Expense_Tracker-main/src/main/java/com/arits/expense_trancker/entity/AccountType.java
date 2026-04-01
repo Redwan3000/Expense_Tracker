@@ -8,33 +8,29 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-
 @Entity
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Getter
 @Setter
-@Table(name = "transaction_methods")
-@SQLDelete(sql = "update transaction_methods set is_deleted=true ,deleted_at=NOW()where tm_id=?")
+@SQLDelete(sql = "update account_type set is_deleted=true , deleted_at = NOW() where id= ?")
 @SQLRestriction("is_deleted=false")
-
-public class TransactionMethods {
-
+public class AccountType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "tm_id")
-    private Long tmId;
+    private long id;
+    private String name;
 
-    @Column(name = "method_name")
-    private String methodName;
+    @OneToMany(mappedBy = "accountType")
+    private Set<Bank> bankAccounts;
+
+    @OneToMany(mappedBy = "accountType")
+    private Set<MobileBanking> mobileBankingAccounts;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-
-    @OneToMany(mappedBy = "transactionMethods")
-    private Set<Transactions> transactions;
 
 }

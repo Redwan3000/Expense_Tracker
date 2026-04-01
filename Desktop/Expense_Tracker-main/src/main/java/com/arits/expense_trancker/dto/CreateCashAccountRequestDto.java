@@ -16,5 +16,5 @@ import java.math.BigDecimal;
 public class CreateCashAccountRequestDto {
 
     private String currency;
-    private BigDecimal currentBalance;
+    private BigDecimal balance;
 }

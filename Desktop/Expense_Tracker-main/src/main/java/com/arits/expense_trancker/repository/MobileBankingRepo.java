@@ -17,7 +17,6 @@ public interface MobileBankingRepo extends JpaRepository<MobileBanking,Long> {
 
     boolean existsByProviderNameAndPhoneNumber(String providerName, String providerName1);
 
-    MobileBanking findByUser(User user);
 
     Optional<MobileBanking> findByUserAndId(User user, Long mobileBankingId);
 

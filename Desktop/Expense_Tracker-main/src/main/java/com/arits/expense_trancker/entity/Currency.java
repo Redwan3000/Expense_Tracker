@@ -6,6 +6,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Builder
@@ -20,9 +21,20 @@ public class Currency {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String currencyName;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+    private String name;
+
+
+    @OneToMany(mappedBy = "currency")
+    private Set<Bank> bankAccounts;
+
+    @OneToMany(mappedBy = "currency")
+    private Set<MobileBanking> mobileBankingAccounts;
+
+    @OneToMany(mappedBy = "currency")
+    private Set<CashWallet> cashWallets;
+
 }

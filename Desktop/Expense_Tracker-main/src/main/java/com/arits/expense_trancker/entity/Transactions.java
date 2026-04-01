@@ -16,49 +16,39 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-@Table(name = "transactions")
-@SQLDelete(sql = "update transactions set is_deleted=true ,deleted_at=NOW() where transaction_id=?")
+@SQLDelete(sql = "update transactions set is_deleted=true ,deleted_at=NOW() where id=?")
 @SQLRestriction("is_deleted = false")
 public class Transactions {
 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "transaction_id")
-    private Long transactionId;
-
+    private Long id;
 
     private BigDecimal amount;
     private String itemName;
     private String description;
     private LocalDate date;
+    private String invoicePath;
+    private Long accountId;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
 
 
+
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "transaction_type", nullable = false)
+    @JoinColumn(name = "transaction_type_id", nullable = false)
     private TransactionType transactionType;
 
     @ManyToOne
-    @JoinColumn(name = "transaction_methods", nullable = false)
-    private TransactionMethods transactionMethods;
-
-    private String invoicePath;
-
-    private Long accountId;
-
-//@PreRemove
-//    public void preRemove(){
-//       this.deletedAt= LocalDateTime.now();
-//        this.isDeleted= true;
-//    }
+    @JoinColumn(name = "payment_method_id", nullable = false)
+    private PaymentMethod paymentMethod;
 
 
 }

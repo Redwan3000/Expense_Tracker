@@ -1,6 +1,6 @@
 package com.arits.expense_trancker.repository;
 
-import com.arits.expense_trancker.entity.BankAccount;
+import com.arits.expense_trancker.entity.Bank;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,17 +12,17 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface BankAccountRepo extends JpaRepository<BankAccount,Long> {
+public interface BankAccountRepo extends JpaRepository<Bank,Long> {
 
 
-    BankAccount findByUser(User user);
+    Bank findByUser(User user);
 
 
-    Optional<BankAccount> findByUserAndId(User user, long id);
+    Optional<Bank> findByUserAndId(User user, long id);
 
     @Modifying
     @Transactional
-    @Query(value = "update bank_account set is_deleted = true, deleted_at = NOW() where id = :id", nativeQuery = true)
+    @Query(value = "update bank set is_deleted = true, deleted_at = NOW() where id = :id", nativeQuery = true)
     void softDeleteBankAccount(@Param("id") Long id);
 
 }

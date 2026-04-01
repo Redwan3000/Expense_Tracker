@@ -14,34 +14,41 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Setter
-@SQLDelete(sql= "update bank_account set is_deleted=true , deleted_at = NOW() where id= ?")
+@SQLDelete(sql = "update bank set is_deleted=true , deleted_at = NOW() where id= ?")
 @SQLRestriction("is_deleted=false")
-public class BankAccount {
+public class Bank {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String bankName;
-    private String bankBranch;
-
     @Column(unique = true)
     private String accountNumber;
 
-    @Enumerated(EnumType.STRING)
-    private BankAccountType accountType;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "currency_id", nullable = false)
-    private Currency currency;
-
-    private BigDecimal currentBalance;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",nullable = false)
-    private User user;
+    private String bankName;
+    private String bankBranch;
+    private BigDecimal balance;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+
+
+    @ManyToOne
+    @JoinColumn(name = "currency_id", nullable = false)
+    private Currency currency;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "account_type_id", nullable = false)
+    private AccountType accountType;
+
+    @ManyToOne
+    @JoinColumn(name = "payment_method_id", nullable = false)
+    private PaymentMethod paymentMethod;
+
 
 }

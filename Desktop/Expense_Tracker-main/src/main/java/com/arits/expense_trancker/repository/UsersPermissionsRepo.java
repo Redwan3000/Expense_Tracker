@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface UsersPermissionsRepo extends JpaRepository<UsersPermissions, Long> {
 
-@Query(value = "select * from users_permissions where user_id=:user_id",nativeQuery = true)
-    List<UsersPermissions> findPermissionsByUserId(@Param("user_id") Long user_id);
+@Query(value = "select * from users_permissions where id=:id",nativeQuery = true)
+    List<UsersPermissions> findPermissionsByUserId(@Param("id") long id);
 }

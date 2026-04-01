@@ -16,30 +16,35 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-@SQLDelete(sql = "UPDATE role SET is_deleted = true ,deleted_at=NOW() WHERE role_id=?")
+@SQLDelete(sql = "UPDATE role SET is_deleted = true ,deleted_at=NOW() WHERE id=?")
 @SQLRestriction("is_deleted = false")
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long roleId;
-    @Column(name = "role_name")
-    private String roleName;
+    private long id;
+    private String name;
+
+    @Builder.Default
+    private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
+
 
     @OneToMany(mappedBy = "role")
     private Set<User> users;
 
     @Builder.Default
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<RolesDefaultPermissions> defaultPermissions = new HashSet<>();
+    private Set<RolesDefaultPermissions> rolesDefaultPermissions = new HashSet<>();
 
-    @Builder.Default
-    private boolean isDeleted = false;
-    private LocalDateTime deletedAt;
 
-    public Role(long roleId, String roleName) {
-        this.roleId = roleId;
-        this.roleName = roleName;
-    }
+
+
+
+
+//    public Role(long roleId, String roleName) {
+//        this.roleId = roleId;
+//        this.roleName = roleName;
+//    }
 
 }
