@@ -1,5 +1,5 @@
 package com.arits.expense_trancker.repository;
-import com.arits.expense_trancker.entity.TransactionMethods;
+import com.arits.expense_trancker.entity.PaymentMethod;
 import com.arits.expense_trancker.entity.Transactions;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
@@ -17,23 +17,22 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
 
 
     @Query("select t from Transactions t " +
-            "JOIN fetch t.user u join fetch t.transactionType tt join fetch t.transactionMethods tm " +
-            "where u.userId=:userId or u.parent.userId=:userId order by t.date DESC ")
+            "JOIN fetch t.user u join fetch t.transactionType tt join fetch t.paymentMethod tm " +
+            "where u.id=:userId or u.parent.id=:userId order by t.date DESC ")
     List<Transactions> findTransactionsByUserIDAndParentID(@Param("userId") Long userId);
 
-@Query(value = "select * from transactions where user_id=:userId and is_deleted=true and transaction_id=:tId",nativeQuery = true)
+@Query(value = "select * from transactions where user_id=:userId and is_deleted=true and id=:tId",nativeQuery = true)
     Optional<Transactions> findDeletedTransactionsByUserId(@Param("userId") Long userId ,@Param("tId") Long tId);
 
-    Optional<Transactions> findByUserAndTransactionId(User user, long id);
+    Optional<Transactions> findByUserAndId(User user, long id);
 
 
 
     @Modifying
     @Transactional
-    @Query(value = "update transactions set is_deleted = true, deleted_at = NOW() where transaction_id = :transaction_id", nativeQuery = true)
+    @Query(value = "update transactions set is_deleted = true, deleted_at = NOW() where id = :transaction_id", nativeQuery = true)
     void softDeleteTransactions(@Param("transaction_id") Long transaction_id);
 
 
-    List<Transactions> findByTransactionMethodsAndAccountId(TransactionMethods transactionMethods, Long accountId);
-
+    List<Transactions> findByPaymentMethodAndAccountId(PaymentMethod transactionMethodNotFound, long id);
 }

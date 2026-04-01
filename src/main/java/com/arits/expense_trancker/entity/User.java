@@ -4,7 +4,6 @@ package com.arits.expense_trancker.entity;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,9 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -28,13 +25,13 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Table(name = "users")
-@SQLDelete(sql = "UPDATE users SET is_deleted = true ,deleted_at=NOW() WHERE user_id=?")
+@SQLDelete(sql = "UPDATE users SET is_deleted = true,deleted_at=NOW() WHERE id=?")
 @SQLRestriction("is_deleted = false")
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long id;
 
     @Column(unique = true, nullable = false)
     private String username;
@@ -50,8 +47,8 @@ public class User implements UserDetails {
 
     @Builder.Default
     private boolean isDeleted = false;
-
     private LocalDateTime deletedAt;
+
 
     @ManyToOne
     @JoinColumn(name = "gender_id")
@@ -59,8 +56,8 @@ public class User implements UserDetails {
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
-    @Nullable
-    private User parent;
+    @Builder.Default
+    private User parent=null;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
@@ -69,11 +66,16 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user")
     private Set<Transactions> transactions;
 
+    @OneToMany(mappedBy = "user")
+    private Set<PaymentMethod> paymentMethods;
 
+    //    @Builder.Default
+//    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
+//    private Set<UsersPermissions> usersPermissions = new HashSet<>();
+//
     @Builder.Default
-    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UsersPermissions> usersPermissions = new HashSet<>();
-
 
 
     @Override
@@ -81,10 +83,10 @@ public class User implements UserDetails {
 
         Set<SimpleGrantedAuthority> authorities = new java.util.HashSet<>();
         if (role != null) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
         }
 
-        Set<SimpleGrantedAuthority> userPermissionAuth= this.usersPermissions.stream()
+        Set<SimpleGrantedAuthority> userPermissionAuth = this.usersPermissions.stream()
                 .map(usersPermissions -> new SimpleGrantedAuthority(usersPermissions.getPermission().getPermissionName()))
                 .collect(Collectors.toSet());
 

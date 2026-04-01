@@ -9,32 +9,28 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Getter
 @Setter
-@SQLDelete(sql = "UPDATE currency SET is_deleted = true , deleted_at = NOW() WHERE id=?")
-@SQLRestriction("is_deleted = false")
-public class Currency {
+@SQLDelete(sql = "update account_type set is_deleted=true , deleted_at = NOW() where id= ?")
+@SQLRestriction("is_deleted=false")
+public class AccountType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
+    private String name;
+
+    @OneToMany(mappedBy = "accountType")
+    private Set<Bank> bankAccounts;
+
+    @OneToMany(mappedBy = "accountType")
+    private Set<MobileBanking> mobileBankingAccounts;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-    private String name;
-
-
-    @OneToMany(mappedBy = "currency")
-    private Set<Bank> bankAccounts;
-
-    @OneToMany(mappedBy = "currency")
-    private Set<MobileBanking> mobileBankingAccounts;
-
-    @OneToMany(mappedBy = "currency")
-    private Set<CashWallet> cashWallets;
 
 }

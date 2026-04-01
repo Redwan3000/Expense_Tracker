@@ -15,9 +15,9 @@ public class CurrencyService {
 
     public Currency currencySeeding(String currencyName) {
 
-        return currencyRepo.findByCurrencyName(currencyName).orElseGet(() -> {
+        return currencyRepo.findByName(currencyName).orElseGet(() -> {
 
-            return currencyRepo.save(Currency.builder().currencyName(currencyName).build());
+            return currencyRepo.save(Currency.builder().name(currencyName).build());
 
         });
 

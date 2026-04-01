@@ -18,21 +18,16 @@ import java.time.LocalDateTime;
 public class AccountController {
 
 
-
     private final AccountsService accountsService;
-
-
-
-
 
 
     @PutMapping("modify-bank-details/{id}")
     @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
-    public ResponseEntity<?> modifyMobileBankingDetails(@AuthenticationPrincipal User user, @PathVariable("id") long id , @RequestBody ModifyMobileBankingDetailsRequestDto modifyMobileBankingDetailsRequestDto){
+    public ResponseEntity<?> modifyBankingDetails(@AuthenticationPrincipal User user, @PathVariable("id") long id, @RequestBody ModifyBankAccountDetailsRequestDto requestDTo) {
 
-        ModifyMobileBankingDetailsResponseDto modifyMobileBankAccount = accountsService.modifyMobileBankingAccountDetails(user,id, modifyMobileBankingDetailsRequestDto);
+        ModifyBankAccountDetailsResponseDto modifyMobileBankAccount = accountsService.modifyBankAccountDetails(user, id, requestDTo);
 
-        ApiResponse<?> response= ApiResponse.<ModifyMobileBankingDetailsResponseDto>builder()
+        ApiResponse<?> response = ApiResponse.<ModifyBankAccountDetailsResponseDto>builder()
                 .status(HttpStatus.OK.value())
                 .message("modified bank details successfully")
                 .timestamp(LocalDateTime.now())
@@ -44,6 +39,24 @@ public class AccountController {
 
     }
 
+
+    @PutMapping("modify-mobile-bank-details/{id}")
+    @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
+    public ResponseEntity<?> modifyMobileBankingDetails(@AuthenticationPrincipal User user, @PathVariable("id") long id, @RequestBody ModifyBankAccountDetailsRequestsDTo modifyMobileBankingDetailsRequestDto) {
+
+        ModifyMobileBankingDetailsResponseDto modifyMobileBankAccount = accountsService.modifyMobileBankingAccountDetails(user, id, modifyMobileBankingDetailsRequestDto);
+
+        ApiResponse<?> response = ApiResponse.<ModifyMobileBankingDetailsResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("modified bank details successfully")
+                .timestamp(LocalDateTime.now())
+                .result(modifyMobileBankAccount)
+                .error(null)
+                .build();
+
+        return ResponseEntity.ok(response);
+
+    }
 
 
     @PostMapping("/add-bank-account")
@@ -101,7 +114,7 @@ public class AccountController {
 
     @DeleteMapping("/delete-bank-account/{id}")
     @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>> deleteBankAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id){
+    public ResponseEntity<ApiResponse<?>> deleteBankAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id) {
 
         AddBankAccountResponseDto deletedBankAccount = accountsService.deleteBankAccount(user, id);
 
@@ -117,12 +130,12 @@ public class AccountController {
     }
 
     @DeleteMapping("/delete-mobile-bank-account/{id}")
-    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>>deleteMobileBankingAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id){
+    @PreAuthorize("hasAuthority('Delete Mobile Banking Account') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<?>> deleteMobileBankingAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id) {
 
-        AddBankAccountResponseDto deletedBankAccount = accountsService.deleteMobileBankingAccount(user, id);
+        AddMobileBankingResponseDto deletedBankAccount = accountsService.deleteMobileBankingAccount(user, id);
 
-        ApiResponse<?> response = ApiResponse.<AddBankAccountResponseDto>builder()
+        ApiResponse<?> response = ApiResponse.<AddMobileBankingResponseDto>builder()
                 .status(HttpStatus.NO_CONTENT.value())
                 .message("bank account deleted sucessfully along with the transactions")
                 .timestamp(LocalDateTime.now())
@@ -133,5 +146,20 @@ public class AccountController {
 
     }
 
+    @GetMapping("/get-all-accounts-balance")
+    @PreAuthorize("hasAuthority('Get Accounts Balance') or hasRole('OWNER')")
+public ResponseEntity<ApiResponse<?>> getAllAccountBalance(@AuthenticationPrincipal User user)
+    {
+        AllAccountBalanceDto allAccountBalance= accountsService.getAccountsBalance(user);
+
+        ApiResponse<?> response = ApiResponse.<AllAccountBalanceDto>builder()
+                .status(HttpStatus.NO_CONTENT.value())
+                .message("fatched all account balance")
+                .timestamp(LocalDateTime.now())
+                .result(allAccountBalance)
+                .error(null)
+                .build();
+        return  new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 }

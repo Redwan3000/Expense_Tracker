@@ -23,6 +23,10 @@ public class UsersPermissions {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Builder.Default
+    private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
+
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -32,11 +36,7 @@ public class UsersPermissions {
     @JoinColumn(name = "permission_id")
     private Permission permission;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 
-    @Column(name = "is_deleted")
-    private boolean isDeleted = false;
 
 
 }

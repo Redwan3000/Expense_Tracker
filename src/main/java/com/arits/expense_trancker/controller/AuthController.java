@@ -18,21 +18,22 @@ import java.time.LocalDateTime;
 @RequestMapping("/auth")
 public class AuthController {
 
-
     private final AuthService authService;
+
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<?>> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {
+
         UserRegisterResponseDto registers = authService.register(userRegisterRequestDto);
 
         ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
                 .status(HttpStatus.CREATED.value())
-                .message("Registered Successfully")
+                .message("Successfully Registered")
                 .timestamp(LocalDateTime.now())
                 .result(registers)
                 .error(null)
                 .build();
-        return ResponseEntity.ok(response);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
 
@@ -43,7 +44,7 @@ public class AuthController {
 
         ApiResponse<?> response = ApiResponse.<UserLoginResponseDto>builder()
                 .status(HttpStatus.OK.value())
-                .message("Logged in Successfully")
+                .message("Successfully Logged in")
                 .timestamp(LocalDateTime.now())
                 .result(login)
                 .error(null)

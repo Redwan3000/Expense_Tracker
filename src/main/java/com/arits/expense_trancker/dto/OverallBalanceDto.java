@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -13,8 +14,10 @@ import java.math.BigDecimal;
 @Builder
 public class OverallBalanceDto {
 
+private Long id;
 private BigDecimal totalBalance;
 private BigDecimal bankBalance;
 private  BigDecimal mobileBankingBalance;
 private BigDecimal cashBalance;
 }
+

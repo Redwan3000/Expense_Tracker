@@ -3,6 +3,8 @@ package com.arits.expense_trancker.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +16,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Table(name = "mobile_banking",uniqueConstraints = {@UniqueConstraint(columnNames = {"providerName", "phoneNumber"})})
+@SQLDelete(sql = "UPDATE mobile_banking SET is_deleted = true , deleted_at = NOW() WHERE id=?")
+@SQLRestriction("is_deleted = false")
 public class MobileBanking {
 
 
@@ -22,23 +26,28 @@ public class MobileBanking {
     private Long id;
 
     private String providerName;
-
-    @Enumerated(EnumType.STRING)
-    private MobileBankingAccountType accountType;
-
-
     private String phoneNumber;
+    private BigDecimal balance;
 
-    private BigDecimal currentBalance;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",nullable = false)
-    private User user;
-
-    private Boolean isDeleted;
+    @Builder.Default
+    private boolean isDeleted = false;
     private LocalDateTime deletedAt;
 
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "currency_id", nullable = false)
+    private Currency currency;
+
+    @ManyToOne
+    @JoinColumn(name = "account_type_id", nullable = false)
+    private AccountType accountType;
+
+    @ManyToOne
+    @JoinColumn(name = "payment_method_id", nullable = false)
+    private PaymentMethod paymentMethod;
 
 }

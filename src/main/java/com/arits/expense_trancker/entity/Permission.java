@@ -16,33 +16,35 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-@SQLDelete(sql = "UPDATE permission SET is_deleted = true ,deleted_at=NOW() WHERE permission_id=?")
+@SQLDelete(sql = "UPDATE permission SET is_deleted = true ,deleted_at=NOW() WHERE id=?")
 @SQLRestriction("is_deleted = false")
 public class Permission {
 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long permissionId;
+    private Long id;
 
-    @Column(name = "permission_name", unique = true)
+    @Column(unique = true)
     private String permissionName;
 
-    @Column(name = "description")
     private String description;
 
     @Builder.Default
+    private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
+
+
+
+    @Builder.Default
     @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<RolesDefaultPermissions> defaultPermissions = new HashSet<>();
+    private Set<RolesDefaultPermissions> rolesDefaultPermissions = new HashSet<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UsersPermissions> usersPermissions = new HashSet<>();
 
 
-    @Builder.Default
-    private boolean isDeleted = false;
 
-    private LocalDateTime deletedAt;
 
 }

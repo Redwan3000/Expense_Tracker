@@ -1,6 +1,5 @@
 package com.arits.expense_trancker.dto;
 
-import com.arits.expense_trancker.entity.MobileBankingAccountType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +21,4 @@ public class AddBankAccountResponseDto {
         private String currencyName;
         private BigDecimal currentBalance;
 
-
-        public AddBankAccountResponseDto(Long id, String providerName, MobileBankingAccountType accountType, String phoneNumber, BigDecimal currentBalance) {
-        }
 }

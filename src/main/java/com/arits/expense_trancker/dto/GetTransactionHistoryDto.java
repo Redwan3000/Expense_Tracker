@@ -6,9 +6,9 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class GetTransactionHistoryDto {
 
 private Long transactionId;

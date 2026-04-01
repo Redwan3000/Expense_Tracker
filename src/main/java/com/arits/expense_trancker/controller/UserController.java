@@ -27,10 +27,8 @@ public class UserController {
 
     private final UserService userService;
 
-
     @GetMapping("/user-info")
     @PreAuthorize("hasAuthority('User Info') or hasAnyRole('OWNER','ADMIN')")
-
     public ResponseEntity<ApiResponse<?>> getCurrentUserDetails(@AuthenticationPrincipal User currentUser) {
 
         UserDetailResponseDto userDetails = userService.getUserDetails(currentUser);
@@ -43,9 +41,7 @@ public class UserController {
                 .error(null)
                 .build();
 
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-
+        return ResponseEntity.ok(response);
 
     }
 
@@ -57,14 +53,13 @@ public class UserController {
         List<SubuserListDto> subusers = userService.getSubuserList(currentUser);
 
         ApiResponse<List<SubuserListDto>> responses = ApiResponse.<List<SubuserListDto>>builder()
-                .status(HttpStatus.OK.value())
-                .message("Fetched user's subUsers list")
+                .status(HttpStatus.CREATED.value())
+                .message("Fetched User's SubUsers List")
                 .timestamp(LocalDateTime.now())
                 .result(subusers)
                 .error(null)
                 .build();
         return new ResponseEntity<>(responses, HttpStatus.CREATED);
-
 
     }
 
@@ -72,7 +67,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('Create Subuser') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
 
-        UserRegisterResponseDto userRegisterResponseDto = userService.createSubUser(userRegisterRequestDto, user.getUserId());
+        UserRegisterResponseDto userRegisterResponseDto = userService.createSubUser(userRegisterRequestDto, user.getId());
 
         ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
                 .status(HttpStatus.CREATED.value())

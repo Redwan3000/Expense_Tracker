@@ -28,60 +28,61 @@ public class UserService {
 
 
     public UserDetailResponseDto getUserDetails(User currentUser) {
-        log.info("Fetching current user info : {}", currentUser.getUsername());
 
-        UserDetailResponseDto response = new UserDetailResponseDto();
-
-        response.setUser_id(currentUser.getUserId());
-        response.setUsername(currentUser.getUsername());
-        response.setFirst_name(currentUser.getFirstName());
-        response.setLast_name(currentUser.getLastName());
-        response.setEmail(currentUser.getEmail());
-        response.setPhone(currentUser.getPhone());
-        response.setDob(currentUser.getDob());
-        response.setGender(currentUser.getGender().getName());
-        response.setRole(currentUser.getRole().getRoleName());
-
-
-        return response;
+        return UserDetailResponseDto.builder()
+                .user_id(currentUser.getId())
+                .username(currentUser.getUsername())
+                .first_name(currentUser.getFirstName())
+                .last_name(currentUser.getLastName())
+                .email(currentUser.getEmail())
+                .phone(currentUser.getPhone())
+                .dob(currentUser.getDob())
+                .gender(currentUser.getGender().getName())
+                .role(currentUser.getRole().getName())
+                .build();
     }
 
 
-    public ResponseEntity<?> defaultAdmin(UserRegisterRequestDto userRegisterRequestDto) {
+    public UserRegisterResponseDto defaultAdmin(UserRegisterRequestDto requestDto) {
 
-        if (userRepo.findByUsername(userRegisterRequestDto.getUsername()).isPresent()) {
-            System.out.println("ADMIN present please login");
-        } else {
 
-            Gender userGender = genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Invalid Gender"));
-            Role userRole = roleRepo.findByRoleName("ADMIN").orElseThrow(() -> new RuntimeException("role not found"));
-
-            User newUser = userRepo.save(User.builder()
-                    .firstName(userRegisterRequestDto.getFirst_name())
-                    .lastName(userRegisterRequestDto.getLast_name())
-                    .email(userRegisterRequestDto.getEmail())
-                    .dob(userRegisterRequestDto.getDob())
-                    .role(userRole)
-                    .phone(userRegisterRequestDto.getPhone())
-                    .gender(userGender)
-                    .password(passwordEncoder.encode(userRegisterRequestDto.getPassword()))
-                    .username(userRegisterRequestDto.getUsername())
-                    .parent(null)
-                    .usersPermissions(new HashSet<>())
-                    .build());
-
-            Set<UsersPermissions> defaultPermission = userRole.getDefaultPermissions().stream()
-                    .map(rolesPermission -> UsersPermissions.builder()
-                            .user(newUser)
-                            .permission(rolesPermission.getPermission())
-                            .isDeleted(false).build()).collect(Collectors.toSet());
-
-            newUser.setUsersPermissions(defaultPermission);
-            userRepo.save(newUser);
-            return ResponseEntity.ok(new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername()));
+        if (userRepo.findByUsername(requestDto.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("user already exist ,,,,please login");
         }
-        return ResponseEntity.ok().build();
+
+
+        Gender gender = genderRepo.findById(requestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
+        Role role = roleRepo.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Role does not exist"));
+
+
+        User newUser = userRepo.save(User.builder()
+                .firstName(requestDto.getFirst_name())
+                .lastName(requestDto.getLast_name())
+                .email(requestDto.getEmail())
+                .dob(requestDto.getDob())
+                .role(role)
+                .phone(requestDto.getPhone())
+                .gender(gender)
+                .password(passwordEncoder.encode(requestDto.getPassword()))
+                .username(requestDto.getUsername())
+                .build());
+
+        List<UsersPermissions> defaultPermissions = role.getRolesDefaultPermissions().stream()
+                .map(r -> UsersPermissions.builder()
+                        .user(newUser)
+                        .permission(r.getPermission())
+                        .build())
+                .toList();
+
+        newUser.getUsersPermissions().addAll(defaultPermissions);
+        userRepo.save(newUser);
+
+        return new UserRegisterResponseDto(newUser.getId(), newUser.getUsername());
     }
+
+
+
+
 
 
     public UserRegisterResponseDto createSubUser(UserRegisterRequestDto userRegisterRequestDto, Long userId) {
@@ -92,7 +93,7 @@ public class UserService {
 
 
             Gender userGender = genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Invalid Gender"));
-            Role userRole = roleRepo.findById(userRegisterRequestDto.getRole_id()).orElse(roleRepo.findByRoleName("SUBOWNER").orElseThrow());
+            Role userRole = roleRepo.findById(userRegisterRequestDto.getRole_id()).orElse(roleRepo.findByName("SUBOWNER").orElseThrow());
             User currentUser = userRepo.findById(userId).orElseThrow();
 
             User newUser = userRepo.save(User.builder()
@@ -110,7 +111,7 @@ public class UserService {
                     .build());
 
 
-            Set<UsersPermissions> defaultPermission = userRole.getDefaultPermissions().stream()
+            Set<UsersPermissions> defaultPermission = userRole.getRolesDefaultPermissions().stream()
                     .map(rolesPermission -> UsersPermissions.builder()
                             .user(newUser)
                             .permission(rolesPermission.getPermission())
@@ -118,7 +119,7 @@ public class UserService {
 
             newUser.setUsersPermissions(defaultPermission);
             userRepo.save(newUser);
-            return new UserRegisterResponseDto(newUser.getUserId(), newUser.getUsername());
+            return new UserRegisterResponseDto(newUser.getId(), newUser.getUsername());
         }
 
 
@@ -144,7 +145,7 @@ public class UserService {
 
     public List<SubuserListDto> getSubuserList(User currentUser) {
 
-        List<User> subusers = userRepo.getUserByParentId(currentUser);
+        List<User> subusers = userRepo.getUserByParentId(currentUser.getId());
         return subusers.stream().map(n -> new SubuserListDto(n.getUsername(), n.getFirstName() + n.getLastName())).collect(Collectors.toList());
 
     }
@@ -156,7 +157,7 @@ public class UserService {
         User user= userRepo.findById(userId).orElseThrow(()->new RuntimeException("user not found"));
 
         DeletedUserResponseDto deletedUser= DeletedUserResponseDto.builder()
-                .id(user.getUserId())
+                .id(user.getId())
                 .username(user.getUsername())
                 .build();
 
@@ -169,18 +170,18 @@ return deletedUser;
 
     @Transactional
     public DeletedUserResponseDto softDeleteSubUser(User user, Long userId) {
-        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(() -> new RuntimeException("current user not found"));
+        User currentuser = userRepo.findById(user.getId()).orElseThrow(() -> new RuntimeException("current user not found"));
 
         User subUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("subuser not found"));
 
         DeletedUserResponseDto deletedUser = DeletedUserResponseDto.builder()
-                .id(subUser.getUserId())
+                .id(subUser.getId())
                 .username(subUser.getUsername())
                 .build();
 
         if (subUser.getParent() == currentuser) {
 
-            userRepo.softDeleteSubUsersId(subUser.getUserId());
+            userRepo.softDeleteSubUsersId(subUser.getId());
 
         } else {
             throw new RuntimeException("subuser do not exist under your account");
@@ -194,7 +195,7 @@ return deletedUser;
 
         List<User> allUser = userRepo.findAll();
 
-        List<AlluserListDto> users = allUser.stream().map(u -> new AlluserListDto(u.getUserId(), u.getUsername())).collect(Collectors.toList());
+        List<AlluserListDto> users = allUser.stream().map(u -> new AlluserListDto(u.getId(), u.getUsername())).collect(Collectors.toList());
         return users;
     }
 
@@ -209,7 +210,7 @@ return deletedUser;
 
         return deletedUsers.stream().filter(Objects::nonNull).map(user -> {
             DeletedUsersListDto dto = new DeletedUsersListDto();
-            dto.setId(user.getUserId());
+            dto.setId(user.getId());
             dto.setUsername(user.getUsername());
             dto.setDeletedAt(user.getDeletedAt());
             return dto;
@@ -219,7 +220,7 @@ return deletedUser;
 
     public UserRegisterRequestDto updateProfile(User user, UserRegisterRequestDto userRegisterRequestDto) {
 
-        User currentuser = userRepo.findById(user.getUserId()).orElseThrow(() -> new RuntimeException("user not found"));
+        User currentuser = userRepo.findById(user.getId()).orElseThrow(() -> new RuntimeException("user not found"));
 
         currentuser.setFirstName(userRegisterRequestDto.getFirst_name());
         currentuser.setLastName(userRegisterRequestDto.getLast_name());
@@ -238,7 +239,7 @@ return deletedUser;
                 .email(currentuser.getEmail())
                 .phone(currentuser.getPhone())
                 .dob(currentuser.getDob())
-                .gender_id(currentuser.getGender().getGenderid())
+                .gender_id(currentuser.getGender().getId())
                 .username(currentuser.getUsername())
                 .build();
 
@@ -257,7 +258,7 @@ return deletedUser;
             p.setDeletedAt(null);
         });
         log.info("user and his subusers retrieved");
-        return new RetriveUserResponseDto(user.getUserId(), user.getUsername());
+        return new RetriveUserResponseDto(user.getId(), user.getUsername());
     }
 
 

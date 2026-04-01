@@ -3,6 +3,7 @@ package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
@@ -14,29 +15,30 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-@SQLRestriction("is_deleted=false")
+@SQLDelete(sql = "UPDATE notifications SET is_deleted = true , deleted_at = NOW() WHERE id=?")
+@SQLRestriction("is_deleted = false")
 public class Notifications {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "notification_id")
-    private Long notifId;
+    private Long id;
 
-
-    @Column(name = "massages", nullable = false)
+    @Column(nullable = false)
     private String message;
-
-
-    @ManyToOne
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "status_id")
-    private NotificationStatus notificationStatus;
-
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "status_id", nullable = false)
+    private NotificationStatus notificationStatus;
+
+
 
 }

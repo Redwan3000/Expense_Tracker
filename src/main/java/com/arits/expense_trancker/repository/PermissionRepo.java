@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface PermissionRepo extends JpaRepository<Permission, Long> {
 
 
-    @Query("SELECT defaultPermission.permission FROM RolesDefaultPermissions defaultPermission WHERE defaultPermission.role.roleId = :roleId")
+    @Query("SELECT defaultPermission.permission FROM RolesDefaultPermissions defaultPermission WHERE defaultPermission.role.id = :roleId")
     List<Permission> findPermissionsByRoleId(@Param("roleId") Long roleId);
 
 
