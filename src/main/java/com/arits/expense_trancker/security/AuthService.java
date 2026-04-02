@@ -14,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -29,29 +28,104 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
 
-    public UserRegisterResponseDto register(UserRegisterRequestDto requestDto) {
+//    public UserRegisterResponseDto register(UserRegisterRequestDto requestDto) {
+//
+//
+//        if (userRepo.findByUsername(requestDto.getUsername()).isPresent()) {
+//            throw new IllegalArgumentException("user already exist ,,,,please login");
+//        }
+//
+//
+//        Gender gender = genderRepo.findById(requestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
+//        Role role = roleRepo.findByName("OWNER").orElseThrow(() -> new RuntimeException("Role does not exist"));
+//
+//
+//        User newUser = userRepo.save(User.builder()
+//                .firstName(requestDto.getFirst_name())
+//                .lastName(requestDto.getLast_name())
+//                .email(requestDto.getEmail())
+//                .dob(requestDto.getDob())
+//                .role(role)
+//                .phone(requestDto.getPhone())
+//                .gender(gender)
+//                .password(passwordEncoder.encode(requestDto.getPassword()))
+//                .username(requestDto.getUsername())
+//                .build());
+//
+//        List<UsersPermissions> defaultPermissions = role.getRolesDefaultPermissions().stream()
+//                .map(r -> UsersPermissions.builder()
+//                        .user(newUser)
+//                        .permission(r.getPermission())
+//                        .build())
+//                .toList();
+//
+//        newUser.getUsersPermissions().addAll(defaultPermissions);
+//        userRepo.save(newUser);
+//
+//        return new UserRegisterResponseDto(newUser.getId(), newUser.getUsername());
+//
+//    }
+
+
+    public UserRegisterResponseDto register(UserRegisterRequestDto requestDto, User currentUser) {
 
 
         if (userRepo.findByUsername(requestDto.getUsername()).isPresent()) {
+
             throw new IllegalArgumentException("user already exist ,,,,please login");
         }
 
+        Role role;
 
-        Gender gender = genderRepo.findById(requestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
-        Role role = roleRepo.findByName("OWNER").orElseThrow(() -> new RuntimeException("Role does not exist"));
+        Gender gender = genderRepo.findById(requestDto.getGenderId()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
+
+
+        if(currentUser== null && requestDto.getRoleId()==null){
+
+            role=roleRepo.findByName("OWNER").orElseThrow(()->
+                    new RuntimeException("ERROR Getting Owner Role"));
+
+        }
+        else if (requestDto.getRoleId()!=null && (currentUser==null ||currentUser.getRole().getName().contains("ADMIN")) ) {
+            role= roleRepo.findById(requestDto.getRoleId()).orElseThrow(()->
+                    new RuntimeException("Role Does Not Exist"));
+
+            if(role.getName().contains("SUBOWNER")|| role.getName().contains("TERTIARY")){
+                throw new IllegalArgumentException("ADMINS Cannot Create SUBOWNER Or TERTIARY Accounts");
+            }
+        }
+
+        else if (currentUser.getRole().getName().contains("OWNER")) {
+
+            if(requestDto.getRoleId()==null){
+                role = roleRepo.findById(2L).orElseThrow(()->new RuntimeException("Role Does Not Exist"));
+
+            }else if(requestDto.getRoleId()==2L || requestDto.getRoleId()==3L){
+                role= roleRepo.findById(requestDto.getRoleId()).orElseThrow(()->new RuntimeException("Role Does Not Exist"));
+            }else {
+                throw new RuntimeException("OWNERS Can Not Create OWNERS Or ADMINS Account");
+            }
+
+        }
+        else {
+            throw new IllegalArgumentException("You Cannot Register");
+        }
 
 
         User newUser = userRepo.save(User.builder()
-                .firstName(requestDto.getFirst_name())
-                .lastName(requestDto.getLast_name())
+                .firstName(requestDto.getFirstName())
+                .lastName(requestDto.getLastName())
                 .email(requestDto.getEmail())
                 .dob(requestDto.getDob())
                 .role(role)
                 .phone(requestDto.getPhone())
                 .gender(gender)
+                .parent((currentUser != null && currentUser.getRole().getName().contains("OWNER") ? currentUser : null))
                 .password(passwordEncoder.encode(requestDto.getPassword()))
                 .username(requestDto.getUsername())
                 .build());
+
+
 
         List<UsersPermissions> defaultPermissions = role.getRolesDefaultPermissions().stream()
                 .map(r -> UsersPermissions.builder()
@@ -70,6 +144,7 @@ public class AuthService {
 
 
 
+
     public UserLoginResponseDto login(UserLoginRequestDto userLoginRequestDto) {
 
         Authentication authentication = authenticationManager
@@ -77,7 +152,7 @@ public class AuthService {
                         new UsernamePasswordAuthenticationToken(userLoginRequestDto.getUsername(), userLoginRequestDto.getPassword())
                 );
 
-        User loginUser = (User)authentication.getPrincipal();
+        User loginUser = (User) authentication.getPrincipal();
 
         String token = jwtUtils.createJwtToken(loginUser);
 

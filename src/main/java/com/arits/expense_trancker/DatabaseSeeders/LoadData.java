@@ -1,6 +1,8 @@
 package com.arits.expense_trancker.DatabaseSeeders;
 
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
+import com.arits.expense_trancker.repository.UserRepo;
+import com.arits.expense_trancker.security.AuthService;
 import com.arits.expense_trancker.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +23,23 @@ public class LoadData implements CommandLineRunner {
 
     private final PermissionService permissionService;
 
-    private final UserService userService;
 
     private final TransactionService transactionService;
 
     private final CurrencyService currencyService;
+    private final AuthService authService;
+    private final UserRepo userRepo;
 
-    private  UserRegisterRequestDto userRegisterRequestDto = UserRegisterRequestDto.builder()
-            .first_name("ADMIN").last_name("ADMIN").email("admin@gmail.com").phone("123456789").password("ADMIN").dob(LocalDate.of(2001, 9, 5)).gender_id(1L).username("ADMIN").role_id(4L)
+    private final UserRegisterRequestDto userRegisterRequestDto = UserRegisterRequestDto.builder()
+            .firstName("ADMIN")
+            .lastName("ADMIN")
+            .email("admin@gmail.com")
+            .phone("123456789")
+            .password("ADMIN")
+            .dob(LocalDate.of(2001, 9, 5))
+            .genderId(1L)
+            .roleId(4L)
+            .username("ADMIN")
             .build();
 
 
@@ -58,9 +69,9 @@ public class LoadData implements CommandLineRunner {
         transactionService.tmSeedding("BANK");
         transactionService.tmSeedding("MOBILE_BANKING");
 
-
-        userService.defaultAdmin(userRegisterRequestDto);
-
+        if (userRepo.findByUsername("ADMIN").isEmpty()) {
+            authService.register(userRegisterRequestDto, null);
+        }
         permissionService.permissionsSeeding("Login", "users can login");
         permissionService.permissionsSeeding("Register", "can register as owner");
         permissionService.permissionsSeeding("User Info", "users can see his or her info");
@@ -81,10 +92,10 @@ public class LoadData implements CommandLineRunner {
         permissionService.permissionsSeeding("Modify Expenses", "Where any user can Modify Expenses");
         permissionService.permissionsSeeding("Delete Expenses", "Where any user can delete his Expenses");
 
-        permissionService.assigningPermissions(1l, List.of(3l, 4l));
-        permissionService.assigningPermissions(2l, List.of(3l, 15l, 16l, 17l, 18l));
-        permissionService.assigningPermissions(3l, List.of(3l, 15l));
-        permissionService.assigningPermissions(4l, List.of(3l, 4l, 5l, 7l, 9l, 10l, 11l, 13l, 14l, 15l, 16l, 17l, 18l));
+        permissionService.assigningPermissions(1L, List.of(3L, 4L));
+        permissionService.assigningPermissions(2L, List.of(3L, 15L, 16L, 17L, 18L));
+        permissionService.assigningPermissions(3L, List.of(3L, 15L));
+        permissionService.assigningPermissions(4L, List.of(3L, 4L, 5L, 7L, 9L, 10L, 11L, 13L, 14L, 15L, 16L, 17L, 18L));
 
 
     }

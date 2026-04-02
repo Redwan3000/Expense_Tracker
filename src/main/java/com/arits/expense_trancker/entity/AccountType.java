@@ -23,14 +23,17 @@ public class AccountType {
     private long id;
     private String name;
 
+    @Builder.Default
+    private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
+
+
+
     @OneToMany(mappedBy = "accountType")
     private Set<Bank> bankAccounts;
 
     @OneToMany(mappedBy = "accountType")
     private Set<MobileBanking> mobileBankingAccounts;
 
-    @Builder.Default
-    private boolean isDeleted = false;
-    private LocalDateTime deletedAt;
 
 }

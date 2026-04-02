@@ -1,6 +1,9 @@
 package com.arits.expense_trancker.repository;
 
+import com.arits.expense_trancker.dto.GetUserInfoDto;
 import com.arits.expense_trancker.dto.OverallBalanceDto;
+import com.arits.expense_trancker.dto.SubuserListDto;
+import com.arits.expense_trancker.dto.UserDetailResponseDto;
 import com.arits.expense_trancker.entity.Role;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
@@ -76,8 +79,27 @@ public interface UserRepo extends JpaRepository<User, Long> {
             "left join bank b on m.user_id = b.user_id " +
             "left join cash_wallet c on b.user_id = c.user_id " +
             "Where u.user_id=:id"
-
             ,nativeQuery = true)
 
     OverallBalanceDto fetchAccountsBalance(@Param("id")long id);
+
+    List<User> getUserByParent(User user);
+
+    @Query(value = "select username , concat(first_name,' ',last_name )as name from users where parent_id=:id",nativeQuery = true)
+    List<SubuserListDto> getSubusersListByParent(@Param("id") Long id);
+
+@Query(value = "select " +
+        "u.id as id," +
+        "u.username as username," +
+        " concat(u.first_name,' ',u.last_name)as name," +
+        " r.name as role ," +
+        " g.name as gender," +
+        "u.phone as phone," +
+        "u.dob as dateOfBirth"+
+        " from users u " +
+        "inner join role  r on u.role_id=r.id" +
+        "  inner join gender as g on u.gender_id=g.id " +
+        "where" +
+        " u.id=:id",nativeQuery = true)
+GetUserInfoDto getUserInfo(@Param("id") long id);
 }

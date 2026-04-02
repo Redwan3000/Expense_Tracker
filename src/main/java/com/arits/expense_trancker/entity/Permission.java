@@ -26,7 +26,7 @@ public class Permission {
     private Long id;
 
     @Column(unique = true)
-    private String permissionName;
+    private String name;
 
     private String description;
 

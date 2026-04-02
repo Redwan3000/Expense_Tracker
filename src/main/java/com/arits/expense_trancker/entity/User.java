@@ -87,7 +87,7 @@ public class User implements UserDetails {
         }
 
         Set<SimpleGrantedAuthority> userPermissionAuth = this.usersPermissions.stream()
-                .map(usersPermissions -> new SimpleGrantedAuthority(usersPermissions.getPermission().getPermissionName()))
+                .map(usersPermissions -> new SimpleGrantedAuthority(usersPermissions.getPermission().getName()))
                 .collect(Collectors.toSet());
 
         authorities.addAll(userPermissionAuth);

@@ -1,13 +1,16 @@
 package com.arits.expense_trancker.controller;
 
 import com.arits.expense_trancker.dto.*;
+import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
+import com.arits.expense_trancker.security.AuthService;
 import com.arits.expense_trancker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -20,6 +23,7 @@ import java.util.List;
 public class AdminController {
 
     private final UserService userService;
+    private final AuthService authService;
 
 
     @GetMapping("/get-user-info/{key}")
@@ -102,6 +106,23 @@ public class AdminController {
 
         return new ResponseEntity<>(response,HttpStatus.OK);
 
+    }
+
+    @PostMapping("/create-account")
+    @PreAuthorize("hasAuthority('Create Subuser') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<?>> createAccount(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
+
+        UserRegisterResponseDto userRegisterResponseDto = authService.register(userRegisterRequestDto, user);
+
+        ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("Account Created successfully")
+                .timestamp(LocalDateTime.now())
+                .result(userRegisterResponseDto)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
 }

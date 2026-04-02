@@ -11,20 +11,14 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserRegisterRequestDto {
-
-
-    private String firstName;
-    private String lastName;
+public class SubUsersRequestDTo {
+    private String first_name;
+    private String last_name;
     private String email;
     private String phone;
     private String password;
     private LocalDate dob;
-    private Long genderId;
+    private Long gender_id;
     private String username;
-
-    @Builder.Default
-    private Long roleId= null;
-
-
+    private Long role_id;
 }

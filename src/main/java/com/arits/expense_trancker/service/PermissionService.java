@@ -41,7 +41,7 @@ public class PermissionService {
         } else {
 
             permissionRepo.save(Permission.builder()
-                    .permissionName(name)
+                    .name(name)
                     .description(des)
                     .isDeleted(false)
                     .build());
@@ -118,31 +118,39 @@ public class PermissionService {
         return new SetPermissionDto(roleId, permissionIds);
     }
 
+//    public List<PermissionResponseDto> permissionList(Long roleId) {
+//
+//        List<Permission> permissionsByRole = permissionRepo.findPermissionsByRoleId(roleId);
+//
+//        if (!permissionsByRole.isEmpty()) {
+//
+//            return permissionRepo.findPermissionsByRoleId(roleId)
+//                    .stream()
+//                    .map(
+//                            Permission -> new PermissionResponseDto(
+//                                    Permission.getId(),
+//                                    Permission.getName(),
+//                                    Permission.getDescription()))
+//                    .collect(Collectors.toList());
+//        } else {
+//            return permissionRepo.findAll()
+//                    .stream()
+//                    .map(
+//                            Permission -> new PermissionResponseDto(
+//                                    Permission.getId(),
+//                                    Permission.getName(),
+//                                    Permission.getDescription()))
+//                    .collect(Collectors.toList());
+//        }
+//    }
+
+
     public List<PermissionResponseDto> permissionList(Long roleId) {
 
-        List<Permission> permissionsByRole = permissionRepo.findPermissionsByRoleId(roleId);
-
-        if (!permissionsByRole.isEmpty()) {
-
-            return permissionRepo.findPermissionsByRoleId(roleId)
-                    .stream()
-                    .map(
-                            Permission -> new PermissionResponseDto(
-                                    Permission.getId(),
-                                    Permission.getPermissionName(),
-                                    Permission.getDescription()))
-                    .collect(Collectors.toList());
-        } else {
-            return permissionRepo.findAll()
-                    .stream()
-                    .map(
-                            Permission -> new PermissionResponseDto(
-                                    Permission.getId(),
-                                    Permission.getPermissionName(),
-                                    Permission.getDescription()))
-                    .collect(Collectors.toList());
-        }
+        List<PermissionResponseDto> rolesPermission=rolesDefaultPermissionsRepo.findRolesPermission(roleId);
+        return rolesPermission;
     }
+
 
 
     @Transactional
@@ -224,7 +232,7 @@ public class PermissionService {
 
         return targetSubUser.getRole().getRolesDefaultPermissions().stream().map(p -> new PermissionResponseDto(
                 p.getPermission().getId(),
-                p.getPermission().getPermissionName(),
+                p.getPermission().getName(),
                 p.getPermission().getDescription())).collect(Collectors.toList());
 
 

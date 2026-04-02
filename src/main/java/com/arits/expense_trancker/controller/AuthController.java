@@ -4,11 +4,13 @@ import com.arits.expense_trancker.dto.UserLoginRequestDto;
 import com.arits.expense_trancker.dto.UserLoginResponseDto;
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
 import com.arits.expense_trancker.dto.UserRegisterResponseDto;
+import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
 import com.arits.expense_trancker.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -21,10 +23,10 @@ public class AuthController {
     private final AuthService authService;
 
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<?>> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {
+    @PostMapping("/users-register")
+    public ResponseEntity<ApiResponse<?>> UsersRegister(@AuthenticationPrincipal User user, @RequestBody UserRegisterRequestDto userRegisterRequestDto) {
 
-        UserRegisterResponseDto registers = authService.register(userRegisterRequestDto);
+        UserRegisterResponseDto registers = authService.register(userRegisterRequestDto, user);
 
         ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
                 .status(HttpStatus.CREATED.value())

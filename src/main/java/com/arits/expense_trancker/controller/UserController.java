@@ -4,6 +4,7 @@ import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
 import com.arits.expense_trancker.repository.BankAccountRepo;
+import com.arits.expense_trancker.security.AuthService;
 import com.arits.expense_trancker.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,14 +27,15 @@ public class UserController {
 
 
     private final UserService userService;
+    private final AuthService authService;
 
     @GetMapping("/user-info")
     @PreAuthorize("hasAuthority('User Info') or hasAnyRole('OWNER','ADMIN')")
     public ResponseEntity<ApiResponse<?>> getCurrentUserDetails(@AuthenticationPrincipal User currentUser) {
 
-        UserDetailResponseDto userDetails = userService.getUserDetails(currentUser);
+        GetUserInfoDto userDetails = userService.getUserDetails(currentUser);
 
-        ApiResponse<UserDetailResponseDto> response = ApiResponse.<UserDetailResponseDto>builder()
+        ApiResponse<?> response = ApiResponse.<GetUserInfoDto>builder()
                 .status(HttpStatus.OK.value())
                 .message("User info fetched")
                 .timestamp(LocalDateTime.now())
@@ -67,7 +69,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('Create Subuser') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
 
-        UserRegisterResponseDto userRegisterResponseDto = userService.createSubUser(userRegisterRequestDto, user.getId());
+        UserRegisterResponseDto userRegisterResponseDto = authService.register(userRegisterRequestDto, user);
 
         ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
                 .status(HttpStatus.CREATED.value())

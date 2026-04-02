@@ -6,7 +6,6 @@ import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +20,11 @@ public class UserService {
 
 
     private final UserRepo userRepo;
-    private final RoleRepo roleRepo;
-    private final PermissionRepo permissionRepo;
     private final GenderRepo genderRepo;
     private final PasswordEncoder passwordEncoder;
 
 
-    public UserDetailResponseDto getUserDetails(User currentUser) {
+    public UserDetailResponseDto getUserDetail(User currentUser) {
 
         return UserDetailResponseDto.builder()
                 .user_id(currentUser.getId())
@@ -41,92 +38,16 @@ public class UserService {
                 .role(currentUser.getRole().getName())
                 .build();
     }
+    public GetUserInfoDto getUserDetails(User currentUser) {
 
-
-    public UserRegisterResponseDto defaultAdmin(UserRegisterRequestDto requestDto) {
-
-
-        if (userRepo.findByUsername(requestDto.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("user already exist ,,,,please login");
-        }
-
-
-        Gender gender = genderRepo.findById(requestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
-        Role role = roleRepo.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Role does not exist"));
-
-
-        User newUser = userRepo.save(User.builder()
-                .firstName(requestDto.getFirst_name())
-                .lastName(requestDto.getLast_name())
-                .email(requestDto.getEmail())
-                .dob(requestDto.getDob())
-                .role(role)
-                .phone(requestDto.getPhone())
-                .gender(gender)
-                .password(passwordEncoder.encode(requestDto.getPassword()))
-                .username(requestDto.getUsername())
-                .build());
-
-        List<UsersPermissions> defaultPermissions = role.getRolesDefaultPermissions().stream()
-                .map(r -> UsersPermissions.builder()
-                        .user(newUser)
-                        .permission(r.getPermission())
-                        .build())
-                .toList();
-
-        newUser.getUsersPermissions().addAll(defaultPermissions);
-        userRepo.save(newUser);
-
-        return new UserRegisterResponseDto(newUser.getId(), newUser.getUsername());
+        GetUserInfoDto response= userRepo.getUserInfo(currentUser.getId());
+        return response;
     }
 
 
 
 
-
-
-    public UserRegisterResponseDto createSubUser(UserRegisterRequestDto userRegisterRequestDto, Long userId) {
-
-        if (userRepo.findByUsername(userRegisterRequestDto.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("user already exist ,,,,please login");
-        } else {
-
-
-            Gender userGender = genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("Invalid Gender"));
-            Role userRole = roleRepo.findById(userRegisterRequestDto.getRole_id()).orElse(roleRepo.findByName("SUBOWNER").orElseThrow());
-            User currentUser = userRepo.findById(userId).orElseThrow();
-
-            User newUser = userRepo.save(User.builder()
-                    .firstName(userRegisterRequestDto.getFirst_name())
-                    .lastName(userRegisterRequestDto.getLast_name())
-                    .email(userRegisterRequestDto.getEmail())
-                    .dob(userRegisterRequestDto.getDob())
-                    .role(userRole)
-                    .phone(userRegisterRequestDto.getPhone())
-                    .gender(userGender)
-                    .usersPermissions(new HashSet<>())
-                    .password(passwordEncoder.encode(userRegisterRequestDto.getPassword()))
-                    .username(userRegisterRequestDto.getUsername())
-                    .parent(currentUser)
-                    .build());
-
-
-            Set<UsersPermissions> defaultPermission = userRole.getRolesDefaultPermissions().stream()
-                    .map(rolesPermission -> UsersPermissions.builder()
-                            .user(newUser)
-                            .permission(rolesPermission.getPermission())
-                            .isDeleted(false).build()).collect(Collectors.toSet());
-
-            newUser.setUsersPermissions(defaultPermission);
-            userRepo.save(newUser);
-            return new UserRegisterResponseDto(newUser.getId(), newUser.getUsername());
-        }
-
-
-    }
-
-
-    @Transactional
+  @Transactional
     public List<UserDetailResponseDto> getUserBySearch(String keyword) {
 
 
@@ -138,15 +59,15 @@ public class UserService {
         }
 
 
-        return users.stream().map(this::getUserDetails).collect(Collectors.toList());
+        return users.stream().map(this::getUserDetail).collect(Collectors.toList());
 
 
     }
 
     public List<SubuserListDto> getSubuserList(User currentUser) {
 
-        List<User> subusers = userRepo.getUserByParentId(currentUser.getId());
-        return subusers.stream().map(n -> new SubuserListDto(n.getUsername(), n.getFirstName() + n.getLastName())).collect(Collectors.toList());
+        List<SubuserListDto> subUsersList = userRepo.getSubusersListByParent(currentUser.getId());
+        return subUsersList;
 
     }
 
@@ -222,11 +143,11 @@ return deletedUser;
 
         User currentuser = userRepo.findById(user.getId()).orElseThrow(() -> new RuntimeException("user not found"));
 
-        currentuser.setFirstName(userRegisterRequestDto.getFirst_name());
-        currentuser.setLastName(userRegisterRequestDto.getLast_name());
+        currentuser.setFirstName(userRegisterRequestDto.getFirstName());
+        currentuser.setLastName(userRegisterRequestDto.getLastName());
 
         currentuser.setDob(userRegisterRequestDto.getDob());
-        currentuser.setGender(genderRepo.findById(userRegisterRequestDto.getGender_id()).orElseThrow(() -> new RuntimeException("gender not found ")));
+        currentuser.setGender(genderRepo.findById(userRegisterRequestDto.getGenderId()).orElseThrow(() -> new RuntimeException("gender not found ")));
         currentuser.setPhone(userRegisterRequestDto.getPhone());
 
         currentuser.setPassword(passwordEncoder.encode(userRegisterRequestDto.getPassword()));
@@ -234,12 +155,12 @@ return deletedUser;
         userRepo.save(currentuser);
 
         return UserRegisterRequestDto.builder()
-                .first_name(currentuser.getFirstName())
-                .last_name(currentuser.getLastName())
+                .firstName(currentuser.getFirstName())
+                .lastName(currentuser.getLastName())
                 .email(currentuser.getEmail())
                 .phone(currentuser.getPhone())
                 .dob(currentuser.getDob())
-                .gender_id(currentuser.getGender().getId())
+                .genderId(currentuser.getGender().getId())
                 .username(currentuser.getUsername())
                 .build();
 

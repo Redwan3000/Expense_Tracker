@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SubuserListDto {
 
-
     private String username;
     private String Name;
 
