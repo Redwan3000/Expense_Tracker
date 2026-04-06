@@ -1,5 +1,6 @@
 package com.arits.expense_trancker.entity;
 
+import com.arits.expense_trancker.repository.PaymentMethodRepo;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 @SQLDelete(sql = "update bank set is_deleted=true , deleted_at = NOW() where id= ?")
 @SQLRestriction("is_deleted=false")
 public class Bank {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

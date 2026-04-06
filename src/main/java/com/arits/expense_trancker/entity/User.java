@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SoftDelete;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 @Table(name = "users")
 @SQLDelete(sql = "UPDATE users SET is_deleted = true,deleted_at=NOW() WHERE id=?")
 @SQLRestriction("is_deleted = false")
+
 public class User implements UserDetails {
 
     @Id

@@ -25,11 +25,11 @@ public class PermissionsController {
 
     private final PermissionService permissionService;
 
-    //modifying role's permission
+    //fixed
     @PostMapping("/modify-roles-permission")
     @PreAuthorize("hasAuthority('Modify Role Permission') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> addPermissionsToRole(@RequestBody SetPermissionDto setPermissionDto) {
-        SetPermissionDto setPermission = permissionService.assigningPermissions(setPermissionDto.getRoleId(),
+        SetPermissionDto setPermission = permissionService.setPermissionToRole(setPermissionDto.getRoleId(),
                 setPermissionDto.getPermissionId());
 
         ApiResponse<?> response = ApiResponse.<SetPermissionDto>builder()
@@ -42,11 +42,13 @@ public class PermissionsController {
         return ResponseEntity.ok(response);
     }
 
+
+//fixed
     @PostMapping("/modify-subusers-permission")
     @PreAuthorize("hasAuthority('Modify Subuser Permission') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> addPermissionsTosubUsersRole(@AuthenticationPrincipal User user, @RequestBody SetPermissionDto setPermissionDto) {
 
-        SetPermissionDto setPermission = permissionService.setPermissionSubUser(user, setPermissionDto.getRoleId(), setPermissionDto.getPermissionId());
+        SetPermissionDto setPermission = permissionService.setPermissionToSubusersRole(user, setPermissionDto);
 
         ApiResponse<?> response = ApiResponse.<SetPermissionDto>builder()
                 .status(HttpStatus.OK.value())
@@ -59,30 +61,30 @@ public class PermissionsController {
     }
 
 
-    //updating or replaceing roles permissions
-    @PutMapping("/modify-roles-permission")
-    @PreAuthorize("hasAuthority('Modify Subuser Permission')")
-    public ResponseEntity<ApiResponse<?>> updatePermissionsToRole(@RequestBody UpdatePermissionRequestDto updatePermissionRequestDto) {
-        UpdatePermssionResponseDto updatePermission = permissionService.updatePermission(
-                updatePermissionRequestDto.getRoleName(),
-                updatePermissionRequestDto.getReplacedTo(),
-                updatePermissionRequestDto.getReplacedWith());
+//    //updating or replaceing roles permissions
+//    @PutMapping("/modify-roles-permission")
+//    @PreAuthorize("hasAuthority('Modify Subuser Permission')")
+//    public ResponseEntity<ApiResponse<?>> updatePermissionsToRole(@RequestBody UpdatePermissionRequestDto updatePermissionRequestDto) {
+//        UpdatePermssionResponseDto updatePermission = permissionService.updatePermission(
+//                updatePermissionRequestDto.getRoleName(),
+//                updatePermissionRequestDto.getReplacedTo(),
+//                updatePermissionRequestDto.getReplacedWith());
+//
+//        ApiResponse<?> response = ApiResponse.<UpdatePermssionResponseDto>builder()
+//                .status(HttpStatus.OK.value())
+//                .message("modified subusers permiossion successfully")
+//                .timestamp(LocalDateTime.now())
+//                .result(updatePermission)
+//                .error(null)
+//                .build();
+//        return ResponseEntity.ok(response);
+//    }
 
-        ApiResponse<?> response = ApiResponse.<UpdatePermssionResponseDto>builder()
-                .status(HttpStatus.OK.value())
-                .message("modified subusers permiossion successfully")
-                .timestamp(LocalDateTime.now())
-                .result(updatePermission)
-                .error(null)
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
-
-    @GetMapping("/all-permission-list/")
+//fixed
+    @GetMapping("/all-permission-list/{id}")
     @PreAuthorize("hasAuthority('see permission list') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<?>> permissionList(@RequestBody PermissionRequestDto permissionRequestDto) {
-        List<PermissionResponseDto> permissionList = permissionService.permissionList(permissionRequestDto.getId());
+    public ResponseEntity<ApiResponse<?>> permissionList(@PathVariable("id") Long roleId) {
+        List<PermissionResponseDto> permissionList = permissionService.permissionList(roleId);
 
         ApiResponse<?> response = ApiResponse.<List<PermissionResponseDto>>builder()
                 .status(HttpStatus.OK.value())
@@ -94,11 +96,11 @@ public class PermissionsController {
         return ResponseEntity.ok(response);
     }
 
-
-    @GetMapping("/subuser-permission-list")
-    @PreAuthorize("hasAuthority('See Subuser Permission List') or hasRole('ADMIN')")
-    public ResponseEntity<?> permissionList(@AuthenticationPrincipal User user, @RequestBody PermissionRequestDto permissionRequestDto) {
-        List<PermissionResponseDto> subUsersPermissions = permissionService.subUsersPermission(user, permissionRequestDto);
+//fixed
+    @GetMapping("/subuser-permission-list/{id}")
+    @PreAuthorize("hasAuthority('See Subuser Permission List') or hasAnyRole('ADMIN','OWNER')")
+    public ResponseEntity<?> permissionList(@AuthenticationPrincipal User user,@PathVariable("id") Long roleId) {
+        List<PermissionResponseDto> subUsersPermissions = permissionService.subUsersPermission(user, roleId);
 
         ApiResponse<?> response = ApiResponse.<List<PermissionResponseDto>>builder()
                 .status(HttpStatus.OK.value())

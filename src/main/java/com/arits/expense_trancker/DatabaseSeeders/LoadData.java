@@ -1,6 +1,7 @@
 package com.arits.expense_trancker.DatabaseSeeders;
 
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
+import com.arits.expense_trancker.repository.AccountTypeRepo;
 import com.arits.expense_trancker.repository.UserRepo;
 import com.arits.expense_trancker.security.AuthService;
 import com.arits.expense_trancker.service.*;
@@ -41,6 +42,8 @@ public class LoadData implements CommandLineRunner {
             .roleId(4L)
             .username("ADMIN")
             .build();
+    private final AccountsService accountsService;
+    private final AccountTypeRepo accountTypeRepo;
 
 
     @Override
@@ -64,6 +67,12 @@ public class LoadData implements CommandLineRunner {
         currencyService.currencySeeding("EUR");
         currencyService.currencySeeding("USD");
 
+        accountsService.accountTypeSeeding("SAVINGS");
+        accountsService.accountTypeSeeding("AGENT");
+        accountsService.accountTypeSeeding("FDR");
+        accountsService.accountTypeSeeding("PERSONAL");
+        accountsService.accountTypeSeeding("DPS");
+        accountsService.accountTypeSeeding("VIP");
 
         transactionService.tmSeedding("CASH");
         transactionService.tmSeedding("BANK");
@@ -92,10 +101,10 @@ public class LoadData implements CommandLineRunner {
         permissionService.permissionsSeeding("Modify Expenses", "Where any user can Modify Expenses");
         permissionService.permissionsSeeding("Delete Expenses", "Where any user can delete his Expenses");
 
-        permissionService.assigningPermissions(1L, List.of(3L, 4L));
-        permissionService.assigningPermissions(2L, List.of(3L, 15L, 16L, 17L, 18L));
-        permissionService.assigningPermissions(3L, List.of(3L, 15L));
-        permissionService.assigningPermissions(4L, List.of(3L, 4L, 5L, 7L, 9L, 10L, 11L, 13L, 14L, 15L, 16L, 17L, 18L));
+        permissionService.setPermissionToRole(1L, List.of(3L, 4L));
+        permissionService.setPermissionToRole(2L, List.of(3L, 15L, 16L, 17L, 18L));
+        permissionService.setPermissionToRole(3L, List.of(3L, 15L));
+        permissionService.setPermissionToRole(4L, List.of(3L, 4L, 5L, 7L, 9L, 10L, 11L, 13L, 14L, 15L, 16L, 17L, 18L));
 
 
     }

@@ -14,7 +14,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-@Table(name = "users_permissions")
+@Table(name = "users_permissions",uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "permission_id"})
+})
+
 @SQLDelete(sql = "UPDATE users_permissions SET is_deleted = true , deleted_at = NOW() WHERE id=?")
 @SQLRestriction("is_deleted = false")
 public class UsersPermissions {
@@ -23,11 +26,6 @@ public class UsersPermissions {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Builder.Default
-    private boolean isDeleted = false;
-    private LocalDateTime deletedAt;
-
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -35,6 +33,14 @@ public class UsersPermissions {
     @ManyToOne
     @JoinColumn(name = "permission_id")
     private Permission permission;
+
+
+    @Builder.Default
+    private boolean isDeleted = false;
+    private LocalDateTime deletedAt;
+    @Builder.Default
+    private boolean wasLocked=false;
+
 
 
 
