@@ -5,13 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class DeletedUserResponseDto {
+import java.util.List;
 
-    private long id;
-    private String username;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AllUserGroupWiseResponseDto {
+
+private List<UserDetailResponseDto> owner;
+private List<UserDetailResponseDto> subowner;
 
 }

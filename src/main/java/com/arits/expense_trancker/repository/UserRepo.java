@@ -1,18 +1,17 @@
 package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.*;
-import com.arits.expense_trancker.entity.Role;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.text.html.Option;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -40,22 +39,26 @@ public interface UserRepo extends JpaRepository<User, Long> {
     void softDeleteSubUsersId(@Param("user_id") Long user_id);
 
 
-    @Query("select u from User u where lower(u.username)=lower(:keyword) or lower(u.firstName) =lower(:keyword) or lower(u.lastName)=lower(:keyword)  or lower(u.email)=lower(:keyword) ")
-    List<User> getUserBySearch(@Param("keyword") String keyword);
-
-    @Query(value = "select u.username, u.first_name, u.last_name, r.role_name from users u inner join role r On u.role_id= r.role_id where u.parent_id=:userId", nativeQuery = true)
-    List<User> getUserByParentId(@Param("userId") Long userId);
+    @Query(value = "select u.id as userId, " +
+            "u.username as username," +
+            "u.first_name as firstName, " +
+            "u.last_name as lastName, " +
+            "u.email as email, " +
+            "u.phone as phone, " +
+            "u.dob as dob," +
+            "u.parent_id as parentId," +
+            "g.name as gender, " +
+            "r.name as role  " +
+            " from users u " +
+            "left join gender g on u.gender_id= g.id " +
+            "left join role r on u.role_id= r.id " +
+            "where lower(u.username)=lower(:keyword) or lower(u.first_name) =lower(:keyword) or lower(u.last_name)=lower(:keyword)  or lower(u.email)=lower(:keyword) or lower(r.name)=lower(:keyword)", nativeQuery = true)
+    Optional<List<UserDetailResponseDto>> getUserByKeyword(@Param("keyword") String keyword);
 
 
     @Query(value = "select * from users where is_deleted = true", nativeQuery = true)
     List<User> findAllDeletedUsers();
 
-
-    @Query(value = "SELECT * FROM users WHERE id IN (" +
-            "SELECT MIN(id) FROM users " +
-            "WHERE parent_id = :parentId " +
-            "GROUP BY role_id)", nativeQuery = true)
-    List<User> findOneSubUserPerRole(@Param("parentId") Long parentId);
 
     @Query(value = "select * from users where is_deleted= true and id=:user_id", nativeQuery = true)
     Optional<User> findUserFromSoftDelete(@Param("user_id") Long user_id);
@@ -108,7 +111,25 @@ public interface UserRepo extends JpaRepository<User, Long> {
             "from users u where u.role_id=:roleId", nativeQuery = true)
     List<Long> findUsersIdByRoleId(@Param("roleId") Long roleId);
 
-    @Query(value = "select  u.id " +
-            "from users u where u.role_id=:roleId and u.parent_id=:parentId", nativeQuery = true)
-    List<Long> findSubUserByParentIdAndRoleId(@Param("parentId") Long parentId, @Param("roleId") Long roleId);
+
+    @Query(value = "select  * " +
+            "from users u " +
+            "where u.parent_id=:id and u.id=:subUserId ", nativeQuery = true)
+    Optional<User> findByParentIdAndUserId(@Param("id") Long id, @Param("subUserId") Long subUserId);
+
+
+    @Query(value = "select u.id as userId, " +
+            "u.username as username," +
+            "u.first_name as firstName, " +
+            "u.last_name as lastName, " +
+            "u.email as email, " +
+            "u.phone as phone, " +
+            "u.dob as dob," +
+            "u.parent_id as parentId," +
+            "g.name as gender, " +
+            "r.name as role  " +
+            " from users u " +
+            "left join gender g on u.gender_id= g.id " +
+            "left join role r on u.role_id= r.id ",nativeQuery = true)
+    List<UserDetailResponseDto> getAllUsersDetail();
 }

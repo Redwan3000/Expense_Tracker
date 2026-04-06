@@ -25,13 +25,12 @@ public class AdminController {
     private final UserService userService;
     private final AuthService authService;
 
-
+//fixed
     @GetMapping("/get-user-info/{key}")
     @PreAuthorize("hasAuthority('Get Any User') or hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<?>> getUserInfo(@PathVariable("key") String keyword) {
 
-        List<UserDetailResponseDto> userDetailResponseDtos = userService.getUserBySearch(keyword);
-
+        List<UserDetailResponseDto> userDetailResponseDtos = userService.getAnyUserBySearch(keyword);
 
         ApiResponse<List<UserDetailResponseDto>> response= ApiResponse.<List<UserDetailResponseDto>>builder()
                 .status(HttpStatus.OK.value())
@@ -41,33 +40,34 @@ public class AdminController {
                 .error(null)
                 .build();
 
-        return new ResponseEntity<>(response,HttpStatus.OK);
+        return ResponseEntity.ok(response);
 
     }
 
 
+//fixed
     @DeleteMapping("/delete-user/{id}")
     @PreAuthorize("hasAuthority('Delete Users') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        DeletedUserResponseDto deletedUser= userService.softDeleteUser(id);
-        ApiResponse<?> response= ApiResponse.<DeletedUserResponseDto>builder()
-                .status(HttpStatus.OK.value())
+        softDeletedUserResponseDto deletedUser= userService.softDeleteUser(id);
+        ApiResponse<?> response= ApiResponse.<softDeletedUserResponseDto>builder()
+                .status(HttpStatus.NO_CONTENT.value())
                 .message("User deleted successfully")
                 .timestamp(LocalDateTime.now())
                 .result(deletedUser)
                 .error(null)
                 .build();
 
-        return new ResponseEntity<>(response,HttpStatus.OK);
+        return new ResponseEntity<>(response,HttpStatus.NO_CONTENT);
     }
 
-
-    @GetMapping("/get-users-list")
+//
+    @GetMapping("/get-users-list-group-wise")
     @PreAuthorize("hasAuthority('Get Users List') or hasRole('ADMIN')")
     public ResponseEntity<?> getALlUser() {
-        List<AlluserListDto> usersList= userService.getAllUsers();
+        List<AllUserGroupWiseResponseDto> usersList= userService.getAllUsers();
 
-        ApiResponse<List<AlluserListDto>> response= ApiResponse.<List<AlluserListDto>>builder()
+        ApiResponse<List<AllUserGroupWiseResponseDto>> response= ApiResponse.<List<AllUserGroupWiseResponseDto>>builder()
                 .status(HttpStatus.OK.value())
                 .message("fateched all users list successfully")
                 .timestamp(LocalDateTime.now())

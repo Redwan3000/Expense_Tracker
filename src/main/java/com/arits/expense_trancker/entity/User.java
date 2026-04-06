@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 @Table(name = "users")
 @SQLDelete(sql = "UPDATE users SET is_deleted = true,deleted_at=NOW() WHERE id=?")
 @SQLRestriction("is_deleted = false")
-
 public class User implements UserDetails {
 
     @Id

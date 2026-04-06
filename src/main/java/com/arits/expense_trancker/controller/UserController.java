@@ -3,18 +3,15 @@ package com.arits.expense_trancker.controller;
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
-import com.arits.expense_trancker.repository.BankAccountRepo;
 import com.arits.expense_trancker.security.AuthService;
 import com.arits.expense_trancker.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,13 +26,15 @@ public class UserController {
     private final UserService userService;
     private final AuthService authService;
 
+
+//    fixed
     @GetMapping("/user-info")
     @PreAuthorize("hasAuthority('User Info') or hasAnyRole('OWNER','ADMIN')")
     public ResponseEntity<ApiResponse<?>> getCurrentUserDetails(@AuthenticationPrincipal User currentUser) {
 
-        GetUserInfoDto userDetails = userService.getUserDetails(currentUser);
+        List<UserDetailResponseDto> userDetails = userService.getUserDetails(currentUser);
 
-        ApiResponse<?> response = ApiResponse.<GetUserInfoDto>builder()
+        ApiResponse<?> response = ApiResponse.<List<UserDetailResponseDto>>builder()
                 .status(HttpStatus.OK.value())
                 .message("User info fetched")
                 .timestamp(LocalDateTime.now())
@@ -82,19 +81,19 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-
+//fixed
     @DeleteMapping("/delete-subUser/{id}")
     @PreAuthorize("hasAuthority('Delete Subusers') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> deleteSubUser(@AuthenticationPrincipal User user, @PathVariable Long id) {
-        DeletedUserResponseDto deleteSubuser = userService.softDeleteSubUser(user, id);
-        ApiResponse<?> response = ApiResponse.<DeletedUserResponseDto>builder()
-                .status(HttpStatus.OK.value())
+        softDeletedUserResponseDto deleteSubuser = userService.softDeleteSubUser(user, id);
+        ApiResponse<?> response = ApiResponse.<softDeletedUserResponseDto>builder()
+                .status(HttpStatus.NO_CONTENT.value())
                 .message("SubUser deleted successfully")
                 .timestamp(LocalDateTime.now())
                 .result(deleteSubuser)
                 .error(null)
                 .build();
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
     }
 
 

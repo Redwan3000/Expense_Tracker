@@ -24,100 +24,72 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
 
-    public UserDetailResponseDto getUserDetail(User currentUser) {
+    public List<UserDetailResponseDto> getUserDetails(User currentUser) {
 
-        return UserDetailResponseDto.builder()
-                .user_id(currentUser.getId())
-                .username(currentUser.getUsername())
-                .first_name(currentUser.getFirstName())
-                .last_name(currentUser.getLastName())
-                .email(currentUser.getEmail())
-                .phone(currentUser.getPhone())
-                .dob(currentUser.getDob())
-                .gender(currentUser.getGender().getName())
-                .role(currentUser.getRole().getName())
-                .build();
-    }
-    public GetUserInfoDto getUserDetails(User currentUser) {
+        List<UserDetailResponseDto> users = userRepo.getUserByKeyword(currentUser.getUsername()).orElseThrow(()->new RuntimeException("user not found"));
 
-        GetUserInfoDto response= userRepo.getUserInfo(currentUser.getId());
-        return response;
+        return users;
     }
 
 
+    @Transactional
+    public List<UserDetailResponseDto> getAnyUserBySearch(String keyword) {
 
 
-  @Transactional
-    public List<UserDetailResponseDto> getUserBySearch(String keyword) {
+        List<UserDetailResponseDto> users = userRepo.getUserByKeyword(keyword).orElseThrow(()->new RuntimeException("user not found"));
 
-
-        List<User> users = userRepo.getUserBySearch(keyword);
-
-
-        if (users.isEmpty()) {
-            throw new RuntimeException("no user found with " + keyword);
-        }
-
-
-        return users.stream().map(this::getUserDetail).collect(Collectors.toList());
+        return users;
 
 
     }
+
 
     public List<SubuserListDto> getSubuserList(User currentUser) {
-
         List<SubuserListDto> subUsersList = userRepo.getSubusersListByParent(currentUser.getId());
+
         return subUsersList;
 
     }
 
 
-    @Transactional
-    public DeletedUserResponseDto softDeleteUser(Long userId) {
 
-        User user= userRepo.findById(userId).orElseThrow(()->new RuntimeException("user not found"));
+    public softDeletedUserResponseDto softDeleteUser(Long userId) {
 
-        DeletedUserResponseDto deletedUser= DeletedUserResponseDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .build();
+        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("user not found"));
+        userRepo.delete(user);
 
-        userRepo.softDeleteById(userId);
-        userRepo.softDeleteSubUsers(userId);
-
-return deletedUser;
+        return softDeletedUserResponseDto.builder().id(user.getId()).build();
     }
 
 
-    @Transactional
-    public DeletedUserResponseDto softDeleteSubUser(User user, Long userId) {
-        User currentuser = userRepo.findById(user.getId()).orElseThrow(() -> new RuntimeException("current user not found"));
 
-        User subUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("subuser not found"));
+    public softDeletedUserResponseDto softDeleteSubUser(User user, Long subUserId) {
 
-        DeletedUserResponseDto deletedUser = DeletedUserResponseDto.builder()
-                .id(subUser.getId())
-                .username(subUser.getUsername())
-                .build();
+        User subUser = userRepo.findByParentIdAndUserId(user.getId(), subUserId).orElseThrow(() -> new RuntimeException("SubUser Not Found"));
+        userRepo.delete(subUser);
 
-        if (subUser.getParent() == currentuser) {
+        return softDeletedUserResponseDto.builder().id(subUser.getId()).build();
 
-            userRepo.softDeleteSubUsersId(subUser.getId());
-
-        } else {
-            throw new RuntimeException("subuser do not exist under your account");
-        }
-
-        return deletedUser;
     }
 
 
-    public List<AlluserListDto> getAllUsers() {
+    public List<AllUserGroupWiseResponseDto> getAllUsers() {
 
-        List<User> allUser = userRepo.findAll();
+        List<UserDetailResponseDto>allUsers= userRepo.getAllUsersDetail();
 
-        List<AlluserListDto> users = allUser.stream().map(u -> new AlluserListDto(u.getId(), u.getUsername())).collect(Collectors.toList());
-        return users;
+
+        List<UserDetailResponseDto>owner= userRepo.getUserByKeyword("owner").orElseThrow(()->new RuntimeException("Owner Not Found"));
+
+
+        List<UserDetailResponseDto>subowner= userRepo.getUserByKeyword("subowner").orElseThrow(()->new RuntimeException("Owner Not Found"));
+
+        List<AllUserGroupWiseResponseDto> temp =   AllUserGroupWiseResponseDto.builder()
+                .owner(owner)
+                .subowner(subowner)
+                .build();
+
+
+
     }
 
 
