@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 public class AddMobileBankingRequestDto {
 
     private String providerName;
-
+private String currency;
     private String accountType;
 
     private String phoneNumber;

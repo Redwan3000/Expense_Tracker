@@ -26,9 +26,8 @@ public class UserService {
 
     public List<UserDetailResponseDto> getUserDetails(User currentUser) {
 
-        List<UserDetailResponseDto> users = userRepo.getUserByKeyword(currentUser.getUsername()).orElseThrow(()->new RuntimeException("user not found"));
+        return userRepo.getUserByKeyword(currentUser.getUsername()).orElseThrow(() -> new RuntimeException("user not found"));
 
-        return users;
     }
 
 
@@ -36,7 +35,7 @@ public class UserService {
     public List<UserDetailResponseDto> getAnyUserBySearch(String keyword) {
 
 
-        List<UserDetailResponseDto> users = userRepo.getUserByKeyword(keyword).orElseThrow(()->new RuntimeException("user not found"));
+        List<UserDetailResponseDto> users = userRepo.getUserByKeyword(keyword).orElseThrow(() -> new RuntimeException("user not found"));
 
         return users;
 
@@ -45,12 +44,10 @@ public class UserService {
 
 
     public List<SubuserListDto> getSubuserList(User currentUser) {
-        List<SubuserListDto> subUsersList = userRepo.getSubusersListByParent(currentUser.getId());
 
-        return subUsersList;
+        return userRepo.getSubusersListByParent(currentUser.getId());
 
     }
-
 
 
     public softDeletedUserResponseDto softDeleteUser(Long userId) {
@@ -60,7 +57,6 @@ public class UserService {
 
         return softDeletedUserResponseDto.builder().id(user.getId()).build();
     }
-
 
 
     public softDeletedUserResponseDto softDeleteSubUser(User user, Long subUserId) {
@@ -75,54 +71,35 @@ public class UserService {
 
     public List<AllUserGroupWiseResponseDto> getAllUsers() {
 
-        List<UserDetailResponseDto>allUsers= userRepo.getAllUsersDetail();
-
-
-        List<UserDetailResponseDto>owner= userRepo.getUserByKeyword("owner").orElseThrow(()->new RuntimeException("Owner Not Found"));
-
-
-        List<UserDetailResponseDto>subowner= userRepo.getUserByKeyword("subowner").orElseThrow(()->new RuntimeException("Owner Not Found"));
-
-        List<AllUserGroupWiseResponseDto> temp =   AllUserGroupWiseResponseDto.builder()
-                .owner(owner)
-                .subowner(subowner)
-                .build();
-
-
+        return userRepo.getAllOwner().stream()
+                .map(owner -> AllUserGroupWiseResponseDto.builder()
+                        .owner(owner)
+                        .subowner(userRepo.getALlSubuserByOwnerId(owner.getUserId()))
+                        .build()).collect(Collectors.toList());
 
     }
 
 
     public List<DeletedUsersListDto> getAllDeletedUsers() {
 
-        List<User> deletedUsers = userRepo.findAllDeletedUsers();
-
-        if (deletedUsers.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return deletedUsers.stream().filter(Objects::nonNull).map(user -> {
-            DeletedUsersListDto dto = new DeletedUsersListDto();
-            dto.setId(user.getId());
-            dto.setUsername(user.getUsername());
-            dto.setDeletedAt(user.getDeletedAt());
-            return dto;
-        }).collect(Collectors.toList());
+        return userRepo.findAllSoftDeletedUsers().stream().map(user -> DeletedUsersListDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .deletedAt(user.getDeletedAt())
+                .build()).collect(Collectors.toList());
     }
 
 
-    public UserRegisterRequestDto updateProfile(User user, UserRegisterRequestDto userRegisterRequestDto) {
+    public UserRegisterRequestDto updateProfile(User currentuser, UserRegisterRequestDto dto) {
 
-        User currentuser = userRepo.findById(user.getId()).orElseThrow(() -> new RuntimeException("user not found"));
+        currentuser.setFirstName(dto.getFirstName()==null?currentuser.getFirstName():dto.getFirstName());
+        currentuser.setLastName(dto.getLastName()==null?currentuser.getLastName():dto.getLastName());
+        currentuser.setDob(dto.getDob()==null?currentuser.getDob():dto.getDob());
+        currentuser.setGender(dto.getGenderId()==null?currentuser.getGender():genderRepo.findById(dto.getGenderId()).orElseThrow(() -> new RuntimeException("gender not found ")));
+        currentuser.setPhone(dto.getPhone()==null? currentuser.getEmail() : dto.getPhone());
+        currentuser.setEmail(dto.getEmail()==null?currentuser.getEmail():dto.getEmail());
+        currentuser.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        currentuser.setFirstName(userRegisterRequestDto.getFirstName());
-        currentuser.setLastName(userRegisterRequestDto.getLastName());
-
-        currentuser.setDob(userRegisterRequestDto.getDob());
-        currentuser.setGender(genderRepo.findById(userRegisterRequestDto.getGenderId()).orElseThrow(() -> new RuntimeException("gender not found ")));
-        currentuser.setPhone(userRegisterRequestDto.getPhone());
-
-        currentuser.setPassword(passwordEncoder.encode(userRegisterRequestDto.getPassword()));
 
         userRepo.save(currentuser);
 
@@ -136,22 +113,13 @@ public class UserService {
                 .username(currentuser.getUsername())
                 .build();
 
-
     }
 
-    public RetriveUserResponseDto retriveUser(Long userId) {
 
-        User user = userRepo.findUserFromSoftDelete(userId).orElseThrow(() -> new RuntimeException("USER NOT FOUND IN SOFT DELETE"));
-        List<User> subusers = userRepo.findSubUserByParentId(userId);
+    public RetriveUserResponseDto reviveUser(Long userId) {
 
-        user.setDeleted(false);
-        user.setDeletedAt(null);
-        subusers.forEach(p -> {
-            p.setDeleted(false);
-            p.setDeletedAt(null);
-        });
-        log.info("user and his subusers retrieved");
-        return new RetriveUserResponseDto(user.getId(), user.getUsername());
+        return userRepo.reviveUserById(userId).orElseThrow(()->new RuntimeException("user not found"));
+
     }
 
 

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,10 +17,61 @@ import java.util.Optional;
 public interface TransactionRepo extends JpaRepository<Transactions,Long> {
 
 
-    @Query("select t from Transactions t " +
-            "JOIN fetch t.user u join fetch t.transactionType tt join fetch t.paymentMethod tm " +
-            "where u.id=:userId or u.parent.id=:userId order by t.date DESC ")
-    List<Transactions> findTransactionsByUserIDAndParentID(@Param("userId") Long userId);
+
+    @Query(value = """
+            select * 
+            from transactions t 
+            join users u  on t.user_id = u.id 
+            where (u.id=:userId or u.parent_id=:userId)
+                        and (:itemName is null or t.item_name=:itemName)
+                        and(:username is null or t.date=:username)
+                        and(:singleDate is null or t.date=:singleDate)
+                        and(:fromDate is null or t.date>:fromDate)
+                        and(:toDate is null or t.date<:toDate)
+            """,nativeQuery = true)
+    List<Transactions> findTransactionsOfOwnerAndSubowner(@Param("userId") Long userId,@Param("username") String username,
+                                                          @Param("itemName") String itemName,
+                                                          @Param("singleDate") LocalDate singleDate,
+                                                          @Param("fromDate") LocalDate fromDate,
+                                                          @Param("toDate") LocalDate toDate);
+
+    @Query(value = """
+        select t.* 
+        from transactions t 
+        join users u on t.user_id = u.id 
+        where (u.id = :userId and u.parent_id is null)
+            and (:itemName is null or t.item_name = :itemName)
+            and (:username is null or u.username = :username)
+            and (cast(:singleDate as date) is null or t.date = cast(:singleDate as date))
+            and (cast(:fromDate as date) is null or t.date >= cast(:fromDate as date))
+            and (cast(:toDate as date) is null or t.date <= cast(:toDate as date))
+        """, nativeQuery = true)
+    List<Transactions> findTransactionsOfOwner(
+            @Param("userId") Long userId,
+            @Param("username") String username,
+            @Param("itemName") String itemName,
+            @Param("singleDate") LocalDate singleDate,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate);
+
+    @Query(value = """
+        select t.* 
+        from transactions t 
+        join users u on t.user_id = u.id 
+        where (u.parent_id = :userId)
+            and (:itemName is null or t.item_name = :itemName)
+            and (:username is null or u.username = :username)
+            and (cast(:singleDate as date) is null or t.date = cast(:singleDate as date))
+            and (cast(:fromDate as date) is null or t.date >= cast(:fromDate as date))
+            and (cast(:toDate as date) is null or t.date <= cast(:toDate as date))
+        """, nativeQuery = true)
+    List<Transactions> findTransactionsOfSubowner(
+            @Param("userId") Long userId,
+            @Param("username") String username,
+            @Param("itemName") String itemName,
+            @Param("singleDate") LocalDate singleDate,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate);
 
 @Query(value = "select * from transactions where user_id=:userId and is_deleted=true and id=:tId",nativeQuery = true)
     Optional<Transactions> findDeletedTransactionsByUserId(@Param("userId") Long userId ,@Param("tId") Long tId);

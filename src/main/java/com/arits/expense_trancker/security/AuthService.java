@@ -30,6 +30,7 @@ public class AuthService {
     private final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
 
 
+
     public UserRegisterResponseDto register(UserRegisterRequestDto requestDto, User currentUser) {
 
 
@@ -38,8 +39,8 @@ public class AuthService {
             throw new IllegalArgumentException("user already exist ,,,,please login");
         }
 
-        Role role;
 
+        Role role;
         Gender gender = genderRepo.findById(requestDto.getGenderId()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
 
 
@@ -89,7 +90,6 @@ public class AuthService {
                 .build());
 
 List<RolesDefaultPermissions> defaultPermissions= rolesDefaultPermissionsRepo.findByRoleId(role.getId());
-
 
 
         newUser.getUsersPermissions().addAll(defaultPermissions.stream()

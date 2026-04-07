@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.swing.text.html.Option;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -22,21 +23,6 @@ public interface UserRepo extends JpaRepository<User, Long> {
             "LEFT JOIN FETCH u.role r " +
             "LEFT JOIN FETCH u.usersPermissions p where u.username=:username")
     Optional<User> findByUsername(@Param("username") String username);
-
-    @Modifying
-    @Transactional
-    @Query(value = "update users set is_deleted = true, deleted_at = NOW() where id = :id", nativeQuery = true)
-    void softDeleteById(@Param("id") Long id);
-
-    @Modifying
-    @Transactional
-    @Query(value = "update users set is_deleted = true, deleted_at = NOW() where parent_id = :parentId", nativeQuery = true)
-    void softDeleteSubUsers(@Param("parentId") Long parentId);
-
-    @Modifying
-    @Transactional
-    @Query(value = "update users set is_deleted = true, deleted_at = NOW() where id = :user_id", nativeQuery = true)
-    void softDeleteSubUsersId(@Param("user_id") Long user_id);
 
 
     @Query(value = "select u.id as userId, " +
@@ -56,55 +42,9 @@ public interface UserRepo extends JpaRepository<User, Long> {
     Optional<List<UserDetailResponseDto>> getUserByKeyword(@Param("keyword") String keyword);
 
 
-    @Query(value = "select * from users where is_deleted = true", nativeQuery = true)
-    List<User> findAllDeletedUsers();
-
-
-    @Query(value = "select * from users where is_deleted= true and id=:user_id", nativeQuery = true)
-    Optional<User> findUserFromSoftDelete(@Param("user_id") Long user_id);
-
-    @Query(value = "SELECT * FROM users WHERE is_deleted=true and parent_id = :parentId ", nativeQuery = true)
-    List<User> findSubUserByParentId(@Param("parentId") Long parentId);
-
-
-    @Query(value = "select u.user_id as userId, m.current_balance as mobileBankingBalance,b.current_balance as bankBalance, c.current_balance as cashWalletBalance , m.current_balance+b.current_balance+c.current_balance as totalBalance" +
-            " from users u " +
-            "left join mobile_banking m  on  u.user_id= m.user_id " +
-            "left join bank b on m.user_id = b.user_id " +
-            "left join cash_wallet c on b.user_id = c.user_id " +
-            "Where u.user_id=:id"
-            , nativeQuery = true)
-    OverallBalanceDto fetchAccountsBalance(@Param("id") long id);
 
     @Query(value = "select username , concat(first_name,' ',last_name )as name from users where parent_id=:id", nativeQuery = true)
     List<SubuserListDto> getSubusersListByParent(@Param("id") Long id);
-
-    @Query(value = "select " +
-            "u.id as id," +
-            "u.username as username," +
-            " concat(u.first_name,' ',u.last_name)as name," +
-            " r.name as role ," +
-            " g.name as gender," +
-            "u.phone as phone," +
-            "u.dob as dateOfBirth" +
-            " from users u " +
-            "inner join role  r on u.role_id=r.id" +
-            "  inner join gender as g on u.gender_id=g.id " +
-            "where" +
-            " u.id=:id", nativeQuery = true)
-    GetUserInfoDto getUserInfo(@Param("id") long id);
-
-
-    @Query(value = "select " +
-            "u.id as userId, " +
-            "concat(u.first_name, ' ', u.last_name) as userName, " +
-            "b.bank_name as bankName, " +
-            "a.name as accountType " +
-            "FROM users u " +
-            "inner join bank b on u.id=b.user_id " +
-            "inner join account_Type a on b.account_type_id=a.id " +
-            "where u.id=:userId ", nativeQuery = true)
-    List<Object[]> getUserBankDetails(@Param("userId") Long userId);
 
 
     @Query(value = "select  u.id " +
@@ -130,6 +70,49 @@ public interface UserRepo extends JpaRepository<User, Long> {
             "r.name as role  " +
             " from users u " +
             "left join gender g on u.gender_id= g.id " +
-            "left join role r on u.role_id= r.id ",nativeQuery = true)
-    List<UserDetailResponseDto> getAllUsersDetail();
+            "left join role r on u.role_id= r.id " +
+            "where u.parent_id is null ", nativeQuery = true)
+    List<UserDetailResponseDto> getAllOwner();
+
+
+    @Query(value = "select u.id as userId, " +
+            "u.username as username," +
+            "u.first_name as firstName, " +
+            "u.last_name as lastName, " +
+            "u.email as email, " +
+            "u.phone as phone, " +
+            "u.dob as dob," +
+            "u.parent_id as parentId," +
+            "g.name as gender, " +
+            "r.name as role  " +
+            " from users u " +
+            "left join gender g on u.gender_id= g.id " +
+            "left join role r on u.role_id= r.id " +
+            "where u.parent_id = :userId ", nativeQuery = true)
+    List<UserDetailResponseDto> getALlSubuserByOwnerId(@Param("userId") Long userId);
+
+
+    @Query(value = "select u.id as userId, " +
+            "u.username as userName, " +
+            "u.deleted_at as deletedAt " +
+            "from users u " +
+            "where is_deleted is true ", nativeQuery = true)
+    List<DeletedUsersListDto> findAllSoftDeletedUsers();
+
+    @Query(value = "update users" +
+            " set is_deleted = false ," +
+            "     deleted_at = null " +
+            "where id=:id and is_deleted is true " +
+            "returning id as userId , username", nativeQuery = true)
+    Optional<RetriveUserResponseDto> reviveUserById(@Param("id") long id);
+
+
+    @Query(value = """
+            select sum(b.balance)+sum(m.balance)+sum(c.balance) as totalBalance
+            from bank b 
+            join mobile_banking m on b.user_id= m.user_id 
+             join cash_wallet c on m.user_id = c.user_id
+            where b.user_id=:id
+            """, nativeQuery = true)
+    BigDecimal getAllAccountBanance(@Param("id") Long id);
 }

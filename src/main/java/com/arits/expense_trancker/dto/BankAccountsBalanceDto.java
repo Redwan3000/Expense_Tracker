@@ -7,17 +7,13 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class BankAccountsBalanceDto {
+public interface BankAccountsBalanceDto {
 
-    private Long id;
-    private String bankName;
-    private String accountNumber;
-    private String accountType;
-    private BigDecimal balance;
-    private String currency;
+     Long getId();
+     String getBankName();
+     String getAccountNumber();
+     String getAccountType();
+     BigDecimal getBalance();
+     String getCurrency();
 
 }

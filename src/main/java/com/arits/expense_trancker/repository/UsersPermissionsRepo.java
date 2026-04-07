@@ -15,8 +15,6 @@ import java.util.Set;
 @Repository
 public interface UsersPermissionsRepo extends JpaRepository<UsersPermissions, Long> {
 
-@Query(value = "select * from users_permissions where id=:id",nativeQuery = true)
-    List<UsersPermissions> findPermissionsByUserId(@Param("id") long id);
 
 
     @Modifying
@@ -95,7 +93,6 @@ public interface UsersPermissionsRepo extends JpaRepository<UsersPermissions, Lo
             "from users_permissions up " +
             "join permission p on up.permission_id = p.id " +
             "join users u on u.id=up.user_id " +
-
             "where u.parent_id=:parentId " +
             "and u.role_id = :roleId " +
             "and up.is_deleted = false " +

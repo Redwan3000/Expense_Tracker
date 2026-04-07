@@ -37,11 +37,11 @@ public class Permission {
 
 
     @Builder.Default
-    @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "permission")
     private Set<RolesDefaultPermissions> rolesDefaultPermissions = new HashSet<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "permission")
     private Set<UsersPermissions> usersPermissions = new HashSet<>();
 
 

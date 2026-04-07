@@ -20,9 +20,6 @@ import java.util.Set;
 public interface RolesDefaultPermissionsRepo extends JpaRepository<RolesDefaultPermissions, Long> {
 
 
-//    @Query(value = "select * from roles_default_permissions where role_id=:role_id", nativeQuery = true)
-//    List<RolesDefaultPermissions> findCurrentPermissionsByRoleId(@Param("role_id") Long role_id);
-
 
     @Query(value = "select " +
             "p.id as id, " +
@@ -51,16 +48,6 @@ public interface RolesDefaultPermissionsRepo extends JpaRepository<RolesDefaultP
             @Param("validPermissionsIds") Set<Long> validPermissionsIds
     );
 
-
-//    @Modifying
-//    @Transactional
-//    @Query(value = """
-//insert into roles_default_permissions (role_id, permission_id,is_deleted)
-//SELECT :roleId, p.id ,false
-//    FROM permission p
-//    WHERE p.id IN (:validPermissionsIds)
-//""",nativeQuery = true)
-//    void setNewPermissions(Long roleId, Set<Long> validPermissionsIds);
 
     @Modifying
     @Transactional

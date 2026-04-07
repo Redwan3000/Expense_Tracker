@@ -16,5 +16,6 @@ public class CreateCashAccountResponseDto {
     private Long id;
     private String currencyName;
     private BigDecimal currentBalance;
+    private String paymentMethod;
 
 }

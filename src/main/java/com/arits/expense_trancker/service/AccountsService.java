@@ -17,25 +17,27 @@ public class AccountsService {
 
     private final CurrencyRepo currencyRepo;
     private final BankAccountRepo bankAccountRepo;
-    private final CashAccountRepo cashAccountRepo;
+    private final CashWalletRepo cashWalletRepo;
     private final MobileBankingRepo mobileBankingRepo;
     private final TransactionRepo transactionRepo;
     private final PaymentMethodRepo paymentMethodRepo;
     private final UserRepo userRepo;
     private final AccountTypeRepo accountTypeRepo;
 
+
     public AddBankAccountResponseDto addBankAccount(User user, AddBankAccountRequestDto requestDto) {
-
-
+        if (bankAccountRepo.existsByUserIdAndAccountNumber(user.getId(), requestDto.getAccountNumber())) {
+            throw new RuntimeException("account already exist");
+        }
         Bank newAccount = Bank.builder()
                 .accountNumber(requestDto.getAccountNumber())
                 .bankName(requestDto.getBankName())
                 .bankBranch(requestDto.getBankBranch())
                 .balance(requestDto.getCurrentBalance())
-                .currency(currencyRepo.findByName(requestDto.getCurrency()).orElseThrow(() -> new RuntimeException("currency not found")))
+                .currency(currencyRepo.findByNameIgnoreCase(requestDto.getCurrency()).orElseThrow(() -> new RuntimeException("currency not found")))
                 .user(user)
-                .accountType(accountTypeRepo.findByName(requestDto.getAccountType()).orElseThrow(() -> new RuntimeException("account type not found")))
-                .paymentMethod(paymentMethodRepo.findByName("BANK").orElseThrow(()->new RuntimeException("paymentMethod not found")))
+                .accountType(accountTypeRepo.findByNameIgnoreCase(requestDto.getAccountType()).orElseThrow(() -> new RuntimeException("account type not found")))
+                .paymentMethod(paymentMethodRepo.findByNameIgnoreCase("BANK").orElseThrow(() -> new RuntimeException("paymentMethod not found")))
                 .build();
 
         bankAccountRepo.save(newAccount);
@@ -45,7 +47,7 @@ public class AccountsService {
                 .bankName(newAccount.getBankName())
                 .bankBranch(newAccount.getBankBranch())
                 .accountNumber(newAccount.getAccountNumber())
-                .accountType(String.valueOf(newAccount.getAccountType()))
+                .accountType(newAccount.getAccountType().getName())
                 .currencyName(newAccount.getCurrency().getName())
                 .currentBalance(newAccount.getBalance())
                 .build();
@@ -53,18 +55,20 @@ public class AccountsService {
     }
 
 
-    public AddMobileBankingResponseDto addMobileBankingAccount(User user, AddMobileBankingRequestDto addMobileBankingRequestDto) {
+    public AddMobileBankingResponseDto addMobileBankingAccount(User user, AddMobileBankingRequestDto dto) {
 
-        if (mobileBankingRepo.existsByProviderNameAndPhoneNumber(addMobileBankingRequestDto.getProviderName(), addMobileBankingRequestDto.getPhoneNumber())) {
+        if (mobileBankingRepo.existsByProviderNameAndPhoneNumber(dto.getProviderName(), dto.getPhoneNumber())) {
             throw new RuntimeException("phone already exists");
         }
         MobileBanking newAccount = MobileBanking.builder()
-                .providerName(addMobileBankingRequestDto.getProviderName())
-                .phoneNumber(addMobileBankingRequestDto.getPhoneNumber())
-                .balance(addMobileBankingRequestDto.getCurrentBalance())
+                .providerName(dto.getProviderName())
+                .phoneNumber(dto.getPhoneNumber())
+                .balance(dto.getCurrentBalance())
                 .user(user)
+                .currency(currencyRepo.findByNameIgnoreCase(dto.getCurrency()).orElseThrow(()->new RuntimeException("currency not found")))
+                .accountType(accountTypeRepo.findByNameIgnoreCase(dto.getAccountType()).orElseThrow(()->new RuntimeException("account type not found")))
+                .paymentMethod(paymentMethodRepo.findById(3L).orElseThrow(()->new RuntimeException("paymentMethod not found")))
                 .build();
-
         mobileBankingRepo.save(newAccount);
 
         return AddMobileBankingResponseDto.builder()
@@ -77,37 +81,58 @@ public class AccountsService {
     }
 
 
+    @Transactional
     public CreateCashAccountResponseDto addCashAccount(User user, CreateCashAccountRequestDto dto) {
 
-        CashWallet newAccount = CashWallet.builder()
+        if (cashWalletRepo.existsByUserId(user.getId())) {
+            throw new RuntimeException("Users Wallet Already Exist");
+        }
+
+        CashWallet wallet = cashWalletRepo.save(CashWallet.builder()
                 .balance(dto.getBalance())
-                .currency(currencyRepo.findByName(dto.getCurrency()).orElseThrow(() -> new RuntimeException("Currency does not exist")))
+                .currency(currencyRepo.findByNameIgnoreCase(dto.getCurrency()).orElseThrow(() -> new RuntimeException("currency not found")))
                 .user(user)
-                .build();
-        cashAccountRepo.save(newAccount);
+                .paymentMethod(paymentMethodRepo.findById(3L).orElseThrow(() -> new RuntimeException("payment method not found")))
+                .build());
 
         return CreateCashAccountResponseDto.builder()
-                .id(newAccount.getId())
-                .currencyName(newAccount.getCurrency().getName())
-                .currentBalance(newAccount.getBalance())
+                .id(wallet.getId())
+                .currencyName(wallet.getCurrency().getName())
+                .currentBalance(wallet.getBalance())
+                .paymentMethod(wallet.getPaymentMethod().getName())
                 .build();
 
     }
 
 
-    public OverallBalanceDto overallBalance(User user) {
 
-//        BankAccount bankAccount = bankAccountRepo.findByUser(user);
-//        CashAccount cashAccount = cashAccountRepo.findByUser(user).orElseThrow();
-//        MobileBanking mobileBanking = mobileBankingRepo.findByUser(user);
+    @Transactional
+    public AllAccountBalanceDto getAccountsBalance(User user) {
 
+        List<MobileBankingAccountsBalanceDto> mobileAccounts = mobileBankingRepo.findAccountDetailsByUserId(user.getId());
+        List<BankAccountsBalanceDto> bankAccounts = bankAccountRepo.findAccountDetailsByUserId(user.getId());
+        List<CashAccountsBalanceDto> cashWallets = cashWalletRepo.findAccountDetailsByUserId(user.getId());
 
-        OverallBalanceDto allAccountBalanceSheet = userRepo.fetchAccountsBalance(user.getId());
-
-        return allAccountBalanceSheet;
-
-
+        return  AllAccountBalanceDto.builder()
+                .totalBalance(userRepo.getAllAccountBanance(user.getId()))
+                .bankAccounts(bankAccounts)
+                .mobileBankingAccounts(mobileAccounts)
+                .cashAccounts(cashWallets)
+                .build();
     }
+
+    public AccountType accountTypeSeeding(String accountTypeName) {
+
+        return accountTypeRepo.findByNameIgnoreCase(accountTypeName).orElseGet(() -> {
+
+            return accountTypeRepo.save(AccountType.builder()
+                    .name(accountTypeName)
+                    .build());
+        });
+    }
+
+
+
 
 
     public ModifyBankAccountDetailsResponseDto modifyBankAccountDetails(User user, long id, ModifyBankAccountDetailsRequestDto dto) {
@@ -115,9 +140,11 @@ public class AccountsService {
         Bank account = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
 
         account.setAccountNumber(dto.getAccountNumber() == null ? account.getAccountNumber() : dto.getAccountNumber());
-        account.setCurrency(dto.getAccountNumber() == null ? account.getCurrency() : currencyRepo.findByName(dto.getCurrencyId()).orElseThrow(() -> new RuntimeException("invalid currency")));
         account.setBankName(dto.getBankName() == null ? account.getBankName() : dto.getBankName());
+        account.setBankBranch(dto.getBankBranch() == null ? account.getBankBranch() : dto.getBankBranch());
         account.setBalance(dto.getBalance() == null ? account.getBalance() : dto.getBalance());
+        account.setCurrency(dto.getAccountNumber() == null ? account.getCurrency() : currencyRepo.findByNameIgnoreCase(dto.getCurrencyId()).orElseThrow(() -> new RuntimeException("invalid currency")));
+        account.setAccountType(dto.getAccountType() == null ? account.getAccountType() : accountTypeRepo.findByNameIgnoreCase(dto.getAccountType()).orElseThrow(() -> new RuntimeException("Account Type Not Found")));
 
 
         bankAccountRepo.save(account);
@@ -127,91 +154,108 @@ public class AccountsService {
                 .currencyId(account.getCurrency().getName())
                 .bankName(account.getBankName())
                 .bankBranch(account.getBankBranch())
-                .accountType(account.getAccountType().toString())
+                .accountType(account.getAccountType().getName())
                 .balance(account.getBalance())
                 .build();
     }
 
 
-    public ModifyMobileBankingDetailsResponseDto modifyMobileBankingAccountDetails(User user, long id, ModifyBankAccountDetailsRequestsDTo Dto) {
+    public ModifyMobileBankingDetailsResponseDto modifyMobileBankingAccountDetails(User user, long id, ModifyBankAccountDetailsRequestsDTo dto) {
 
         MobileBanking mobileBankAccount = mobileBankingRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("mobile banking account not found"));
 
-        mobileBankAccount.setBalance(Dto.getCurrentBalance() == null ? mobileBankAccount.getBalance() : Dto.getCurrentBalance());
-        mobileBankAccount.setPhoneNumber(Dto.getPhoneNumber() == null ? mobileBankAccount.getPhoneNumber() : Dto.getPhoneNumber());
-        mobileBankAccount.setProviderName(Dto.getProviderName() == null ? mobileBankAccount.getProviderName() : Dto.getProviderName());
+        mobileBankAccount.setBalance(dto.getCurrentBalance() == null ? mobileBankAccount.getBalance() : dto.getCurrentBalance());
+        mobileBankAccount.setPhoneNumber(dto.getPhoneNumber() == null ? mobileBankAccount.getPhoneNumber() : dto.getPhoneNumber());
+        mobileBankAccount.setProviderName(dto.getProviderName() == null ? mobileBankAccount.getProviderName() : dto.getProviderName());
+        mobileBankAccount.setAccountType(dto.getAccountType() == null ? mobileBankAccount.getAccountType() : accountTypeRepo.findByNameIgnoreCase(dto.getAccountType()).orElseThrow(() -> new RuntimeException("Account Type Not Found")));
 
         mobileBankingRepo.save(mobileBankAccount);
+
         return ModifyMobileBankingDetailsResponseDto.builder()
                 .id(mobileBankAccount.getId())
                 .providerName(mobileBankAccount.getProviderName())
-                .accountType(mobileBankAccount.getAccountType().toString())
+                .accountType(mobileBankAccount.getAccountType().getName())
                 .phoneNumber(mobileBankAccount.getPhoneNumber())
                 .currentBalance(mobileBankAccount.getBalance())
                 .build();
     }
 
+
+    public CreateCashAccountResponseDto modifyCashWallet(User user, ModifyCashWalletDetailsDto dto) {
+
+    CashWallet wallet= cashWalletRepo.findByUserId(user.getId()).orElseThrow(()->new RuntimeException("Users Cash Wallet Not Found"));
+
+    wallet.setBalance(dto.getBalance()==null? wallet.getBalance():dto.getBalance());
+    wallet.setCurrency(dto.getCurrency()==null?wallet.getCurrency():currencyRepo.findByNameIgnoreCase(dto.getCurrency()).orElseThrow(() -> new RuntimeException("invalid currency")));
+ cashWalletRepo.save(wallet);
+
+ return CreateCashAccountResponseDto.builder()
+         .id(wallet.getId())
+         .currencyName(wallet.getCurrency().getName())
+         .currentBalance(wallet.getBalance())
+         .paymentMethod(wallet.getPaymentMethod().getName())
+         .build();
+
+
+    }
+
+
+
+
+
     @Transactional
-    public AddBankAccountResponseDto deleteBankAccount(User user, long id) {
+    public DeleteAccountDto deleteCashWallet(User user) {
+        CashWallet wallet= cashWalletRepo.findByUserId(user.getId()).orElseThrow(()->new RuntimeException("Users wallet not found"));
+        List<Transactions>deletedWalletTransactions= transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(1L).orElseThrow(() -> new RuntimeException("transaction method not found")), wallet.getId());
 
-        List<Transactions> deletedAccountTransactions = transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(2).orElseThrow(() -> new RuntimeException("transaction method not found")), id);
+        transactionRepo.deleteAll(deletedWalletTransactions);
+        cashWalletRepo.delete(wallet);
+        return DeleteAccountDto.builder()
+                .accountId(wallet.getId())
+                .paymentType(wallet.getPaymentMethod().getName())
+                .deletedStatus(true)
+                .build();
+    }
 
+
+    @Transactional
+    public DeleteAccountDto deleteBankAccount(User user, long id) {
 
         Bank bank = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
+        List<Transactions> deletedAccountTransactions = transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(2L).orElseThrow(() -> new RuntimeException("transaction method not found")), id);
 
-        AddBankAccountResponseDto response = AddBankAccountResponseDto.builder()
-                .id(bank.getId())
-                .bankName(bank.getBankName())
-                .bankBranch(bank.getBankBranch())
-                .accountNumber(bank.getAccountNumber())
-                .accountType(bank.getAccountType().toString())
-                .currencyName(bank.getCurrency().getName())
-                .currentBalance(bank.getBalance())
+        transactionRepo.deleteAll(deletedAccountTransactions);
+        bankAccountRepo.delete(bank);
+
+
+        return DeleteAccountDto.builder()
+                .accountId(bank.getId())
+                .paymentType(bank.getPaymentMethod().getName())
+                .deletedStatus(true)
                 .build();
-
-        deletedAccountTransactions.forEach(e -> transactionRepo.softDeleteTransactions(e.getId()));
-        bankAccountRepo.softDeleteBankAccount(bank.getId());
-
-        return response;
 
     }
 
     @Transactional
-    public AddMobileBankingResponseDto deleteMobileBankingAccount(User user, long id) {
-
-        List<Transactions> deletedAccountTransactions = transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(2).orElseThrow(() -> new RuntimeException("transaction method not found")), id);
-
+    public DeleteAccountDto deleteMobileBankingAccount(User user, long id) {
 
         MobileBanking mobileBankingAccount = mobileBankingRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("mobile banking not found"));
+        List<Transactions> deletedAccountTransactions = transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(3L).orElseThrow(() -> new RuntimeException("transaction method not found")), id);
 
-        AddMobileBankingResponseDto response = AddMobileBankingResponseDto.builder()
-                .id(mobileBankingAccount.getId())
-                .providerName(mobileBankingAccount.getProviderName())
-                .accountType(mobileBankingAccount.getAccountType().toString())
-                .phoneNumber(mobileBankingAccount.getPhoneNumber())
-                .currentBalance(mobileBankingAccount.getBalance())
+        transactionRepo.deleteAll(deletedAccountTransactions);
+        mobileBankingRepo.delete(mobileBankingAccount);
+
+        return DeleteAccountDto.builder()
+                .accountId(mobileBankingAccount.getId())
+                .paymentType(mobileBankingAccount.getPaymentMethod().getName())
+                .deletedStatus(true)
                 .build();
 
-        deletedAccountTransactions.forEach(e -> transactionRepo.softDeleteTransactions(e.getId()));
-        mobileBankingRepo.softDeleteMobileBankingAccount(mobileBankingAccount.getId());
-
-        return response;
     }
 
-    @Transactional
-    public AllAccountBalanceDto getAccountsBalance(User user) {
 
-        return new AllAccountBalanceDto();
-    }
 
-    public AccountType accountTypeSeeding(String accountTypeName) {
 
-        return accountTypeRepo.findByName(accountTypeName).orElseGet(()->{
 
-            return accountTypeRepo.save(AccountType.builder()
-                    .name(accountTypeName)
-                    .build());
-        });
-    }
 }
 

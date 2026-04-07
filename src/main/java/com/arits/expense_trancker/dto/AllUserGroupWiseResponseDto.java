@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class AllUserGroupWiseResponseDto {
 
-private List<UserDetailResponseDto> owner;
+private UserDetailResponseDto owner;
 private List<UserDetailResponseDto> subowner;
 
 }

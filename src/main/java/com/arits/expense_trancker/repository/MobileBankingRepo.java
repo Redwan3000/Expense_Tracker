@@ -1,5 +1,6 @@
 package com.arits.expense_trancker.repository;
 
+import com.arits.expense_trancker.dto.MobileBankingAccountsBalanceDto;
 import com.arits.expense_trancker.entity.MobileBanking;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
@@ -9,10 +10,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MobileBankingRepo extends JpaRepository<MobileBanking,Long> {
+public interface MobileBankingRepo extends JpaRepository<MobileBanking, Long> {
 
 
     boolean existsByProviderNameAndPhoneNumber(String providerName, String providerName1);
@@ -20,11 +23,32 @@ public interface MobileBankingRepo extends JpaRepository<MobileBanking,Long> {
 
     Optional<MobileBanking> findByUserAndId(User user, Long mobileBankingId);
 
+    @Query(value = """
+            select ma.id as id ,
+            ma.provider_name as providerName , 
+            ma.phone_number as phoneNumber , 
+            at.name as accountType ,
+            ma.balance as balance
+            from mobile_banking ma 
+            left join account_type at 
+            on ma.account_type_id = at.id
+            where ma.user_id=:id
+            """, nativeQuery = true)
+    List<MobileBankingAccountsBalanceDto> findAccountDetailsByUserId(@Param("id") Long id);
 
 
     @Modifying
     @Transactional
-    @Query(value = "update mobile_banking set is_deleted = true, deleted_at = NOW() where id = :id", nativeQuery = true)
-    void softDeleteMobileBankingAccount(@Param("id") Long id);
+    @Query(value = """
+                        update mobile_banking 
+                        set balance=case 
+                        when :isIncome is true then balance+:amount 
+                        when :isIncome is false then balance-:amount
+                            else balance
+                        end
+                          where user_id=:userId 
+                        and id=:accountId """,nativeQuery = true)
+    void updateMobileBalance(@Param("userId") Long userId, @Param("accountId")Long accountId, @Param("amount")BigDecimal amount, @Param("isIncome")boolean isIncome);
+
 
 }

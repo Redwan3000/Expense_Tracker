@@ -61,8 +61,8 @@ public class AdminController {
         return new ResponseEntity<>(response,HttpStatus.NO_CONTENT);
     }
 
-//
-    @GetMapping("/get-users-list-group-wise")
+//fixed
+    @GetMapping("/get-users-list")
     @PreAuthorize("hasAuthority('Get Users List') or hasRole('ADMIN')")
     public ResponseEntity<?> getALlUser() {
         List<AllUserGroupWiseResponseDto> usersList= userService.getAllUsers();
@@ -75,12 +75,14 @@ public class AdminController {
                 .error(null)
                 .build();
 
-        return new ResponseEntity<>(response,HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
+//    fixed
     @GetMapping("/get-deleted-users-list")
     @PreAuthorize("hasAuthority('Get Deleted Users List') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<DeletedUsersListDto>>> getDeletedUsersList() {
+    public ResponseEntity<ApiResponse<?>> getDeletedUsersList() {
+
         List<DeletedUsersListDto> deletedUsers= userService.getAllDeletedUsers();
         ApiResponse<List<DeletedUsersListDto>>response= ApiResponse.<List<DeletedUsersListDto>>builder()
                 .status(HttpStatus.OK.value())
@@ -92,10 +94,14 @@ public class AdminController {
     return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
+
+
+
+//    fixed
     @PutMapping("/retrive-users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> retrieveUser(@PathVariable("id") Long userId) {
-        RetriveUserResponseDto reviveUser= userService.retriveUser(userId);
+    public ResponseEntity<?> reviveUser(@PathVariable("id") Long userId) {
+        RetriveUserResponseDto reviveUser= userService.reviveUser(userId);
         ApiResponse<?> response= ApiResponse.<RetriveUserResponseDto>builder()
                 .status(HttpStatus.OK.value())
                 .message("restore user successfully")
@@ -108,6 +114,8 @@ public class AdminController {
 
     }
 
+
+//fixed
     @PostMapping("/create-account")
     @PreAuthorize("hasAuthority('Create Subuser') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> createAccount(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {

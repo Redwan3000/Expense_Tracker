@@ -7,20 +7,13 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 @Builder
-public class ModifyMobileBankingDetailsRequestDto {
+public class ModifyCashWalletDetailsDto {
 
-
-    private String providerName;
-
-    private String accountType;
-
-    private String phoneNumber;
-
-    private BigDecimal currentBalance;
-
+private String currency;
+private BigDecimal balance;
 
 }

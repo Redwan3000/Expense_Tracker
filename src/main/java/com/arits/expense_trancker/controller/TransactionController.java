@@ -26,16 +26,16 @@ public class TransactionController {
 
 
     private final TransactionService transactionService;
-    private final AccountsService accountsService;
 
 
-
-    @PostMapping(value = "/add-expenses", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//fixed but gets -balance
+    @PostMapping(value = "/add-transaction", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('Add Expenses') or hasAnyRole('OWNER','SUBOWNER')")
     public ResponseEntity<ApiResponse<AddTransactionResponseDto>> addTransaction(
             @AuthenticationPrincipal User user,
             @RequestPart("data") AddTransactionRequestDto addTransactionRequestDTO,
             @RequestPart(value = "file", required = false) MultipartFile file) {
+
 
         AddTransactionResponseDto newTransaction = transactionService.addTransaction(user, addTransactionRequestDTO, file);
         ApiResponse<AddTransactionResponseDto> response = ApiResponse.<AddTransactionResponseDto>builder()
@@ -142,22 +142,22 @@ public class TransactionController {
     }
 
 
-
-    @GetMapping("/get-overall-balance")
-    @PreAuthorize("hasAuthority('Get Overall Balance') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>> getOverallBalance(@AuthenticationPrincipal User user) {
-
-        OverallBalanceDto overallBalance = accountsService.overallBalance(user);
-
-        ApiResponse<?> response = ApiResponse.<OverallBalanceDto>builder()
-                .status(200)
-                .message("successfully fetch the overall balances")
-                .timestamp(LocalDateTime.now())
-                .result(overallBalance)
-                .error(null)
-                .build();
-        return new ResponseEntity<>(response, HttpStatus.valueOf(200));
-    }
+//
+//    @GetMapping("/get-overall-balance")
+//    @PreAuthorize("hasAuthority('Get Overall Balance') or hasRole('OWNER')")
+//    public ResponseEntity<ApiResponse<?>> getOverallBalance(@AuthenticationPrincipal User user) {
+//
+//        OverallBalanceDto overallBalance = accountsService.overallBalance(user);
+//
+//        ApiResponse<?> response = ApiResponse.<OverallBalanceDto>builder()
+//                .status(200)
+//                .message("successfully fetch the overall balances")
+//                .timestamp(LocalDateTime.now())
+//                .result(overallBalance)
+//                .error(null)
+//                .build();
+//        return new ResponseEntity<>(response, HttpStatus.valueOf(200));
+//    }
 
 
 }

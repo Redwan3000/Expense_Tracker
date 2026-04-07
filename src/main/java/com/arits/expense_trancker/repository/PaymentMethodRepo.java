@@ -20,5 +20,6 @@ public interface PaymentMethodRepo extends JpaRepository<PaymentMethod, Long> {
     @Query(value = "select * from payment_method where id=:tm_id",nativeQuery = true)
     Optional<PaymentMethod> findByMethodId(@Param("tm_id") long tm_id);
 
-    Optional<PaymentMethod> findByName(String bank);
+    Optional<PaymentMethod> findByNameIgnoreCase(String name);
+
 }
