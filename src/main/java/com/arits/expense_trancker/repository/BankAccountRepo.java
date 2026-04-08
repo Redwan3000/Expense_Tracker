@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface BankAccountRepo extends JpaRepository<Bank,Long> {
+public interface BankAccountRepo extends JpaRepository<Bank,Long>{
 
 
 
@@ -53,6 +53,29 @@ public interface BankAccountRepo extends JpaRepository<Bank,Long> {
                           where user_id=:userId 
                         and id=:accountId """,nativeQuery = true)
     void updateBankBalance(@Param("userId") Long userId, @Param("accountId")Long accountId, @Param("amount")BigDecimal amount, @Param("isIncome")boolean isIncome);
+
+
+@Query(value = """
+        select
+                b.id as id,
+                b.bank_name as bankName,
+                b.account_number as accountNumber,
+                at.name as accountType ,
+                b.balance as balance,
+                c.name as currency,
+                concat(u.first_name, ' ',u.last_name) as accountHolder
+        from bank b 
+                left join account_type at on b.account_type_id = at.id
+                left join currency c on b.currency_id = c.id
+                left join users u on b.user_id = u.id
+        where case 
+                when :accountId >0 then (b.id=:accountId and b.user_id=:id) 
+                else b.user_id=:id
+              end  
+                         
+        
+        """,nativeQuery = true)
+    List<BankAccountsBalanceDto> getAccountDetails(@Param("id") Long id, @Param("accountId") Long accountId);
 
 
 }

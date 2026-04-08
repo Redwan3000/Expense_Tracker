@@ -35,13 +35,12 @@ public class TransactionService {
     private void updateBalance(User user, Long accountId, BigDecimal amount, String typeName, String methodName) {
         boolean isIncome = typeName.equalsIgnoreCase("INCOME");
 
-            switch (methodName.toUpperCase()) {
-                case "BANK" -> bankAccountRepo.updateBankBalance(user.getId(), accountId, amount, isIncome);
-                case "MOBILE_BANKING" ->
-                        mobileBankingRepo.updateMobileBalance(user.getId(), accountId, amount, isIncome);
-                case "CASH" -> cashWalletRepo.updateCashBalance(user.getId(), amount, isIncome);
-                default -> throw new RuntimeException("Unsupported transaction method: " + methodName);
-            }
+        switch (methodName.toUpperCase()) {
+            case "BANK" -> bankAccountRepo.updateBankBalance(user.getId(), accountId, amount, isIncome);
+            case "MOBILE_BANKING" -> mobileBankingRepo.updateMobileBalance(user.getId(), accountId, amount, isIncome);
+            case "CASH" -> cashWalletRepo.updateCashBalance(user.getId(), amount, isIncome);
+            default -> throw new RuntimeException("Unsupported transaction method: " + methodName);
+        }
 
     }
 
@@ -133,12 +132,11 @@ public class TransactionService {
 
 
 
-
     public GetTransactionHistoryAllDto showExpenses(User user, GetTransactionHistoryRequestDto request) {
 
         long mainId = (user.getParent() != null) ? user.getParent().getId() : user.getId();
 
-        List<Transactions> ownersTransations = transactionRepo.findTransactionsOfOwner(
+        List<Transactions> allTransactionsOfUser = transactionRepo.findTransactionsOfOwnerAndSubowner(
                 mainId,
                 request.getItemName(),
                 request.getUsername(),
@@ -146,46 +144,42 @@ public class TransactionService {
                 request.getFromDate(),
                 request.getSingleDate());
 
-        List<Transactions> subownersTransactions = transactionRepo.findTransactionsOfSubowner(
-                mainId,
-                request.getItemName(),
-                request.getUsername(),
-                request.getToDate(),
-                request.getFromDate(),
-                request.getSingleDate());
+        List<GetTransactionHistoryDto> owner = allTransactionsOfUser.stream().filter(t -> t.getUser().getId() == mainId)
+                .map(t -> GetTransactionHistoryDto.builder()
+                        .transactionId(t.getId())
+                        .userId(t.getUser().getId())
+                        .username(t.getUser().getUsername())
+                        .amount(t.getAmount())
+                        .transactionMethod(t.getPaymentMethod().getName())
+                        .transactionType(t.getTransactionType().getTypeName())
+                        .accountId(t.getAccountId())
+                        .itemName(t.getItemName())
+                        .description(t.getDescription())
+                        .hasInvoice(t.getInvoicePath() != null ? true : false)
+                        .build()
+                ).toList();
 
-
-
-        List<GetTransactionHistoryDto> owner= ownersTransations.stream().map(t->GetTransactionHistoryDto.builder()
-                .transactionId(t.getId())
-                .userId(t.getUser().getId())
-                .username(t.getUser().getUsername())
-                .amount(t.getAmount())
-                .transactionMethod(t.getPaymentMethod().getName())
-                .transactionType(t.getTransactionType().getTypeName())
-                .accountId(t.getAccountId())
-                .itemName(t.getItemName())
-                .description(t.getDescription())
-                .hasInvoice(t.getInvoicePath() != null?true:false)
-                .build()).toList();
-
-        List<GetTransactionHistoryDto> subowner= subownersTransactions.stream().map(t->GetTransactionHistoryDto.builder()
-                .transactionId(t.getId())
-                .userId(t.getUser().getId())
-                .username(t.getUser().getUsername())
-                .amount(t.getAmount())
-                .transactionMethod(t.getPaymentMethod().getName())
-                .transactionType(t.getTransactionType().getTypeName())
-                .accountId(t.getAccountId())
-                .itemName(t.getItemName())
-                .description(t.getDescription())
-                .hasInvoice(t.getInvoicePath() != null?true:false)
-                .build()).toList();
-
+        List<GetTransactionHistoryDto> subowner = allTransactionsOfUser.stream().filter(t -> t.getUser().getId() != mainId)
+                .map(t -> GetTransactionHistoryDto.builder()
+                        .transactionId(t.getId())
+                        .userId(t.getUser().getId())
+                        .username(t.getUser().getUsername())
+                        .amount(t.getAmount())
+                        .transactionMethod(t.getPaymentMethod().getName())
+                        .transactionType(t.getTransactionType().getTypeName())
+                        .accountId(t.getAccountId())
+                        .itemName(t.getItemName())
+                        .description(t.getDescription())
+                        .hasInvoice(t.getInvoicePath() != null ? true : false)
+                        .build()
+                ).toList();
 
         return GetTransactionHistoryAllDto.builder().owners(owner).subOwners(subowner).build();
 
     }
+
+
+
 
 
     public AddTransactionResponseDto modifyTransaction(User user, AddTransactionRequestDto addTransactionRequestDTO, MultipartFile multipartFile, long id) {
@@ -281,7 +275,7 @@ public class TransactionService {
     public List<DeletedExpensesResponseDto> getDeletedList(User user) {
 
 
-        List<Transactions> transactions = transactionRepo.findTransactionsOfOwnerAndSubowner(user.getId(),null,null,null,null,null);
+        List<Transactions> transactions = transactionRepo.findTransactionsOfOwnerAndSubowner(user.getId(), null, null, null, null, null);
 
         return transactions.stream().map(p -> DeletedExpensesResponseDto.builder()
                 .tId(p.getId())

@@ -13,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,66 +21,11 @@ public class AccountController {
 
 
     private final AccountsService accountsService;
-    private final CashWalletRepo cashWalletRepo;
-
-    //fixed
-    @PutMapping("modify-bank-details/{id}")
-    @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
-    public ResponseEntity<?> modifyBankingDetails(@AuthenticationPrincipal User user, @PathVariable("id") long id, @RequestBody ModifyBankAccountDetailsRequestDto requestDTo) {
-
-        ModifyBankAccountDetailsResponseDto modifyMobileBankAccount = accountsService.modifyBankAccountDetails(user, id, requestDTo);
-
-        ApiResponse<?> response = ApiResponse.<ModifyBankAccountDetailsResponseDto>builder()
-                .status(HttpStatus.OK.value())
-                .message("modified bank details successfully")
-                .timestamp(LocalDateTime.now())
-                .result(modifyMobileBankAccount)
-                .error(null)
-                .build();
-
-        return ResponseEntity.ok(response);
-
-    }
-
-    //fixed
-    @PutMapping("modify-mobile-bank-details/{id}")
-    @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
-    public ResponseEntity<?> modifyMobileBankingDetails(@AuthenticationPrincipal User user, @PathVariable("id") long id, @RequestBody ModifyBankAccountDetailsRequestsDTo modifyMobileBankingDetailsRequestDto) {
-
-        ModifyMobileBankingDetailsResponseDto modifyMobileBankAccount = accountsService.modifyMobileBankingAccountDetails(user, id, modifyMobileBankingDetailsRequestDto);
-
-        ApiResponse<?> response = ApiResponse.<ModifyMobileBankingDetailsResponseDto>builder()
-                .status(HttpStatus.OK.value())
-                .message("modified bank details successfully")
-                .timestamp(LocalDateTime.now())
-                .result(modifyMobileBankAccount)
-                .error(null)
-                .build();
-
-        return ResponseEntity.ok(response);
-
-    }
-
-//fixed
-    @PutMapping("/modify-cash-wallet-details")
-    public ResponseEntity<?> modifyCashWalletDetails(@AuthenticationPrincipal User user , @RequestBody ModifyCashWalletDetailsDto modifyCashWalletDetailsDto){
-
-        CreateCashAccountResponseDto modifyCashWallet = accountsService.modifyCashWallet(user,modifyCashWalletDetailsDto);
-
-        ApiResponse<?> response = ApiResponse.<CreateCashAccountResponseDto>builder()
-                .status(HttpStatus.OK.value())
-                .message("modified bank details successfully")
-                .timestamp(LocalDateTime.now())
-                .result(modifyCashWallet)
-                .error(null)
-                .build();
-
-        return ResponseEntity.ok(response);
-
-    }
 
 
-    //    fixed
+//Controller for the Adding an Account
+
+    //For Adding Bank Account
     @PostMapping("/add-bank-account")
     @PreAuthorize("hasAuthority('Add Bank Account') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<AddBankAccountResponseDto>> addBankAccount(@AuthenticationPrincipal User user, @RequestBody AddBankAccountRequestDto addBankAccountRequestDTO) {
@@ -98,7 +44,7 @@ public class AccountController {
     }
 
 
-    //    fixed
+    //For Adding Mobile Banking Account
     @PostMapping("/add-mobile-Banking-account")
     @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> addMobileBanking(@AuthenticationPrincipal User user, @RequestBody AddMobileBankingRequestDto addMobileBankingRequestDto) {
@@ -118,7 +64,7 @@ public class AccountController {
     }
 
 
-    //    fixed
+    //For creating cash Account
     @PostMapping("/create-cash-wallet-account")
     @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> createCashWallet(@AuthenticationPrincipal User user, @RequestBody CreateCashAccountRequestDto dto) {
@@ -137,7 +83,70 @@ public class AccountController {
     }
 
 
-    //    fixed
+
+//Controller for Modifying Accounts Detail
+    // for modifying bank details
+    @PutMapping("modify-bank-details/{id}")
+    @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
+    public ResponseEntity<?> modifyBankingDetails(@AuthenticationPrincipal User user, @PathVariable("id") long id, @RequestBody ModifyBankAccountDetailsRequestDto requestDTo) {
+
+        ModifyBankAccountDetailsResponseDto modifyMobileBankAccount = accountsService.modifyBankAccountDetails(user, id, requestDTo);
+
+        ApiResponse<?> response = ApiResponse.<ModifyBankAccountDetailsResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("modified bank details successfully")
+                .timestamp(LocalDateTime.now())
+                .result(modifyMobileBankAccount)
+                .error(null)
+                .build();
+
+        return ResponseEntity.ok(response);
+
+    }
+
+    // for modifying mobile banking details
+    @PutMapping("modify-mobile-bank-details/{id}")
+    @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
+    public ResponseEntity<?> modifyMobileBankingDetails(@AuthenticationPrincipal User user, @PathVariable("id") long id, @RequestBody ModifyBankAccountDetailsRequestsDTo modifyMobileBankingDetailsRequestDto) {
+
+        ModifyMobileBankingDetailsResponseDto modifyMobileBankAccount = accountsService.modifyMobileBankingAccountDetails(user, id, modifyMobileBankingDetailsRequestDto);
+
+        ApiResponse<?> response = ApiResponse.<ModifyMobileBankingDetailsResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("modified bank details successfully")
+                .timestamp(LocalDateTime.now())
+                .result(modifyMobileBankAccount)
+                .error(null)
+                .build();
+
+        return ResponseEntity.ok(response);
+
+    }
+
+    // for modifying cash wallet details
+    @PutMapping("/modify-cash-wallet-details")
+    public ResponseEntity<?> modifyCashWalletDetails(@AuthenticationPrincipal User user , @RequestBody ModifyCashWalletDetailsDto modifyCashWalletDetailsDto){
+
+        CreateCashAccountResponseDto modifyCashWallet = accountsService.modifyCashWallet(user,modifyCashWalletDetailsDto);
+
+        ApiResponse<?> response = ApiResponse.<CreateCashAccountResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("modified bank details successfully")
+                .timestamp(LocalDateTime.now())
+                .result(modifyCashWallet)
+                .error(null)
+                .build();
+
+        return ResponseEntity.ok(response);
+
+    }
+
+
+
+
+//Controller for Deleteing Accounts
+
+    //for deleting bank account
     @DeleteMapping("/delete-bank-account/{id}")
     @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> deleteBankAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id) {
@@ -156,7 +165,7 @@ public class AccountController {
     }
 
 
-    //    fixed
+    //For Deleting Mobile Banking Account
     @DeleteMapping("/delete-mobile-bank-account/{id}")
     @PreAuthorize("hasAuthority('Delete Mobile Banking Account') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> deleteMobileBankingAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id) {
@@ -174,7 +183,8 @@ public class AccountController {
 
     }
 
-//fixed
+
+    //For Deleting Cash Wallet Account
     @DeleteMapping("/delete-cash-wallet")
     @PreAuthorize("hasAuthority('Delete Mobile Banking Account') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> deleteCashWallet(@AuthenticationPrincipal User user) {
@@ -197,8 +207,10 @@ public class AccountController {
 
 
 
-//fixed
-    @GetMapping("/get-all-accounts-balance")
+//Controller For Getting Account Balance
+
+    //Detailed Account Balance
+    @GetMapping("/get-all-accounts-balance-group-wise")
     @PreAuthorize("hasAuthority('Get Accounts Balance') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> getAllAccountBalance(@AuthenticationPrincipal User user) {
         AllAccountBalanceDto allAccountBalance = accountsService.getAccountsBalance(user);
@@ -214,7 +226,24 @@ public class AccountController {
     }
 
 
+    @GetMapping("/get-bank-account-Details/{id}")
+    @PreAuthorize("hasAuthority('Get Bank Account Detail') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<?>> getAccountBalanceGroupWise(
+            @AuthenticationPrincipal User user,
+            @PathVariable(value = "id",required = false) Long id) {
 
+        List<BankAccountsBalanceDto> accountBalance = accountsService.getBankAccountDetails(user, id);
+
+        ApiResponse<?> apiResponse = ApiResponse.<List<BankAccountsBalanceDto> >builder()
+                .status(HttpStatus.OK.value())
+                .message("Fetched all account balance")
+                .timestamp(LocalDateTime.now())
+                .result(accountBalance)
+                .error(null)
+                .build();
+
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+    }
 
 
 }

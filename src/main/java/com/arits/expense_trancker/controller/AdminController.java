@@ -25,7 +25,7 @@ public class AdminController {
     private final UserService userService;
     private final AuthService authService;
 
-//fixed
+
     @GetMapping("/get-user-info/{key}")
     @PreAuthorize("hasAuthority('Get Any User') or hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<?>> getUserInfo(@PathVariable("key") String keyword) {
@@ -45,7 +45,7 @@ public class AdminController {
     }
 
 
-//fixed
+
     @DeleteMapping("/delete-user/{id}")
     @PreAuthorize("hasAuthority('Delete Users') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
@@ -61,7 +61,7 @@ public class AdminController {
         return new ResponseEntity<>(response,HttpStatus.NO_CONTENT);
     }
 
-//fixed
+
     @GetMapping("/get-users-list")
     @PreAuthorize("hasAuthority('Get Users List') or hasRole('ADMIN')")
     public ResponseEntity<?> getALlUser() {
@@ -78,7 +78,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-//    fixed
+
     @GetMapping("/get-deleted-users-list")
     @PreAuthorize("hasAuthority('Get Deleted Users List') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> getDeletedUsersList() {
@@ -97,7 +97,6 @@ public class AdminController {
 
 
 
-//    fixed
     @PutMapping("/retrive-users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> reviveUser(@PathVariable("id") Long userId) {
@@ -115,7 +114,7 @@ public class AdminController {
     }
 
 
-//fixed
+
     @PostMapping("/create-account")
     @PreAuthorize("hasAuthority('Create Subuser') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> createAccount(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {

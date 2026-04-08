@@ -22,7 +22,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-//fixed
+
     @PostMapping("/users-register")
     public ResponseEntity<ApiResponse<?>> UsersRegister(@AuthenticationPrincipal User user, @RequestBody UserRegisterRequestDto userRegisterRequestDto) {
 
@@ -38,7 +38,7 @@ public class AuthController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-//fixed
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<?>> login(@RequestBody UserLoginRequestDto userLoginRequestDto) {
 

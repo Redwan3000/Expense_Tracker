@@ -16,9 +16,9 @@ import java.util.List;
 public class AllAccountBalanceDto {
 
     private BigDecimal totalBalance;
-    private List<BankAccountsBalanceDto> bankAccounts;
-    private List<MobileBankingAccountsBalanceDto>mobileBankingAccounts;
-    private List<CashAccountsBalanceDto>cashAccounts;
+    private List<AccountBalanceResponseDto> bankAccounts;
+    private List<AccountBalanceResponseDto>mobileBankingAccounts;
+    private List<AccountBalanceResponseDto>cashAccounts;
 
 
 }

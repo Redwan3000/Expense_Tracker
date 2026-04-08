@@ -25,7 +25,7 @@ public class PermissionsController {
 
     private final PermissionService permissionService;
 
-    //fixed
+
     @PostMapping("/modify-roles-permission")
     @PreAuthorize("hasAuthority('Modify Role Permission') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> addPermissionsToRole(@RequestBody SetPermissionDto setPermissionDto) {
@@ -43,7 +43,7 @@ public class PermissionsController {
     }
 
 
-//fixed
+
     @PostMapping("/modify-subusers-permission")
     @PreAuthorize("hasAuthority('Modify Subuser Permission') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> addPermissionsTosubUsersRole(@AuthenticationPrincipal User user, @RequestBody SetPermissionDto setPermissionDto) {
@@ -80,7 +80,7 @@ public class PermissionsController {
 //        return ResponseEntity.ok(response);
 //    }
 
-//fixed
+
     @GetMapping("/all-permission-list/{id}")
     @PreAuthorize("hasAuthority('see permission list') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> permissionList(@PathVariable("id") Long roleId) {
@@ -96,7 +96,7 @@ public class PermissionsController {
         return ResponseEntity.ok(response);
     }
 
-//fixed
+
     @GetMapping("/subuser-permission-list/{id}")
     @PreAuthorize("hasAuthority('See Subuser Permission List') or hasAnyRole('ADMIN','OWNER')")
     public ResponseEntity<?> permissionList(@AuthenticationPrincipal User user,@PathVariable("id") Long roleId) {

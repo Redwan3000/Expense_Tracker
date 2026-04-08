@@ -81,6 +81,7 @@ public class LoadData implements CommandLineRunner {
         if (userRepo.findByUsername("ADMIN").isEmpty()) {
             authService.register(userRegisterRequestDto, null);
         }
+
         permissionService.permissionsSeeding("Login", "users can login");
         permissionService.permissionsSeeding("Register", "can register as owner");
         permissionService.permissionsSeeding("User Info", "users can see his or her info");

@@ -28,7 +28,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
 
-//fixed but gets -balance
+
     @PostMapping(value = "/add-transaction", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('Add Expenses') or hasAnyRole('OWNER','SUBOWNER')")
     public ResponseEntity<ApiResponse<AddTransactionResponseDto>> addTransaction(
@@ -65,7 +65,6 @@ public class TransactionController {
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
-
 
     }
 

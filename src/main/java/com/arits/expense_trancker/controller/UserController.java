@@ -27,7 +27,7 @@ public class UserController {
     private final AuthService authService;
 
 
-//    fixed
+
     @GetMapping("/user-info")
     @PreAuthorize("hasAuthority('User Info') or hasAnyRole('OWNER','ADMIN')")
     public ResponseEntity<ApiResponse<?>> getCurrentUserDetails(@AuthenticationPrincipal User currentUser) {
@@ -47,7 +47,7 @@ public class UserController {
     }
 
 
-// fixed
+
     @GetMapping("/subusers-list")
     @PreAuthorize("hasAuthority('Subuser List') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<List<SubuserListDto>>> getUserUserList(@AuthenticationPrincipal User currentUser) {
@@ -66,7 +66,7 @@ public class UserController {
     }
 
 
-//    fixed
+
     @PostMapping("/create-subuser")
     @PreAuthorize("hasAuthority('Create Subuser') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
@@ -84,7 +84,7 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-//fixed
+
     @DeleteMapping("/delete-subUser/{id}")
     @PreAuthorize("hasAuthority('Delete Subusers') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> deleteSubUser(@AuthenticationPrincipal User user, @PathVariable Long id) {
@@ -100,7 +100,7 @@ public class UserController {
     }
 
 
-//    fixed
+
     @PutMapping("/update-Profile")
     @PreAuthorize("hasAuthority('Update Profile') or hasAnyRole('OWNER','SUBOWNER','ADMIN','TERTIARY')")
     public ResponseEntity<?> updateProfileDetail(@AuthenticationPrincipal User user, @RequestBody UserRegisterRequestDto userRegisterRequestDto) {

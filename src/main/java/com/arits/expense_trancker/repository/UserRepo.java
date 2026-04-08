@@ -42,7 +42,6 @@ public interface UserRepo extends JpaRepository<User, Long> {
     Optional<List<UserDetailResponseDto>> getUserByKeyword(@Param("keyword") String keyword);
 
 
-
     @Query(value = "select username , concat(first_name,' ',last_name )as name from users where parent_id=:id", nativeQuery = true)
     List<SubuserListDto> getSubusersListByParent(@Param("id") Long id);
 
@@ -108,11 +107,14 @@ public interface UserRepo extends JpaRepository<User, Long> {
 
 
     @Query(value = """
-            select sum(b.balance)+sum(m.balance)+sum(c.balance) as totalBalance
-            from bank b 
-            join mobile_banking m on b.user_id= m.user_id 
-             join cash_wallet c on m.user_id = c.user_id
-            where b.user_id=:id
+            
+            select 
+                coalesce((select sum(balance) from bank where user_id=:id),0)+
+                coalesce((select sum(balance) from mobile_banking where user_id=:id),0)+
+                coalesce((select sum(balance) from cash_wallet where user_id=:id),0) as totalBalance
+            
             """, nativeQuery = true)
-    BigDecimal getAllAccountBanance(@Param("id") Long id);
+    BigDecimal getAllAccountBalance(@Param("id") Long id);
+
+
 }
