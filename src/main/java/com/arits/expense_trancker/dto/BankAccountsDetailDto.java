@@ -3,7 +3,7 @@ package com.arits.expense_trancker.dto;
 
 import java.math.BigDecimal;
 
-public interface BankAccountsBalanceDto {
+public interface BankAccountsDetailDto {
 
     Long getId();
 

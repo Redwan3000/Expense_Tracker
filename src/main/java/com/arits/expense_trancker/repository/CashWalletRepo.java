@@ -1,8 +1,6 @@
 package com.arits.expense_trancker.repository;
 
-import com.arits.expense_trancker.dto.CashAccountsBalanceDto;
-import com.arits.expense_trancker.dto.CreateCashAccountResponseDto;
-import com.arits.expense_trancker.dto.ModifyCashWalletDetailsDto;
+import com.arits.expense_trancker.dto.CashWalletDetailsDto;
 import com.arits.expense_trancker.entity.CashWallet;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
@@ -20,19 +18,28 @@ import java.util.Optional;
 public interface CashWalletRepo extends JpaRepository<CashWallet, Long> {
 
 
-    Optional<CashWallet> findByUser(User user);
 
     boolean existsByUserId(Long id);
 
+
+//    Query to get the users CashWallet Details through user's id
+@Transactional
     @Query(value = """
-            select cw.id as id, 
-                   cw.balance as balance,
-                   c.name as currency
+            select 
+                cw.id as walletId, 
+                concat(u.first_name,' ',u.last_name) as accountHolder,
+                cw.balance as balance,
+                c.name as currency,
+                pm.name as paymentMethod
             from cash_wallet cw 
-            left join currency c on cw.currency_id=c.id 
-            where cw.user_id=:id
-            """,nativeQuery = true)
-    List<CashAccountsBalanceDto> findAccountDetailsByUserId(@Param("id") Long id);
+                left join users u on cw.user_id = u.id 
+                left join currency c on cw.currency_id=c.id 
+                left join payment_method pm on cw.payment_method_id = pm.id 
+            where cw.user_id=:userId """,nativeQuery = true)
+    Optional<CashWalletDetailsDto> getCashWalletDetails(@Param("userId") Long userId);
+
+
+
 
 
     Optional<CashWallet> findByUserId(Long id);

@@ -1,6 +1,6 @@
 package com.arits.expense_trancker.repository;
 
-import com.arits.expense_trancker.dto.BankAccountsBalanceDto;
+import com.arits.expense_trancker.dto.BankAccountsDetailDto;
 import com.arits.expense_trancker.entity.Bank;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
@@ -38,7 +38,7 @@ public interface BankAccountRepo extends JpaRepository<Bank,Long>{
             left join currency c on ba.currency_id=c.id
             where ba.user_id=:id
             """, nativeQuery = true)
-    List<BankAccountsBalanceDto> findAccountDetailsByUserId(@Param("id") Long id);
+    List<BankAccountsDetailDto> findAccountDetailsByUserId(@Param("id") Long id);
 
 
 @Modifying
@@ -55,6 +55,7 @@ public interface BankAccountRepo extends JpaRepository<Bank,Long>{
     void updateBankBalance(@Param("userId") Long userId, @Param("accountId")Long accountId, @Param("amount")BigDecimal amount, @Param("isIncome")boolean isIncome);
 
 
+@Transactional
 @Query(value = """
         select
                 b.id as id,
@@ -68,14 +69,18 @@ public interface BankAccountRepo extends JpaRepository<Bank,Long>{
                 left join account_type at on b.account_type_id = at.id
                 left join currency c on b.currency_id = c.id
                 left join users u on b.user_id = u.id
-        where case 
-                when :accountId >0 then (b.id=:accountId and b.user_id=:id) 
-                else b.user_id=:id
-              end  
+        where b.user_id=:id 
+            and (:accountId<=0 or b.id =:accountId)
                          
         
         """,nativeQuery = true)
-    List<BankAccountsBalanceDto> getAccountDetails(@Param("id") Long id, @Param("accountId") Long accountId);
+    List<BankAccountsDetailDto> getAccountDetails(@Param("id") Long id, @Param("accountId") Long accountId);
 
 
+@Query(value = """
+        select id 
+        from bank 
+        where id=:accountId and user_id=:personId
+        """,nativeQuery = true)
+    Optional<Long> getUsersValidAccountId(@Param("personId") Long personId,@Param("accountId") Long accountId);
 }

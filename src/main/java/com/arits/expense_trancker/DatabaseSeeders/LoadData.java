@@ -82,30 +82,37 @@ public class LoadData implements CommandLineRunner {
             authService.register(userRegisterRequestDto, null);
         }
 
-        permissionService.permissionsSeeding("Login", "users can login");
-        permissionService.permissionsSeeding("Register", "can register as owner");
-        permissionService.permissionsSeeding("User Info", "users can see his or her info");
-        permissionService.permissionsSeeding("Create Subuser", "users can create subUsers ");
-        permissionService.permissionsSeeding("Get Any User", "where the admin or the user can filter the subusers by id or name");
-        permissionService.permissionsSeeding("Subuser List", "the owner can see the subusers list");
-        permissionService.permissionsSeeding("Modify Role Permission", "where the admin can add permission to the roles");
-        permissionService.permissionsSeeding("Modify Subuser Permission", "where the admin can add permission to the roles");
-        permissionService.permissionsSeeding("See Permission List", "where the admin can see the list of permissions");
-        permissionService.permissionsSeeding("Delete Users", "Where the admin can delete any user");
-        permissionService.permissionsSeeding("Get Users List", "Where the admin can see users list");
-        permissionService.permissionsSeeding("Delete SubUser", "Where the user can delete any user");
-        permissionService.permissionsSeeding("Get Deleted Users List", "Where the admin can see all deleted users list");
-        permissionService.permissionsSeeding("See Subuser Permission List", "Where the user can see the permissions that are assigned to the subusers rolewise");
-        permissionService.permissionsSeeding("Update Profile", "Where any user can update his profile");
-        permissionService.permissionsSeeding("Add Expenses", "Where any user can add Expenses");
-        permissionService.permissionsSeeding("See Expenses", "Where any user can See Expenses");
-        permissionService.permissionsSeeding("Modify Expenses", "Where any user can Modify Expenses");
-        permissionService.permissionsSeeding("Delete Expenses", "Where any user can delete his Expenses");
+        permissionService.permissionsSeeding("Login", "users can login");//1
+        permissionService.permissionsSeeding("Register", "can register as owner");//2
+        permissionService.permissionsSeeding("User Info", "users can see his or her info");//3
+        permissionService.permissionsSeeding("Create Subuser", "users can create subUsers ");//4
+        permissionService.permissionsSeeding("Get Any User", "where the admin or the user can filter the subusers by id or name");//5
+        permissionService.permissionsSeeding("Subuser List", "the owner can see the subusers list");//6
+        permissionService.permissionsSeeding("Modify Role Permission", "where the admin can add permission to the roles");//7
+        permissionService.permissionsSeeding("Modify Subuser Permission", "where the admin can add permission to the roles");//8
+        permissionService.permissionsSeeding("See Permission List", "where the admin can see the list of permissions");//9
+        permissionService.permissionsSeeding("Delete Users", "Where the admin can delete any user");//10
+        permissionService.permissionsSeeding("Get Users List", "Where the admin can see users list");//11
+        permissionService.permissionsSeeding("Delete SubUser", "Where the user can delete any user");//12
+        permissionService.permissionsSeeding("Get Deleted Users List", "Where the admin can see all deleted users list");//13
+        permissionService.permissionsSeeding("See Subuser Permission List", "Where the user can see the permissions that are assigned to the subusers rolewise");//14
+        permissionService.permissionsSeeding("Update Profile", "Where any user can update his profile");//15
+        permissionService.permissionsSeeding("Add Expenses", "Where any user can add Expenses");//16
+        permissionService.permissionsSeeding("See Expenses", "Where any user can See Expenses");//17
+        permissionService.permissionsSeeding("Modify Expenses", "Where any user can Modify Expenses");//18
+        permissionService.permissionsSeeding("Get Any User Cash Wallet","where admin can get any user cash wallet details");//19
+        permissionService.permissionsSeeding("Get Cash Wallet Details", "Where any user can delete his Expenses");//20
 
-        permissionService.setPermissionToRole(1L, List.of(3L, 4L));
+        permissionService.permissionsSeeding("Get Mobile Banking Account Detail", "Where any user can delete his Expenses");//21
+        permissionService.permissionsSeeding("Get Any Mobile Banking Account Detail", "Where any user can delete his Expenses");//22
+
+        permissionService.permissionsSeeding("Get Bank Account Detail", "Where any user can delete his Expenses");//23
+        permissionService.permissionsSeeding("Get Any Bank Account Detail", "Where any user can delete his Expenses");//24
+
+        permissionService.setPermissionToRole(1L, List.of(3L, 4L,19L,21L,21L,23L));
         permissionService.setPermissionToRole(2L, List.of(3L, 15L, 16L, 17L, 18L));
         permissionService.setPermissionToRole(3L, List.of(3L, 15L));
-        permissionService.setPermissionToRole(4L, List.of(3L, 4L, 5L, 7L, 9L, 10L, 11L, 13L, 14L, 15L, 16L, 17L, 18L));
+        permissionService.setPermissionToRole(4L, List.of(3L, 4L, 5L, 7L, 9L, 10L, 11L, 13L, 14L, 15L, 16L, 17L, 18L,20L,22L,24L));
 
 
     }

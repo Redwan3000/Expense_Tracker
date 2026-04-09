@@ -1,9 +1,12 @@
 package com.arits.expense_trancker.controller;
 
 import com.arits.expense_trancker.dto.*;
+import com.arits.expense_trancker.entity.MobileBanking;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
-import com.arits.expense_trancker.repository.CashWalletRepo;
+import com.arits.expense_trancker.repository.BankAccountRepo;
+import com.arits.expense_trancker.repository.MobileBankingRepo;
+import com.arits.expense_trancker.repository.UserRepo;
 import com.arits.expense_trancker.service.AccountsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +24,9 @@ public class AccountController {
 
 
     private final AccountsService accountsService;
+    private final UserRepo userRepo;
+    private final MobileBankingRepo mobileBankingRepo;
+    private final BankAccountRepo bankAccountRepo;
 
 
 //Controller for the Adding an Account
@@ -46,7 +52,7 @@ public class AccountController {
 
     //For Adding Mobile Banking Account
     @PostMapping("/add-mobile-Banking-account")
-    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
+    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasAnyRole('OWNER','SUBOWNER')")
     public ResponseEntity<ApiResponse<?>> addMobileBanking(@AuthenticationPrincipal User user, @RequestBody AddMobileBankingRequestDto addMobileBankingRequestDto) {
 
         AddMobileBankingResponseDto newAccount = accountsService.addMobileBankingAccount(user, addMobileBankingRequestDto);
@@ -66,7 +72,7 @@ public class AccountController {
 
     //For creating cash Account
     @PostMapping("/create-cash-wallet-account")
-    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasRole('OWNER')")
+    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasAnyRole('OWNER','SUBOWNER')")
     public ResponseEntity<ApiResponse<?>> createCashWallet(@AuthenticationPrincipal User user, @RequestBody CreateCashAccountRequestDto dto) {
 
         CreateCashAccountResponseDto newWallet = accountsService.addCashAccount(user, dto);
@@ -83,8 +89,7 @@ public class AccountController {
     }
 
 
-
-//Controller for Modifying Accounts Detail
+    //Controller for Modifying Accounts Detail
     // for modifying bank details
     @PutMapping("modify-bank-details/{id}")
     @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
@@ -125,9 +130,9 @@ public class AccountController {
 
     // for modifying cash wallet details
     @PutMapping("/modify-cash-wallet-details")
-    public ResponseEntity<?> modifyCashWalletDetails(@AuthenticationPrincipal User user , @RequestBody ModifyCashWalletDetailsDto modifyCashWalletDetailsDto){
+    public ResponseEntity<?> modifyCashWalletDetails(@AuthenticationPrincipal User user, @RequestBody ModifyCashWalletDetailsDto modifyCashWalletDetailsDto) {
 
-        CreateCashAccountResponseDto modifyCashWallet = accountsService.modifyCashWallet(user,modifyCashWalletDetailsDto);
+        CreateCashAccountResponseDto modifyCashWallet = accountsService.modifyCashWallet(user, modifyCashWalletDetailsDto);
 
         ApiResponse<?> response = ApiResponse.<CreateCashAccountResponseDto>builder()
                 .status(HttpStatus.OK.value())
@@ -140,8 +145,6 @@ public class AccountController {
         return ResponseEntity.ok(response);
 
     }
-
-
 
 
 //Controller for Deleteing Accounts
@@ -203,15 +206,11 @@ public class AccountController {
     }
 
 
-
-
-
-
-//Controller For Getting Account Balance
+//Controller For Getting Account Balance and Details
 
     //Detailed Account Balance
     @GetMapping("/get-all-accounts-balance-group-wise")
-    @PreAuthorize("hasAuthority('Get Accounts Balance') or hasRole('OWNER')")
+    @PreAuthorize("hasAuthority('Get All Accounts Balance') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<?>> getAllAccountBalance(@AuthenticationPrincipal User user) {
         AllAccountBalanceDto allAccountBalance = accountsService.getAccountsBalance(user);
 
@@ -226,15 +225,40 @@ public class AccountController {
     }
 
 
-    @GetMapping("/get-bank-account-Details/{id}")
-    @PreAuthorize("hasAuthority('Get Bank Account Detail') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>> getAccountBalanceGroupWise(
+    //get bank account Details
+    @GetMapping({"/owner/get-bank-account-Details/{id}",
+            "/owner/get-bank-account-Details/{accountId}/{person}",
+            "/admin/get-bank-account-Details/{accountId}/{person}"})
+
+    @PreAuthorize("hasAnyAuthority('Get Bank Account Detail'," +
+                                   "'Get Any Bank Account Detail')")
+    public ResponseEntity<ApiResponse<?>> getBankAccountBalance(
             @AuthenticationPrincipal User user,
-            @PathVariable(value = "id",required = false) Long id) {
+            @PathVariable(value = "personId",required = false) Long personId,
+            @PathVariable(value = "accountId", required = false) Long accountId) {
 
-        List<BankAccountsBalanceDto> accountBalance = accountsService.getBankAccountDetails(user, id);
 
-        ApiResponse<?> apiResponse = ApiResponse.<List<BankAccountsBalanceDto> >builder()
+        User passengerUser = user;
+        boolean isHeSuperAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any Bank Account Detail"));
+
+        if (isHeSuperAdmin && personId != null && accountId != null) {
+
+            passengerUser = userRepo.findById(personId).orElseThrow(() -> new RuntimeException("Invalid UserId"));
+            accountId = bankAccountRepo.getUsersValidAccountId(personId, accountId).orElseThrow(() -> new RuntimeException("Invalid AccountId"));
+
+        } else if (!isHeSuperAdmin && accountId != null && personId != null) {
+
+            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), personId).orElseThrow(() -> new RuntimeException("SubUser does not exist"));
+            accountId = bankAccountRepo.getUsersValidAccountId(personId, accountId).orElseThrow(() -> new RuntimeException("Invalid AccountId"));
+
+        }else {
+
+            accountId = bankAccountRepo.getUsersValidAccountId(user.getId(),accountId).orElseThrow(()->new RuntimeException("invalid accountId"));
+
+        }
+        List<BankAccountsDetailDto> accountBalance = accountsService.getBankAccountDetails(passengerUser, accountId);
+
+        ApiResponse<?> apiResponse = ApiResponse.<List<BankAccountsDetailDto>>builder()
                 .status(HttpStatus.OK.value())
                 .message("Fetched all account balance")
                 .timestamp(LocalDateTime.now())
@@ -246,4 +270,90 @@ public class AccountController {
     }
 
 
+    //get mobileBanking account Details
+    @GetMapping({"/owner/get-mobile-banking-account-Details/{id}",
+                "/owner/get-mobile-banking-account-Details/{accountId}/{personId}",
+                "/admin/get-mobile-banking-account-Details/{accountId}/{personId}"})
+
+    @PreAuthorize("hasAnyAuthority('Get Mobile Banking Account Detail'," +
+                                  "'Get Any Mobile Banking Account Detail')")
+
+    public ResponseEntity<ApiResponse<?>> getMobileBankingAccountDetails(
+            @AuthenticationPrincipal User user,
+            @PathVariable(value = "personId", required = false) Long personId,
+            @PathVariable(value = "accountId", required = false) Long accountId) {
+
+        User passengerUser = user;
+        boolean isHeSuperAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any Mobile Banking Account Detail"));
+
+        if (isHeSuperAdmin && personId != null && accountId != null) {
+
+            passengerUser = userRepo.findById(personId).orElseThrow(() -> new RuntimeException("Invalid UserId"));
+            accountId = mobileBankingRepo.getUsersValidAccountId(personId, accountId).orElseThrow(() -> new RuntimeException("Invalid AccountId"));
+
+        } else if (!isHeSuperAdmin && accountId != null && personId != null) {
+
+            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), personId).orElseThrow(() -> new RuntimeException("SubUser does not exist"));
+            accountId = mobileBankingRepo.getUsersValidAccountId(personId, accountId).orElseThrow(() -> new RuntimeException("Invalid AccountId"));
+
+        }else {
+
+            accountId = mobileBankingRepo.getUsersValidAccountId(user.getId(),accountId).orElseThrow(()->new RuntimeException("invalid accountId"));
+
+        }
+
+        List<MobileAccountsDetailsDto> accountDetails = accountsService.getMobileBankingAccountDetails(passengerUser.getId(), accountId);
+
+        ApiResponse<?> apiResponse = ApiResponse.<List<MobileAccountsDetailsDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Fetched account balance")
+                .timestamp(LocalDateTime.now())
+                .result(accountDetails)
+                .error(null)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+
+
+
+    //for getting cash wallet details of subOnwers and owner's own and also for admin to get any usres cash wallet Details
+    @GetMapping({"/owner/get-cash-wallet-details",
+                "/owner/get-cash-wallet-details/{userId}",
+                "/admin/get-cash-wallet-details/{userId}"})
+    @PreAuthorize("hasAnyAuthority('Get Cash Wallet Details','Get Any User Cash Wallet')")
+    public ResponseEntity<ApiResponse<?>> getCashWalletDetails(@AuthenticationPrincipal User user, @PathVariable(value = "userId", required = false) Long userId) {
+
+        User passengerUser = user;
+        boolean isHeSuperAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any User Cash Wallet"));
+
+        if (isHeSuperAdmin && userId != null) {
+            passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("user does not exist"));
+        } else if (!isHeSuperAdmin && userId != null) {
+            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("subUser does not exist"));
+        }
+
+        CashWalletDetailsDto accountDetails = accountsService.getCashWalletAccountDetails(passengerUser);
+
+        ApiResponse<?> apiResponse = ApiResponse.<CashWalletDetailsDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Fetched all account balance")
+                .timestamp(LocalDateTime.now())
+                .result(accountDetails)
+                .error(null)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+
+    }
+
+
 }
+
+
+
+
+
+
+

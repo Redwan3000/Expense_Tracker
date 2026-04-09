@@ -27,10 +27,6 @@ public class AccountsService {
     private final AccountTypeRepo accountTypeRepo;
 
 
-
-
-
-
     @Transactional
     public CreateCashAccountResponseDto addCashAccount(User user, CreateCashAccountRequestDto dto) {
 
@@ -85,9 +81,6 @@ public class AccountsService {
     }
 
 
-
-
-
     public AddMobileBankingResponseDto addMobileBankingAccount(User user, AddMobileBankingRequestDto dto) {
 
         if (mobileBankingRepo.existsByProviderNameAndPhoneNumber(dto.getProviderName(), dto.getPhoneNumber())) {
@@ -107,12 +100,11 @@ public class AccountsService {
         return AddMobileBankingResponseDto.builder()
                 .id(newAccount.getId())
                 .providerName(newAccount.getProviderName())
-                .accountType(newAccount.getAccountType().toString())
+                .accountType(newAccount.getAccountType().getName())
                 .phoneNumber(newAccount.getPhoneNumber())
                 .currentBalance(newAccount.getBalance())
                 .build();
     }
-
 
 
     public AccountType accountTypeSeeding(String accountTypeName) {
@@ -242,34 +234,57 @@ public class AccountsService {
     }
 
 
+
 //Service to Get the Account Balance Group Wise
-    @Transactional
+@Transactional
     public AllAccountBalanceDto getAccountsBalance(User user) {
 
         List<AccountBalanceResponseDto> allAccount = paymentMethodRepo.getAllAccountBalance(user.getId());
 
-        Map<String, List<AccountBalanceResponseDto>> groupedBalance= allAccount
+        Map<String, List<AccountBalanceResponseDto>> groupedBalance = allAccount
                 .stream()
                 .collect(Collectors.
-                        groupingBy(a->a.getPaymentMethod().toUpperCase()));
-
+                        groupingBy(a -> a.getPaymentMethod().toUpperCase()));
 
         groupedBalance.forEach((key, value) -> System.out.println(">>> key: " + key + " size: " + value.size()));
 
         return AllAccountBalanceDto.builder()
                 .totalBalance(userRepo.getAllAccountBalance(user.getId()))
-                .bankAccounts(groupedBalance.getOrDefault("BANK",List.of()))
-                .mobileBankingAccounts(groupedBalance.getOrDefault("MOBILE_BANKING",List.of()))
-                .cashAccounts(groupedBalance.getOrDefault("CASH",List.of()))
+                .bankAccounts(groupedBalance.getOrDefault("BANK", List.of()))
+                .mobileBankingAccounts(groupedBalance.getOrDefault("MOBILE_BANKING", List.of()))
+                .cashAccounts(groupedBalance.getOrDefault("CASH", List.of()))
                 .build();
+    }
+
+
+
+
+//Service method for bank account details through accountId
+    public List<BankAccountsDetailDto> getBankAccountDetails(User user, Long accountId) {
+
+        List<BankAccountsDetailDto> response = bankAccountRepo.getAccountDetails(user.getId(), accountId);
+
+        if (response.isEmpty()) {
+            throw new RuntimeException("Bank Account Detail Not Found");
+        }
+
+        return response;
+    }
+
+
+//Service method for mobile banking account details through accountId
+    public List<MobileAccountsDetailsDto> getMobileBankingAccountDetails(Long userId, Long accountId) {
+
+        return mobileBankingRepo.getAccountDetials(userId, accountId);
 
     }
 
 
-@Transactional
-    public List<BankAccountsBalanceDto> getBankAccountDetails(User user, Long id) {
 
-    return bankAccountRepo.getAccountDetails(user.getId(),id);
+//Service method for Cash wallet account detail
+    public CashWalletDetailsDto getCashWalletAccountDetails(User user) {
+
+        return cashWalletRepo.getCashWalletDetails(user.getId()).orElseThrow(() -> new RuntimeException("Cash Wallet Not Found"));
 
     }
 }
