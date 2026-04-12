@@ -1,8 +1,7 @@
 package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.CashWalletDetailsDto;
-import com.arits.expense_trancker.entity.CashWallet;
-import com.arits.expense_trancker.entity.User;
+import com.arits.expense_trancker.entity.CashWalletDetails;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,11 +10,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CashWalletRepo extends JpaRepository<CashWallet, Long> {
+public interface CashWalletRepo extends JpaRepository<CashWalletDetails, Long> {
 
 
 
@@ -42,7 +40,9 @@ public interface CashWalletRepo extends JpaRepository<CashWallet, Long> {
 
 
 
-    Optional<CashWallet> findByUserId(Long id);
+    Optional<CashWalletDetails> findByUserId(Long id);
+
+
     @Modifying
     @Transactional
     @Query(value = """
@@ -55,4 +55,12 @@ public interface CashWalletRepo extends JpaRepository<CashWallet, Long> {
                           where user_id=:userId """,nativeQuery = true)
     void updateCashBalance(@Param("userId") Long userId, @Param("amount")BigDecimal amount, @Param("isIncome")boolean isIncome);
 
+
+    @Query(value = """
+            select 
+                id
+            from cash_wallet 
+            where id= :id
+            """,nativeQuery = true)
+    Optional<Long> findValidWalletId(@Param("id") Long id);
 }

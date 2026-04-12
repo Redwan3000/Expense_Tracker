@@ -1,12 +1,9 @@
 package com.arits.expense_trancker.controller;
 
 import com.arits.expense_trancker.dto.*;
-import com.arits.expense_trancker.entity.MobileBanking;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
-import com.arits.expense_trancker.repository.BankAccountRepo;
-import com.arits.expense_trancker.repository.MobileBankingRepo;
-import com.arits.expense_trancker.repository.UserRepo;
+import com.arits.expense_trancker.repository.*;
 import com.arits.expense_trancker.service.AccountsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +24,8 @@ public class AccountController {
     private final UserRepo userRepo;
     private final MobileBankingRepo mobileBankingRepo;
     private final BankAccountRepo bankAccountRepo;
+    private final CashWalletRepo cashWalletRepo;
+    private final PaymentMethodRepo paymentMethodRepo;
 
 
 //Controller for the Adding an Account
@@ -169,11 +168,36 @@ public class AccountController {
 
 
     //For Deleting Mobile Banking Account
-    @DeleteMapping("/delete-mobile-bank-account/{id}")
-    @PreAuthorize("hasAuthority('Delete Mobile Banking Account') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>> deleteMobileBankingAccount(@AuthenticationPrincipal User user, @PathVariable("id") long id) {
+    @DeleteMapping({
+            "/owner/delete-mobile-bank-account/{accountId}",
+            "/owner/delete-subuser-mobile-bank-account/{accountId}/{userId}",
+            "/admin/delete-mobile-bank-account/{accountId}/{userId}"})
+    @PreAuthorize("hasAnyAuthority(" +
+            "'Delete Mobile Banking Account'," +
+            "'Delete Subuser Mobile Banking Account'," +
+            "'Delete Any Mobile Banking Account')")
+    public ResponseEntity<ApiResponse<?>> deleteMobileBankingAccount(@AuthenticationPrincipal User user,
+                                                                     @PathVariable("accountId") long accountId,
+                                                                     @PathVariable(value = "userId", required = false) Long userId) {
 
-        DeleteAccountDto deletedBankAccount = accountsService.deleteMobileBankingAccount(user, id);
+
+        User passengerUser = user;
+        boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete Any Mobile Banking Account"));
+        boolean canOwnerDelete = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete Subuser Mobile Banking Account"));
+
+        if (isHeAdmin && userId != null) {
+            passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("invalid userId"));
+
+        } else if (!isHeAdmin && userId != null && canOwnerDelete) {
+
+            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("invalid userId"));
+
+        }
+
+        Long validAccountId = mobileBankingRepo.getUsersValidAccountId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("invalid accountId"));
+
+
+        DeleteAccountDto deletedBankAccount = accountsService.deleteMobileBankingAccount(passengerUser.getId(), validAccountId);
 
         ApiResponse<?> response = ApiResponse.<DeleteAccountDto>builder()
                 .status(HttpStatus.NO_CONTENT.value())
@@ -188,11 +212,69 @@ public class AccountController {
 
 
     //For Deleting Cash Wallet Account
-    @DeleteMapping("/delete-cash-wallet")
-    @PreAuthorize("hasAuthority('Delete Mobile Banking Account') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>> deleteCashWallet(@AuthenticationPrincipal User user) {
+    @DeleteMapping({"/owner/delete-cash-wallet",
+            "/owner/delete-subuser-cash-wallet/{userId}",
+            "/admin/delete-cash-wallet/{userId}"})
+    @PreAuthorize("hasAnyAuthority(" +
+            "'Delete Cash Wallet Account'," +
+            "'Delete Any Cash Wallet Account'," +
+            "'Delete SubUser Cash Wallet Account')")
 
-        DeleteAccountDto deleteCashWallet = accountsService.deleteCashWallet(user);
+    public ResponseEntity<ApiResponse<?>> deleteCashWallet(@AuthenticationPrincipal User user,
+                                                           @PathVariable(value = "userId", required = false) Long userId) {
+
+        User passengerUser = user;
+        boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete Any Cash Wallet Account"));
+        boolean canUserDelete = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete SubUser Cash Wallet Account"));
+
+        if (isHeAdmin && userId != null) {
+            passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("Invalid UserId"));
+        } else if (!isHeAdmin && userId != null && canUserDelete) {
+            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("invalid userId"));
+        }
+
+
+        DeleteAccountDto deleteCashWallet = accountsService.deleteCashWallet(passengerUser.getId());
+
+        ApiResponse<?> response = ApiResponse.<DeleteAccountDto>builder()
+                .status(HttpStatus.NO_CONTENT.value())
+                .message("bank account deleted sucessfully along with the transactions")
+                .timestamp(LocalDateTime.now())
+                .result(deleteCashWallet)
+                .error(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+
+    }
+
+    //For Deleting Cash Wallet Account
+    @DeleteMapping({
+            "/owner/delete-account/{paymentId}/{accountId}",
+            "/owner/delete-account/{paymentId}/{accountId}/{userId}",
+            "/admin/delete-account/{paymentId}/{accountId}/{userId}00"})
+    @PreAuthorize("hasAnyAuthority(" +
+            "'Delete Account'," +
+            "'Delete Any User Account'," +
+            "'Delete SubUser Account')")
+
+    public ResponseEntity<ApiResponse<?>> deleteAccount(@AuthenticationPrincipal User user,
+                                                        @PathVariable(value = "paymentId", required = false) Long paymentId,
+                                                        @PathVariable(value = "accountId", required = false) Long accountId,
+                                                        @PathVariable(value = "userId", required = false) Long userId) {
+
+
+        User passengerUser = user;
+        boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete Any User Account"));
+        boolean canDeleteSubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete SubUser Account Account"));
+Long validPaymentMethod= paymentMethodRepo.findValidId
+        if (isHeAdmin && userId != null) {
+            passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("Invalid UserId"));
+        } else if (!isHeAdmin && userId != null && canDeleteSubUserAccount) {
+            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("invalid userId"));
+        }
+
+
+        DeleteAccountDto deleteCashWallet = accountsService.deleteCashWallet(passengerUser.getId());
 
         ApiResponse<?> response = ApiResponse.<DeleteAccountDto>builder()
                 .status(HttpStatus.NO_CONTENT.value())
@@ -209,10 +291,25 @@ public class AccountController {
 //Controller For Getting Account Balance and Details
 
     //Detailed Account Balance
-    @GetMapping("/get-all-accounts-balance-group-wise")
-    @PreAuthorize("hasAuthority('Get All Accounts Balance') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>> getAllAccountBalance(@AuthenticationPrincipal User user) {
-        AllAccountBalanceDto allAccountBalance = accountsService.getAccountsBalance(user);
+    @GetMapping({"/owner/get-all-accounts-balance-in-total",
+            "/owner/get-all-accounts-balance-in-total/{userId}",
+            "/admin/get-all-accounts-balance-in-total/{userId}",
+    })
+    @PreAuthorize("hasAnyAuthority('Get All Accounts Balance'," +
+            "'Get SubUser All Account Balance'," +
+            "'Get Any User All Account Balance') or hasAnyRole('OWNER','SUBOWNER')")
+    public ResponseEntity<ApiResponse<?>> getAllAccountBalance(@AuthenticationPrincipal User user, @PathVariable(value = "userId", required = false) Long userId) {
+        User passengerUser = user;
+        boolean isHeADmin = user.getAuthorities().stream().anyMatch(p -> p.getAuthority().equals("Get Any User All Account Balance"));
+        boolean canOwnerOversee = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get SubUser All Account Balance"));
+
+        if (isHeADmin && userId != null) {
+            passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("Invalid userId"));
+        } else if (!isHeADmin && canOwnerOversee && userId != null) {
+            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("Invalid userId / subUser does not exist"));
+        }
+
+        AllAccountBalanceDto allAccountBalance = accountsService.getAccountsBalance(passengerUser);
 
         ApiResponse<?> response = ApiResponse.<AllAccountBalanceDto>builder()
                 .status(HttpStatus.OK.value())
@@ -225,38 +322,37 @@ public class AccountController {
     }
 
 
-    //get bank account Details
-    @GetMapping({"/owner/get-bank-account-Details/{id}",
-            "/owner/get-bank-account-Details/{accountId}/{person}",
-            "/admin/get-bank-account-Details/{accountId}/{person}"})
+    //for getting bank account details of subOnwers and owner's own and also for admin to get any usres bank account Details
+    @GetMapping({"/owner/get-bank-account-details/{id}",
+            "/owner/get-bank-account-details/{accountId}/{person}",
+            "/admin/get-bank-account-details/{accountId}/{person}"})
 
     @PreAuthorize("hasAnyAuthority('Get Bank Account Detail'," +
-                                   "'Get Any Bank Account Detail')")
+            "'Get Any Bank Account Detail'," +
+            "'Get SubUser Bank Account Detail')")
     public ResponseEntity<ApiResponse<?>> getBankAccountBalance(
             @AuthenticationPrincipal User user,
-            @PathVariable(value = "personId",required = false) Long personId,
+            @PathVariable(value = "personId", required = false) Long personId,
             @PathVariable(value = "accountId", required = false) Long accountId) {
 
 
         User passengerUser = user;
         boolean isHeSuperAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any Bank Account Detail"));
+        boolean canOwnerOversee = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get SubUser Bank Account Detail"));
 
         if (isHeSuperAdmin && personId != null && accountId != null) {
 
             passengerUser = userRepo.findById(personId).orElseThrow(() -> new RuntimeException("Invalid UserId"));
-            accountId = bankAccountRepo.getUsersValidAccountId(personId, accountId).orElseThrow(() -> new RuntimeException("Invalid AccountId"));
 
-        } else if (!isHeSuperAdmin && accountId != null && personId != null) {
+        } else if (!isHeSuperAdmin && canOwnerOversee && accountId != null && personId != null) {
 
             passengerUser = userRepo.findByParentIdAndUserId(user.getId(), personId).orElseThrow(() -> new RuntimeException("SubUser does not exist"));
-            accountId = bankAccountRepo.getUsersValidAccountId(personId, accountId).orElseThrow(() -> new RuntimeException("Invalid AccountId"));
-
-        }else {
-
-            accountId = bankAccountRepo.getUsersValidAccountId(user.getId(),accountId).orElseThrow(()->new RuntimeException("invalid accountId"));
 
         }
-        List<BankAccountsDetailDto> accountBalance = accountsService.getBankAccountDetails(passengerUser, accountId);
+
+        Long validAccountId = bankAccountRepo.getUsersValidAccountId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Invalid AccountId"));
+
+        List<BankAccountsDetailDto> accountBalance = accountsService.getBankAccountDetails(passengerUser, validAccountId);
 
         ApiResponse<?> apiResponse = ApiResponse.<List<BankAccountsDetailDto>>builder()
                 .status(HttpStatus.OK.value())
@@ -270,13 +366,14 @@ public class AccountController {
     }
 
 
-    //get mobileBanking account Details
-    @GetMapping({"/owner/get-mobile-banking-account-Details/{id}",
-                "/owner/get-mobile-banking-account-Details/{accountId}/{personId}",
-                "/admin/get-mobile-banking-account-Details/{accountId}/{personId}"})
+    //for getting mobile banking account details of subOnwers and owner's own and also for admin to get any usres mobile banking account Details
+    @GetMapping({"/owner/get-mobile-banking-account-details/{id}",
+            "/owner/get-mobile-banking-account-details/{accountId}/{personId}",
+            "/admin/get-mobile-banking-account-details/{accountId}/{personId}"})
 
     @PreAuthorize("hasAnyAuthority('Get Mobile Banking Account Detail'," +
-                                  "'Get Any Mobile Banking Account Detail')")
+            "'Get Any Mobile Banking Account Detail'," +
+            "'Get SubUser Mobile Banking Account Detail')")
 
     public ResponseEntity<ApiResponse<?>> getMobileBankingAccountDetails(
             @AuthenticationPrincipal User user,
@@ -285,20 +382,21 @@ public class AccountController {
 
         User passengerUser = user;
         boolean isHeSuperAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any Mobile Banking Account Detail"));
+        boolean canOwnerOversee = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get SubUser Mobile Banking Account Detail"));
 
         if (isHeSuperAdmin && personId != null && accountId != null) {
 
             passengerUser = userRepo.findById(personId).orElseThrow(() -> new RuntimeException("Invalid UserId"));
             accountId = mobileBankingRepo.getUsersValidAccountId(personId, accountId).orElseThrow(() -> new RuntimeException("Invalid AccountId"));
 
-        } else if (!isHeSuperAdmin && accountId != null && personId != null) {
+        } else if (!isHeSuperAdmin && canOwnerOversee && accountId != null && personId != null) {
 
             passengerUser = userRepo.findByParentIdAndUserId(user.getId(), personId).orElseThrow(() -> new RuntimeException("SubUser does not exist"));
             accountId = mobileBankingRepo.getUsersValidAccountId(personId, accountId).orElseThrow(() -> new RuntimeException("Invalid AccountId"));
 
-        }else {
+        } else {
 
-            accountId = mobileBankingRepo.getUsersValidAccountId(user.getId(),accountId).orElseThrow(()->new RuntimeException("invalid accountId"));
+            accountId = mobileBankingRepo.getUsersValidAccountId(user.getId(), accountId).orElseThrow(() -> new RuntimeException("invalid accountId"));
 
         }
 
@@ -316,21 +414,21 @@ public class AccountController {
     }
 
 
-
-
     //for getting cash wallet details of subOnwers and owner's own and also for admin to get any usres cash wallet Details
     @GetMapping({"/owner/get-cash-wallet-details",
-                "/owner/get-cash-wallet-details/{userId}",
-                "/admin/get-cash-wallet-details/{userId}"})
-    @PreAuthorize("hasAnyAuthority('Get Cash Wallet Details','Get Any User Cash Wallet')")
+            "/owner/get-cash-wallet-details/{userId}",
+            "/admin/get-cash-wallet-details/{userId}"})
+    @PreAuthorize("hasAnyAuthority('Get Cash Wallet Details'," +
+            "'Get Any User Cash Wallet details'," +
+            "'Get SubUser Cash Wallet Details')")
     public ResponseEntity<ApiResponse<?>> getCashWalletDetails(@AuthenticationPrincipal User user, @PathVariable(value = "userId", required = false) Long userId) {
 
         User passengerUser = user;
         boolean isHeSuperAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any User Cash Wallet"));
-
+        boolean canOwnerOversee = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get SubUser Cash Wallet Details"));
         if (isHeSuperAdmin && userId != null) {
             passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("user does not exist"));
-        } else if (!isHeSuperAdmin && userId != null) {
+        } else if (!isHeSuperAdmin && canOwnerOversee && userId != null) {
             passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("subUser does not exist"));
         }
 

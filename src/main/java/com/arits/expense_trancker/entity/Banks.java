@@ -5,8 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
@@ -14,30 +14,23 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Setter
-@SQLDelete(sql = "update bank set is_deleted=true , deleted_at = NOW() where id= ?")
+@SQLDelete(sql = "update banks set is_deleted=true , deleted_at = NOW() where id= ?")
 @SQLRestriction("is_deleted=false")
-public class CashWallet {
+public class Banks {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String bankName;
+
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-    private BigDecimal balance;
 
+    @OneToMany(mappedBy = "bank")
+    private Set<BankAccountDetails> accountDetails;
 
-    @ManyToOne
-    @JoinColumn(name = "currency_id", nullable = false)
-    private Currency currency;
-
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "payment_method_id", nullable = false)
-    private PaymentMethod paymentMethod;
 
 }

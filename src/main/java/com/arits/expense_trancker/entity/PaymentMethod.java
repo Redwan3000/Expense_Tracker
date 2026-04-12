@@ -39,16 +39,14 @@ public class PaymentMethod {
     private Set<Transactions> transactions;
 
     @OneToMany(mappedBy = "paymentMethod")
-    private Set<Bank> banks;
+    private Set<Banks> banks;
 
     @OneToMany(mappedBy = "paymentMethod")
-    private Set<MobileBanking> mobileBankings;
+    private Set<MobileBanks> mobileBanks;
 
     @OneToMany(mappedBy = "paymentMethod")
-    private Set<CashWallet> cashWallets;
+    private Set<CashWalletDetails> cashWalletDetails;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+
 
 }

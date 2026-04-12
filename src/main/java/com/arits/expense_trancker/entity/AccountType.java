@@ -30,10 +30,10 @@ public class AccountType {
 
 
     @OneToMany(mappedBy = "accountType")
-    private Set<Bank> bankAccounts;
+    private Set<Banks> bankAccounts;
 
     @OneToMany(mappedBy = "accountType")
-    private Set<MobileBanking> mobileBankingAccounts;
+    private Set<MobileBanks> mobileBanksAccounts;
 
 
 }

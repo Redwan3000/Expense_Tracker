@@ -70,13 +70,12 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user")
     private Set<PaymentMethod> paymentMethods;
 
-    //    @Builder.Default
-//    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
-//    private Set<UsersPermissions> usersPermissions = new HashSet<>();
-//
     @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user")
     private Set<UsersPermissions> usersPermissions = new HashSet<>();
+
+
+
 
 
     @Override
