@@ -23,7 +23,10 @@ public class AuthController {
     private final AuthService authService;
 
 
-    @PostMapping("/users-register")
+    @PostMapping({
+            "/users-register",
+            "/owner/subuser-register",
+            "/admin/user-register"})
     public ResponseEntity<ApiResponse<?>> UsersRegister(@AuthenticationPrincipal User user, @RequestBody UserRegisterRequestDto userRegisterRequestDto) {
 
         UserRegisterResponseDto registers = authService.register(userRegisterRequestDto, user);

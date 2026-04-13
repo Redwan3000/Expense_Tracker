@@ -25,9 +25,10 @@ public class CashWalletDetails {
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @OneToOne
-    @JoinColumn(name = "account_details")
-    private AccountDetails accountDetails;
-
+    @JoinColumn(name = "account_id")
+    private Accounts accounts;
 }

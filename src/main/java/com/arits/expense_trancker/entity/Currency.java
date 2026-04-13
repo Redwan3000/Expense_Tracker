@@ -21,20 +21,16 @@ public class Currency {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String name;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-    private String name;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
     @OneToMany(mappedBy = "currency")
-    private Set<Banks> bankAccounts;
-
-    @OneToMany(mappedBy = "currency")
-    private Set<MobileBanks> mobileBanksAccounts;
-
-    @OneToMany(mappedBy = "currency")
-    private Set<CashWalletDetails> cashWalletDetails;
+    private Set<Accounts> accounts;
 
 }

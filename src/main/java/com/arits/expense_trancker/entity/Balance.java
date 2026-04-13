@@ -2,29 +2,29 @@ package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-
 @Entity
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-@SQLDelete(sql = "update gender set is_deleted = true , deleted_at = now() where id=?")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@SQLDelete(sql = "UPDATE balance SET is_deleted = true,deleted_at=NOW() WHERE id=?")
 @SQLRestriction("is_deleted = false")
-public class Gender {
+public class Balance {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+    private BigDecimal balance;
 
     @Builder.Default
     private boolean isDeleted = false;
@@ -32,9 +32,8 @@ public class Gender {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "gender")
-    private Set<User> users;
-
-
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Accounts accounts;
 
 }

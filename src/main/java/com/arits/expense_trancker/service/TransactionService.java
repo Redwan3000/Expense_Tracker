@@ -45,10 +45,10 @@ public class TransactionService {
     }
 
 
-    public PaymentMethod tmSeedding(String name) {
+    public TransactionMethod tmSeedding(String name) {
 
         return paymentMethodRepo.findByMethodName(name).orElseGet(() -> {
-                    return paymentMethodRepo.save(PaymentMethod.builder()
+                    return paymentMethodRepo.save(TransactionMethod.builder()
                             .name(name)
                             .build());
                 }
@@ -96,7 +96,7 @@ public class TransactionService {
             }
         }
 
-        PaymentMethod method = paymentMethodRepo.findById(dto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("Transaction method not found"));
+        TransactionMethod method = paymentMethodRepo.findById(dto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("Transaction method not found"));
         TransactionType type = transactionTypeRepo.findById(dto.getTransactionType()).orElseThrow(() -> new RuntimeException("Transaction type not found"));
 
         updateBalance(user, dto.getAccountId(), dto.getAmount(), type.getTypeName(), method.getName());
@@ -109,7 +109,7 @@ public class TransactionService {
                 .user(user)
                 .accountId(dto.getAccountId())
                 .transactionType(type)
-                .paymentMethod(method)
+                .transactionMethod(method)
                 .invoicePath(savedFilePath)
                 .build();
 
@@ -120,7 +120,7 @@ public class TransactionService {
                 .trxId(transactions.getId())
                 .itemName(transactions.getItemName())
                 .amount(transactions.getAmount())
-                .tMethod(transactions.getPaymentMethod().getName())
+                .tMethod(transactions.getTransactionMethod().getName())
                 .tType(transactions.getTransactionType().getTypeName())
                 .description(transactions.getDescription())
                 .invoicePath(transactions.getInvoicePath())
@@ -150,7 +150,7 @@ public class TransactionService {
                         .userId(t.getUser().getId())
                         .username(t.getUser().getUsername())
                         .amount(t.getAmount())
-                        .transactionMethod(t.getPaymentMethod().getName())
+                        .transactionMethod(t.getTransactionMethod().getName())
                         .transactionType(t.getTransactionType().getTypeName())
                         .accountId(t.getAccountId())
                         .itemName(t.getItemName())
@@ -165,7 +165,7 @@ public class TransactionService {
                         .userId(t.getUser().getId())
                         .username(t.getUser().getUsername())
                         .amount(t.getAmount())
-                        .transactionMethod(t.getPaymentMethod().getName())
+                        .transactionMethod(t.getTransactionMethod().getName())
                         .transactionType(t.getTransactionType().getTypeName())
                         .accountId(t.getAccountId())
                         .itemName(t.getItemName())
@@ -189,7 +189,7 @@ public class TransactionService {
 
         if (addTransactionRequestDTO.getAmount() != null) {
             String inverseTtype = transaction.getTransactionType().getTypeName().equalsIgnoreCase("EXPENSE") ? "INCOME" : "EXPENSE";
-            updateBalance(user, transaction.getAccountId(), transaction.getAmount(), inverseTtype, transaction.getPaymentMethod().getName());
+            updateBalance(user, transaction.getAccountId(), transaction.getAmount(), inverseTtype, transaction.getTransactionMethod().getName());
 
         }
 
@@ -199,11 +199,11 @@ public class TransactionService {
 
         transaction.setDescription((addTransactionRequestDTO.getDescription() != null) ? addTransactionRequestDTO.getDescription() : transaction.getDescription());
 
-        transaction.setPaymentMethod(paymentMethodRepo.findById
+        transaction.setTransactionMethod(paymentMethodRepo.findById
                 (
                         (addTransactionRequestDTO.getPaymentMethod() != null)
                                 ? addTransactionRequestDTO.getPaymentMethod()
-                                : transaction.getPaymentMethod()
+                                : transaction.getTransactionMethod()
                                   .getId()).orElseThrow(() -> new RuntimeException("transaction method not found")));
 
         transaction.setAccountId(addTransactionRequestDTO.getAccountId());
@@ -242,14 +242,14 @@ public class TransactionService {
         transactionRepo.save(transaction);
 
 
-        updateBalance(user, transaction.getAccountId(), transaction.getAmount(), transaction.getTransactionType().getTypeName(), transaction.getPaymentMethod().getName());
+        updateBalance(user, transaction.getAccountId(), transaction.getAmount(), transaction.getTransactionType().getTypeName(), transaction.getTransactionMethod().getName());
 
 
         return AddTransactionResponseDto.builder()
                 .trxId(transaction.getId())
                 .itemName(transaction.getItemName())
                 .amount(transaction.getAmount())
-                .tMethod(transaction.getPaymentMethod().getName())
+                .tMethod(transaction.getTransactionMethod().getName())
                 .tType(transaction.getTransactionType().getTypeName())
                 .accountId(transaction.getAccountId())
                 .description(transaction.getDescription())
@@ -281,7 +281,7 @@ public class TransactionService {
                 .tId(p.getId())
                 .itemName(p.getItemName())
                 .amount(p.getAmount())
-                .tMethod(p.getPaymentMethod().getName())
+                .tMethod(p.getTransactionMethod().getName())
                 .tType(p.getTransactionType().getTypeName())
                 .description(p.getDescription())
                 .invoicePath(p.getInvoicePath())
@@ -297,7 +297,7 @@ public class TransactionService {
         ReviveTransactionResponseDto revivedTransaction = ReviveTransactionResponseDto.builder()
                 .trxId(transaction.getId())
                 .userId(transaction.getUser().getId())
-                .transactionMethod(transaction.getPaymentMethod().getName())
+                .transactionMethod(transaction.getTransactionMethod().getName())
                 .transactionType(transaction.getTransactionType().getTypeName())
                 .description(transaction.getDescription())
                 .build();

@@ -6,36 +6,36 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 
 @Entity
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-
-@SQLDelete(sql="update transaction_type set is_deleted=true ,deleted_at=NOW() where id=?")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@SQLDelete(sql = "update mobile_bank_details set is_deleted=true , deleted_at = NOW() where id= ?")
 @SQLRestriction("is_deleted=false")
-public class TransactionType {
+public class MobileBankDetails {
 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+    private String phoneNumber;
 
     @Builder.Default
-    private boolean isDeleted = false;
+    private boolean isDeleted=false;
     private LocalDateTime deletedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "transactionType")
-    private List<Transactions> transactions = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "mobile_bank_id")
+    private MobileBankingList mobileBanking;
+
+    @OneToOne
+    @JoinColumn(name = "account_id")
+    private Accounts accounts;
 
 
 }

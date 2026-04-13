@@ -1,7 +1,7 @@
 package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.BankAccountsDetailDto;
-import com.arits.expense_trancker.entity.Banks;
+import com.arits.expense_trancker.entity.BankList;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface BankAccountRepo extends JpaRepository<Banks,Long>{
+public interface BankAccountRepo extends JpaRepository<BankList,Long>{
 
 
 
-    Optional<Banks> findByUserAndId(User user, long id);
+    Optional<BankList> findByUserAndId(User user, long id);
 
     boolean existsByUserIdAndAccountNumber(Long id, @NotBlank(message = "Account number cannot be null") String accountNumber);
 

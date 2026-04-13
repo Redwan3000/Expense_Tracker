@@ -1,27 +1,33 @@
 package com.arits.expense_trancker.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE accounts SET is_deleted = true,deleted_at=NOW() WHERE id=?")
+@SQLRestriction("is_deleted = false")
 public class Accounts {
 
 
-    private BigDecimal balance;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-
+    @Builder.Default
+    private boolean isDeleted=false;
+    private LocalDateTime deletedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
     @ManyToOne
@@ -33,11 +39,28 @@ public class Accounts {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "account_type", nullable = false)
+    @JoinColumn(name = "account_type_id", nullable = false)
     private AccountType accountType;
 
     @ManyToOne
-    @JoinColumn(name = "payment_method", nullable = false)
-    private PaymentMethod paymentMethod;
+    @JoinColumn(name = "transaction_method_id", nullable = false)
+    private TransactionMethod transactionMethod;
+
+
+
+    @OneToOne(mappedBy = "accounts")
+    private Balance balance;
+
+    @OneToOne(mappedBy = "accounts")
+    private BankAccountDetails bankAccountDetails;
+
+    @OneToOne(mappedBy = "accounts")
+    private CashWalletDetails cashWalletDetails;
+
+    @OneToOne(mappedBy = "accounts")
+    private MobileBankDetails mobileBankDetails;
+
+    @OneToMany(mappedBy = "accounts")
+    private Set<Transactions> transactions;
 
 }

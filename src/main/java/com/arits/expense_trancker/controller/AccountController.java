@@ -266,7 +266,7 @@ public class AccountController {
         User passengerUser = user;
         boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete Any User Account"));
         boolean canDeleteSubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete SubUser Account Account"));
-Long validPaymentMethod= paymentMethodRepo.findValidId
+
         if (isHeAdmin && userId != null) {
             passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("Invalid UserId"));
         } else if (!isHeAdmin && userId != null && canDeleteSubUserAccount) {

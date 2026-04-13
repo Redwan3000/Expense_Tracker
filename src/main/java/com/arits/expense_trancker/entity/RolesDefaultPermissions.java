@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-@Table(name = "roles_default_permissions",uniqueConstraints = {
+@Table(uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"role_id", "permission_id"})
         })
 @SQLDelete(sql = "update roles_default_permissions set is_deleted=true ,deleted_at=NOW() where id=?")
@@ -31,6 +31,8 @@ public class RolesDefaultPermissions {
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "role_id")

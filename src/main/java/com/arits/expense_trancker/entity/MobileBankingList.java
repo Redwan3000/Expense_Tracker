@@ -14,24 +14,24 @@ import java.util.Set;
 @Builder
 @Getter
 @Setter
-@SQLDelete(sql = "UPDATE mobile_banks SET is_deleted = true , deleted_at = NOW() WHERE id=?")
-@SQLRestriction("is_deleted = false")
-public class MobileBanks {
+@SQLDelete(sql = "update mobile_banking_list set is_deleted=true , deleted_at = NOW() where id= ?")
+@SQLRestriction("is_deleted=false")
+public class MobileBankingList {
 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String providerName;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "mobileBank")
-    private Set<MobileBankAccountDetails> mfs;
-
+    @OneToMany(mappedBy = "mobileBanking")
+    private Set<MobileBankDetails> mobileBankDetails;
 
 
 }

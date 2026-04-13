@@ -28,23 +28,16 @@ public class Role {
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
     @OneToMany(mappedBy = "role")
-    private Set<User> users;
+    private Set<User> user;
 
     @Builder.Default
     @OneToMany(mappedBy = "role")
     private Set<RolesDefaultPermissions> rolesDefaultPermissions = new HashSet<>();
 
-
-
-
-
-
-//    public Role(long roleId, String roleName) {
-//        this.roleId = roleId;
-//        this.roleName = roleName;
-//    }
 
 }

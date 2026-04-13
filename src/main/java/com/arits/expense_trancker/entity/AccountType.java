@@ -26,14 +26,12 @@ public class AccountType {
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
     @OneToMany(mappedBy = "accountType")
-    private Set<Banks> bankAccounts;
-
-    @OneToMany(mappedBy = "accountType")
-    private Set<MobileBanks> mobileBanksAccounts;
+    private Set<Accounts> account;
 
 
 }

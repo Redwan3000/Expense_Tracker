@@ -1,7 +1,7 @@
 package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.MobileAccountsDetailsDto;
-import com.arits.expense_trancker.entity.MobileBanks;
+import com.arits.expense_trancker.entity.MobileBankingList;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,13 +15,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MobileBankingRepo extends JpaRepository<MobileBanks, Long> {
+public interface MobileBankingRepo extends JpaRepository<MobileBankingList, Long> {
 
 
     boolean existsByProviderNameAndPhoneNumber(String providerName, String providerName1);
 
 
-    Optional<MobileBanks> findByUserAndId(User user, Long mobileBankingId);
+    Optional<MobileBankingList> findByUserAndId(User user, Long mobileBankingId);
 
     @Query(value = """
             select ma.id as id ,
@@ -87,5 +87,5 @@ public interface MobileBankingRepo extends JpaRepository<MobileBanks, Long> {
             from mobile_banking 
             where user_id= : userId and id=:accountId
             """,nativeQuery = true)
-    Optional<MobileBanks> findByUserIdAndAccountId(@Param("userId") Long userId, @Param("accountId") Long accountId);
+    Optional<MobileBankingList> findByUserIdAndAccountId(@Param("userId") Long userId, @Param("accountId") Long accountId);
 }

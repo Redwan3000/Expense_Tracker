@@ -29,7 +29,8 @@ public class Notifications {
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

@@ -1,9 +1,16 @@
 package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Entity
-
+@Setter
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class BankAccountDetails {
 
     @Id
@@ -13,8 +20,19 @@ public class BankAccountDetails {
     private String accountNumber;
     private String nomineeName;
 
-    @ManyToOne
-    @JoinColumn(name = "bank_name")
-    private Banks bank;
+    @Builder.Default
+    private boolean isDeleted;
+    private LocalDateTime deletedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "bank_id")
+    private BankList bank;
+
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Accounts accounts;
 
 }

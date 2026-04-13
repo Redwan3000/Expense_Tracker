@@ -55,7 +55,7 @@ public class AccountsService {
         if (bankAccountRepo.existsByUserIdAndAccountNumber(user.getId(), requestDto.getAccountNumber())) {
             throw new RuntimeException("account already exist");
         }
-        Banks newAccount = Banks.builder()
+        BankList newAccount = BankList.builder()
                 .accountNumber(requestDto.getAccountNumber())
                 .bankName(requestDto.getBankName())
                 .bankBranch(requestDto.getBankBranch())
@@ -86,7 +86,7 @@ public class AccountsService {
         if (mobileBankingRepo.existsByProviderNameAndPhoneNumber(dto.getProviderName(), dto.getPhoneNumber())) {
             throw new RuntimeException("phone already exists");
         }
-        MobileBanks newAccount = MobileBanks.builder()
+        MobileBankingList newAccount = MobileBankingList.builder()
                 .providerName(dto.getProviderName())
                 .phoneNumber(dto.getPhoneNumber())
                 .balance(dto.getCurrentBalance())
@@ -120,7 +120,7 @@ public class AccountsService {
 
     public ModifyBankAccountDetailsResponseDto modifyBankAccountDetails(User user, long id, ModifyBankAccountDetailsRequestDto dto) {
 
-        Banks account = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
+        BankList account = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
 
         account.setAccountNumber(dto.getAccountNumber() == null ? account.getAccountNumber() : dto.getAccountNumber());
         account.setBankName(dto.getBankName() == null ? account.getBankName() : dto.getBankName());
@@ -145,7 +145,7 @@ public class AccountsService {
 
     public ModifyMobileBankingDetailsResponseDto modifyMobileBankingAccountDetails(User user, long id, ModifyBankAccountDetailsRequestsDTo dto) {
 
-        MobileBanks mobileBankAccount = mobileBankingRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("mobile banking account not found"));
+        MobileBankingList mobileBankAccount = mobileBankingRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("mobile banking account not found"));
 
         mobileBankAccount.setBalance(dto.getCurrentBalance() == null ? mobileBankAccount.getBalance() : dto.getCurrentBalance());
         mobileBankAccount.setPhoneNumber(dto.getPhoneNumber() == null ? mobileBankAccount.getPhoneNumber() : dto.getPhoneNumber());
@@ -202,7 +202,7 @@ public class AccountsService {
     @Transactional
     public DeleteAccountDto deleteBankAccount(User user, long id) {
 
-        Banks bank = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
+        BankList bank = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
         List<Transactions> deletedAccountTransactions = transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(2L).orElseThrow(() -> new RuntimeException("transaction method not found")), id);
 
         transactionRepo.deleteAll(deletedAccountTransactions);
@@ -220,17 +220,17 @@ public class AccountsService {
     @Transactional
     public DeleteAccountDto deleteMobileBankingAccount(Long userId, Long accountId) {
 
-        MobileBanks mobileBanksAccount = mobileBankingRepo.findByUserIdAndAccountId(userId, accountId).orElseThrow(() -> new RuntimeException("mobile banking not found"));
+        MobileBankingList mobileBankingListAccount = mobileBankingRepo.findByUserIdAndAccountId(userId, accountId).orElseThrow(() -> new RuntimeException("mobile banking not found"));
 
 
         List<Transactions> deletedAccountTransactions = transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(3L).orElseThrow(() -> new RuntimeException("transaction method not found")), accountId);
 
         transactionRepo.deleteAll(deletedAccountTransactions);
-        mobileBankingRepo.delete(mobileBanksAccount);
+        mobileBankingRepo.delete(mobileBankingListAccount);
 
         return DeleteAccountDto.builder()
-                .accountId(mobileBanksAccount.getId())
-                .paymentType(mobileBanksAccount.getPaymentMethod().getName())
+                .accountId(mobileBankingListAccount.getId())
+                .paymentType(mobileBankingListAccount.getPaymentMethod().getName())
                 .deletedStatus(true)
                 .build();
     }

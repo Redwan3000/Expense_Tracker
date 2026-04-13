@@ -27,13 +27,13 @@ public class Permission {
 
     @Column(unique = true)
     private String name;
-
     private String description;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
     @Builder.Default

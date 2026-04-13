@@ -23,12 +23,13 @@ public class NotificationStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String statusName;
+    private String name;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "notificationStatus")
     private Set<Notifications> notifications;

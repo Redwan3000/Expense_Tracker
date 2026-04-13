@@ -30,25 +30,22 @@ public class Transactions {
     private String description;
     private LocalDate date;
     private String invoicePath;
-    private Long accountId;
 
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "account_id", nullable = false)
+    private Accounts accounts;
+
 
     @ManyToOne
     @JoinColumn(name = "transaction_type_id", nullable = false)
     private TransactionType transactionType;
-
-    @ManyToOne
-    @JoinColumn(name = "payment_method_id", nullable = false)
-    private PaymentMethod paymentMethod;
 
 
 }

@@ -8,23 +8,22 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-
 @Entity
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Getter
 @Setter
-@SQLDelete(sql = "update gender set is_deleted = true , deleted_at = now() where id=?")
-@SQLRestriction("is_deleted = false")
-public class Gender {
+@SQLDelete(sql = "update bank_list set is_deleted=true , deleted_at = NOW() where id= ?")
+@SQLRestriction("is_deleted=false")
+public class BankList {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+    private String bankName;
 
     @Builder.Default
     private boolean isDeleted = false;
@@ -32,9 +31,8 @@ public class Gender {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "gender")
-    private Set<User> users;
-
+    @OneToMany(mappedBy = "bank")
+    private Set<BankAccountDetails> accountDetails;
 
 
 }

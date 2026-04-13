@@ -1,12 +1,10 @@
 package com.arits.expense_trancker.entity;
 
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.SoftDelete;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,11 +34,8 @@ public class User implements UserDetails {
 
     @Column(unique = true, nullable = false)
     private String username;
-
     private String firstName;
-
     private String lastName;
-
     private String email;
     private String phone;
     private String password;
@@ -49,31 +44,38 @@ public class User implements UserDetails {
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-
-    @ManyToOne
-    @JoinColumn(name = "gender_id")
-    private Gender gender;
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
     @Builder.Default
-    private User parent=null;
+    private User parent = null;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
 
-    @OneToMany(mappedBy = "user")
-    private Set<Transactions> transactions;
+    @ManyToOne
+    @JoinColumn(name = "gender_id")
+    private Gender gender;
+
+
+    @OneToMany(mappedBy = "parent")
+    private Set<User>subUsers;
+
+
 
     @OneToMany(mappedBy = "user")
-    private Set<PaymentMethod> paymentMethods;
+    private Set<Accounts> accounts;
 
     @Builder.Default
     @OneToMany(mappedBy = "user")
     private Set<UsersPermissions> usersPermissions = new HashSet<>();
 
+    @OneToMany(mappedBy = "user")
+    private Set<Notifications> notifications;
 
 
 
