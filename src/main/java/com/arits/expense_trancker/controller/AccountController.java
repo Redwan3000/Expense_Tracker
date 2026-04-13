@@ -432,6 +432,7 @@ public class AccountController {
             passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("subUser does not exist"));
         }
 
+
         CashWalletDetailsDto accountDetails = accountsService.getCashWalletAccountDetails(passengerUser);
 
         ApiResponse<?> apiResponse = ApiResponse.<CashWalletDetailsDto>builder()

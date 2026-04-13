@@ -6,6 +6,7 @@ import com.arits.expense_trancker.dto.UserRegisterRequestDto;
 import com.arits.expense_trancker.dto.UserRegisterResponseDto;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
+import com.arits.expense_trancker.repository.UserRepo;
 import com.arits.expense_trancker.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,15 +22,32 @@ import java.time.LocalDateTime;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepo userRepo;
 
 
     @PostMapping({
             "/users-register",
             "/owner/subuser-register",
-            "/admin/user-register"})
-    public ResponseEntity<ApiResponse<?>> UsersRegister(@AuthenticationPrincipal User user, @RequestBody UserRegisterRequestDto userRegisterRequestDto) {
+            "/admin/user-register",
+    "/admin/subuser-register/{ownerId}"})
+    public ResponseEntity<ApiResponse<?>> UsersRegister(@AuthenticationPrincipal User user,
+                                                        @RequestBody UserRegisterRequestDto requestDto,
+                                                        @PathVariable(value = "ownerId",required = false) Long ownerId) {
 
-        UserRegisterResponseDto registers = authService.register(userRegisterRequestDto, user);
+        User passengerUser= null;
+        boolean canCreateOwner= user.getAuthorities().stream().anyMatch(a->a.getAuthority().equals("Can Register New User"));
+        boolean canCreateSubowner= user.getAuthorities().stream().anyMatch(a->a.getAuthority().equals("Can Create New Subowner"));
+
+        if(canCreateSubowner && ownerId!=null){
+            passengerUser= userRepo.findById((ownerId)).orElseThrow(()->new RuntimeException("Invalid OwnerId"));
+        }else if (canCreateOwner && ownerId==null){
+            passengerUser=null;
+        } else if (canCreateSubowner && ownerId==null){
+            passengerUser=user;
+        }
+
+
+        UserRegisterResponseDto registers = authService.register(passengerUser,requestDto);
 
         ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
                 .status(HttpStatus.CREATED.value())

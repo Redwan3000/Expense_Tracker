@@ -31,11 +31,10 @@ public class AuthService {
 
 
 
-    public UserRegisterResponseDto register(UserRegisterRequestDto requestDto, User currentUser) {
+    public UserRegisterResponseDto register(User currentUser ,UserRegisterRequestDto requestDto) {
 
 
         if (userRepo.findByUsername(requestDto.getUsername()).isPresent()) {
-
             throw new IllegalArgumentException("user already exist ,,,,please login");
         }
 
