@@ -1,6 +1,9 @@
 package com.arits.expense_trancker.controller;
 
 import com.arits.expense_trancker.dto.*;
+import com.arits.expense_trancker.entity.Account;
+import com.arits.expense_trancker.entity.Balance;
+import com.arits.expense_trancker.entity.Currency;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
 import com.arits.expense_trancker.repository.*;
@@ -22,23 +25,53 @@ public class AccountController {
 
     private final AccountsService accountsService;
     private final UserRepo userRepo;
-    private final MobileBankingRepo mobileBankingRepo;
-    private final BankAccountRepo bankAccountRepo;
-    private final CashWalletRepo cashWalletRepo;
     private final PaymentMethodRepo paymentMethodRepo;
+    private final CurrencyRepo currencyRepo;
+    private final AccountRepo accountRepo;
 
 
 //Controller for the Adding an Account
+    //owner can add account for them also for their subowner
+    //admin can also add account for any user
 
-    //For Adding Bank Account
-    @PostMapping("/add-bank-account")
-    @PreAuthorize("hasAuthority('Add Bank Account') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<AddBankAccountResponseDto>> addBankAccount(@AuthenticationPrincipal User user, @RequestBody AddBankAccountRequestDto addBankAccountRequestDTO) {
+    @PostMapping({
+            "/user/add-account",
+            "/owner/user/add-account/{userId}",
+            "/admin/user/add-account/{userId}",
+            "/admin/subowner/add-account/{userId}/{subUserId}"})
+    @PreAuthorize("hasAnyAuthority(" +
+            "'Add Account'," +
+            "'Add Account For Any User'," +
+            "'Add Account For Subowner'," +
+            "'Add Account For Any Owners Subowner')")
+    public ResponseEntity<ApiResponse<?>> addAccount(@AuthenticationPrincipal User user,
+                                                     @RequestBody AddAccountRequestDto requestDto,
+                                                     @PathVariable(name = "userId", required = false) Long userId,
+                                                     @PathVariable(name = "subUserId", required = false) Long subUserId) {
 
 
-        AddBankAccountResponseDto newAccount = accountsService.addBankAccount(user, addBankAccountRequestDTO);
+        User passengerUser;
 
-        ApiResponse<AddBankAccountResponseDto> response = ApiResponse.<AddBankAccountResponseDto>builder()
+        boolean canAddAnyUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Add Account For Any User"));
+        boolean canAddSubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Add Account For Subowner"));
+        boolean canAddAnySubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Add Account For Any Owners Subowner"));
+        boolean canAddOwnAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Add Account"));
+
+        if (canAddOwnAccount && userId == null && subUserId == null) {
+            passengerUser = user;
+        } else if (canAddAnyUserAccount && userId != null) {
+            passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("invalid userId"));
+        } else if (canAddSubUserAccount && userId != null) {
+            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("invalid userID"));
+        } else if (canAddAnySubUserAccount && userId != null && subUserId != null) {
+            passengerUser = userRepo.findByParentIdAndUserId(userId, subUserId).orElseThrow(() -> new RuntimeException("invalid subUser"));
+        } else {
+            throw new IllegalArgumentException("Invalid User");
+        }
+
+        AddAccountResponseDto newAccount = accountsService.addAccount(passengerUser, requestDto);
+
+        ApiResponse<?> response = ApiResponse.<AddAccountResponseDto>builder()
                 .status(HttpStatus.CREATED.value())
                 .message("Bank Account added successfully")
                 .timestamp(LocalDateTime.now())
@@ -49,58 +82,59 @@ public class AccountController {
     }
 
 
-    //For Adding Mobile Banking Account
-    @PostMapping("/add-mobile-Banking-account")
-    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasAnyRole('OWNER','SUBOWNER')")
-    public ResponseEntity<ApiResponse<?>> addMobileBanking(@AuthenticationPrincipal User user, @RequestBody AddMobileBankingRequestDto addMobileBankingRequestDto) {
-
-        AddMobileBankingResponseDto newAccount = accountsService.addMobileBankingAccount(user, addMobileBankingRequestDto);
-
-
-        ApiResponse<?> response = ApiResponse.<AddMobileBankingResponseDto>builder()
-                .status(HttpStatus.CREATED.value())
-                .message("Mobile Banking Account added Successfully")
-                .timestamp(LocalDateTime.now())
-                .result(newAccount)
-                .error(null)
-                .build();
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-
-    }
-
-
-    //For creating cash Account
-    @PostMapping("/create-cash-wallet-account")
-    @PreAuthorize("hasAuthority('Add Mobile Banking Account') or hasAnyRole('OWNER','SUBOWNER')")
-    public ResponseEntity<ApiResponse<?>> createCashWallet(@AuthenticationPrincipal User user, @RequestBody CreateCashAccountRequestDto dto) {
-
-        CreateCashAccountResponseDto newWallet = accountsService.addCashAccount(user, dto);
-
-        ApiResponse<?> response = ApiResponse.<CreateCashAccountResponseDto>builder()
-                .status(HttpStatus.CREATED.value())
-                .message("Cash Wallet created Successfully")
-                .timestamp(LocalDateTime.now())
-                .result(newWallet)
-                .error(null)
-                .build();
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-
-    }
-
-
     //Controller for Modifying Accounts Detail
     // for modifying bank details
-    @PutMapping("modify-bank-details/{id}")
-    @PreAuthorize("hasAuthority('Modify Bank Account Details') or hasRole('OWNER')")
-    public ResponseEntity<?> modifyBankingDetails(@AuthenticationPrincipal User user, @PathVariable("id") long id, @RequestBody ModifyBankAccountDetailsRequestDto requestDTo) {
+    @PutMapping({
+            "/user/modify-account-details/{paymentMethod}/{accountId}",
+            "/owner/user/modify-account-details/{paymentMethod}/{accountId}/{subUserId}",
+            "/admin/user/modify-account-details/{paymentMethod}/{accountId}/{userId}",
+            "/admin/subowner/modify-account-details/{paymentMethod}/{accountId}/{subUserId}/{userId}"})
+    @PreAuthorize("hasAnyAuthority(" +
+            "'Modify Account Details'," +
+            "'Modify Account Details For Subuser'," +
+            "'Modify Account Details For Any User'," +
+            "'Modify Account Details For Any Users Subuser')")
+    public ResponseEntity<?> modifyBankingDetails(@AuthenticationPrincipal User user,
+                                                  @PathVariable(value = "paymentMethod", required = false) Long paymentMethod,
+                                                  @PathVariable(value = "accountId", required = false) Long accountId,
+                                                  @PathVariable(value = "userId", required = false) Long userId,
+                                                  @PathVariable(value = "subUserId", required = false) Long subUserId,
+                                                  @RequestBody ModifyAccountDetailsRequestDto requestDTo) {
 
-        ModifyBankAccountDetailsResponseDto modifyMobileBankAccount = accountsService.modifyBankAccountDetails(user, id, requestDTo);
 
-        ApiResponse<?> response = ApiResponse.<ModifyBankAccountDetailsResponseDto>builder()
+        if (!accountRepo.existsByPaymentMethodAndId(paymentMethod, accountId)) {
+            throw new IllegalArgumentException("invalid account details");
+        }
+        User passengerUser;
+        Account validAccount;
+        boolean canModifyOwnAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Modify Account Details"));
+        boolean canModifySubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Modify Account Details For Subuser"));
+        boolean canModifyAnyUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Account Details For Any User"));
+        boolean canModifyAnySubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Account Details For Any Users Subuser"));
+
+        if (canModifyOwnAccount && userId == null && subUserId == null) {
+            passengerUser = user;
+            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
+        } else if (canModifyAnyUserAccount && userId != null) {
+            passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("invalid userId"));
+            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
+        } else if (canModifySubUserAccount && userId != null) {
+            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("invalid userID"));
+            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
+        } else if (canModifyAnySubUserAccount && userId != null && subUserId != null) {
+            passengerUser = userRepo.findByParentIdAndUserId(userId, subUserId).orElseThrow(() -> new RuntimeException("invalid subUser"));
+            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
+        } else {
+            throw new IllegalArgumentException("Invalid User");
+        }
+
+        AddAccountResponseDto modifyAccountDetails = accountsService.modifyAccountDetails(passengerUser.getId(), requestDTo, paymentMethod, validAccount.getId());
+
+        ApiResponse<?> response = ApiResponse.<AddAccountResponseDto>builder()
                 .status(HttpStatus.OK.value())
                 .message("modified bank details successfully")
                 .timestamp(LocalDateTime.now())
-                .result(modifyMobileBankAccount)
+                .result(modifyAccountDetails)
                 .error(null)
                 .build();
 

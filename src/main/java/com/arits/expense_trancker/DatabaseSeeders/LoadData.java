@@ -43,7 +43,6 @@ public class LoadData implements CommandLineRunner {
             .username("ADMIN")
             .build();
     private final AccountsService accountsService;
-    private final AccountTypeRepo accountTypeRepo;
 
 
     @Override
@@ -79,8 +78,9 @@ public class LoadData implements CommandLineRunner {
         transactionService.tmSeedding("MOBILE_BANKING");
 
         if (userRepo.findByUsername("ADMIN").isEmpty()) {
-            authService.register(userRegisterRequestDto, null);
+            authService.register(null,userRegisterRequestDto);
         }
+
 
         permissionService.permissionsSeeding("Login", "users can login");//1
         permissionService.permissionsSeeding("Register", "can register as owner");//2

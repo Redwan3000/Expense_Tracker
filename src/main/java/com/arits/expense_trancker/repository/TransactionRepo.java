@@ -1,5 +1,5 @@
 package com.arits.expense_trancker.repository;
-import com.arits.expense_trancker.entity.TransactionMethod;
+import com.arits.expense_trancker.entity.PaymentMethod;
 import com.arits.expense_trancker.entity.Transactions;
 import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
@@ -51,5 +51,5 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
     void softDeleteTransactions(@Param("transaction_id") Long transaction_id);
 
 
-    List<Transactions> findByPaymentMethodAndAccountId(TransactionMethod transactionMethodNotFound, long id);
+    List<Transactions> findByPaymentMethodAndAccountId(PaymentMethod paymentMethodNotFound, long id);
 }

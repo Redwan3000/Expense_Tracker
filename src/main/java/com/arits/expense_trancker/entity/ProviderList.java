@@ -8,18 +8,15 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-
 @Entity
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-@Table(name = "transaction_method")
-@SQLDelete(sql = "update transaction_method set is_deleted=true ,deleted_at=NOW()where id=?")
-@SQLRestriction("is_deleted=false")
-
-public class TransactionMethod {
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@SQLDelete(sql = "update provider_list set is_deleted = true,deleted_at=now() where id=?")
+@SQLRestriction("is_deleted = false")
+public class ProviderList {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,8 +29,7 @@ public class TransactionMethod {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "transactionMethod")
-    private Set<Accounts> accounts;
-
+    @OneToMany(mappedBy = "provider")
+    private Set<AccountDetails> accountDetails;
 
 }

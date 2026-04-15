@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
@@ -29,25 +30,28 @@ public class AuthController {
             "/users-register",
             "/owner/subuser-register",
             "/admin/user-register",
-    "/admin/subuser-register/{ownerId}"})
-    public ResponseEntity<ApiResponse<?>> UsersRegister(@AuthenticationPrincipal User user,
-                                                        @RequestBody UserRegisterRequestDto requestDto,
-                                                        @PathVariable(value = "ownerId",required = false) Long ownerId) {
+            "/admin/subuser-register/{ownerId}"})
+    public ResponseEntity<ApiResponse<?>> registerNewuser(@AuthenticationPrincipal User user,
+                                                          @RequestBody UserRegisterRequestDto requestDto,
+                                                          @PathVariable(value = "ownerId", required = false) Long ownerId) {
 
-        User passengerUser= null;
-        boolean canCreateOwner= user.getAuthorities().stream().anyMatch(a->a.getAuthority().equals("Can Register New User"));
-        boolean canCreateSubowner= user.getAuthorities().stream().anyMatch(a->a.getAuthority().equals("Can Create New Subowner"));
+        User passengerUser = null;
 
-        if(canCreateSubowner && ownerId!=null){
-            passengerUser= userRepo.findById((ownerId)).orElseThrow(()->new RuntimeException("Invalid OwnerId"));
-        }else if (canCreateOwner && ownerId==null){
-            passengerUser=null;
-        } else if (canCreateSubowner && ownerId==null){
-            passengerUser=user;
+        if (user != null) {
+            boolean canCreateSubowner = user.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("Can Create New Subowner"));
+            boolean canCreateOtherSubowner = user.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("Can Create Subowner For Other User"));
+
+            if (canCreateOtherSubowner && ownerId != null) {
+                passengerUser = userRepo.findById(ownerId)
+                        .orElseThrow(() -> new RuntimeException("Invalid OwnerId"));
+            } else if (canCreateSubowner) {
+                passengerUser = user;
+            }
         }
 
-
-        UserRegisterResponseDto registers = authService.register(passengerUser,requestDto);
+        UserRegisterResponseDto registers = authService.register(passengerUser, requestDto);
 
         ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
                 .status(HttpStatus.CREATED.value())

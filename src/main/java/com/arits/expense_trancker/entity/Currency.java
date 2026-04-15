@@ -30,7 +30,7 @@ public class Currency {
     private LocalDateTime updatedAt;
 
 
-    @OneToMany(mappedBy = "currency")
-    private Set<Accounts> accounts;
+    @OneToMany(mappedBy = "currency",cascade = {CascadeType.PERSIST, CascadeType.MERGE })
+    private Set<Account> accounts;
 
 }

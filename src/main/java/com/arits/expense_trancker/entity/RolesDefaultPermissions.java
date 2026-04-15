@@ -26,7 +26,7 @@ public class RolesDefaultPermissions {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Builder.Default
     private boolean isDeleted = false;

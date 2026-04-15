@@ -53,28 +53,28 @@ public class User implements UserDetails {
     @Builder.Default
     private User parent = null;
 
-    @ManyToOne
+    @ManyToOne( cascade = {CascadeType.PERSIST , CascadeType.MERGE})
     @JoinColumn(name = "role_id")
     private Role role;
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.PERSIST , CascadeType.MERGE})
     @JoinColumn(name = "gender_id")
     private Gender gender;
 
 
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = {CascadeType.PERSIST , CascadeType.MERGE})
     private Set<User>subUsers;
 
 
 
-    @OneToMany(mappedBy = "user")
-    private Set<Accounts> accounts;
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST , CascadeType.MERGE})
+    private Set<Account> accounts;
 
     @Builder.Default
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST , CascadeType.MERGE})
     private Set<UsersPermissions> usersPermissions = new HashSet<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST , CascadeType.MERGE})
     private Set<Notifications> notifications;
 
 

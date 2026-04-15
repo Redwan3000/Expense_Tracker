@@ -2,13 +2,11 @@ package com.arits.expense_trancker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -32,8 +30,8 @@ public class Balance {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinColumn(name = "account_id")
-    private Accounts accounts;
+    private Account account;
 
 }

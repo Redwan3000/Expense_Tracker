@@ -30,8 +30,7 @@ public class AuthService {
     private final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
 
 
-
-    public UserRegisterResponseDto register(User currentUser ,UserRegisterRequestDto requestDto) {
+    public UserRegisterResponseDto register(User currentUser, UserRegisterRequestDto requestDto) {
 
 
         if (userRepo.findByUsername(requestDto.getUsername()).isPresent()) {
@@ -42,84 +41,80 @@ public class AuthService {
         Role role;
         Gender gender = genderRepo.findById(requestDto.getGenderId()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
 
+        if (currentUser == null) {
+            role = roleRepo.findByName("OWNER").orElseThrow(() -> new RuntimeException("Role Not Found"));
+        } else {
+            String currentUserRole = currentUser.getRole().getName();
+            if (currentUserRole.contains("ADMIN")) {
+                if (requestDto.getRoleId() == null) {
+                    throw new RuntimeException("admin must enter roleId");
+                }
+                role = roleRepo.findById(requestDto.getRoleId()).orElseThrow(() -> new RuntimeException("invalid roleId"));
+                if (!role.getName().contains("OWNER") && !role.getName().contains("ADMIN")) {
+                    throw new IllegalArgumentException("Admin cannot create tertiary and subowner without userId");
+                }
+            } else if (currentUserRole.contains("OWNER")) {
+                if (requestDto.getRoleId() == null) {
+                    role = roleRepo.findByName("SUBOWNER")
+                            .orElseThrow(() -> new RuntimeException("Role SUBOWNER not found"));
+                } else {
+                    role = roleRepo.findById(requestDto.getRoleId())
+                            .orElseThrow(() -> new RuntimeException("Role not found"));
 
-        if(currentUser== null && requestDto.getRoleId()==null){
-
-            role=roleRepo.findByName("OWNER").orElseThrow(()->
-                    new RuntimeException("ERROR Getting Owner Role"));
-
-        }
-        else if (requestDto.getRoleId()!=null && (currentUser==null ||currentUser.getRole().getName().contains("ADMIN")) ) {
-            role= roleRepo.findById(requestDto.getRoleId()).orElseThrow(()->
-                    new RuntimeException("Role Does Not Exist"));
-
-            if(role.getName().contains("SUBOWNER")|| role.getName().contains("TERTIARY")){
-                throw new IllegalArgumentException("ADMINS Cannot Create SUBOWNER Or TERTIARY Accounts");
+                    if (!role.getName().equals("SUBOWNER") && !role.getName().equals("TERTIARY")) {
+                        throw new RuntimeException("OWNERS can not create other OWNER or ADMIN accounts");
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException("You Can Register");
             }
-        }
-
-        else if (currentUser.getRole().getName().contains("OWNER")) {
-
-            if(requestDto.getRoleId()==null){
-                role = roleRepo.findById(2L).orElseThrow(()->new RuntimeException("Role Does Not Exist"));
-
-            }else if(requestDto.getRoleId()==2L || requestDto.getRoleId()==3L){
-                role= roleRepo.findById(requestDto.getRoleId()).orElseThrow(()->new RuntimeException("Role Does Not Exist"));
-            }else {
-                throw new RuntimeException("OWNERS Can Not Create OWNERS Or ADMINS Account");
-            }
 
         }
-        else {
-            throw new IllegalArgumentException("You Cannot Register");
-        }
 
 
-        User newUser = userRepo.save(User.builder()
-                .firstName(requestDto.getFirstName())
-                .lastName(requestDto.getLastName())
-                .email(requestDto.getEmail())
-                .dob(requestDto.getDob())
-                .role(role)
-                .phone(requestDto.getPhone())
-                .gender(gender)
-                .parent((currentUser != null && currentUser.getRole().getName().contains("OWNER") ? currentUser : null))
-                .password(passwordEncoder.encode(requestDto.getPassword()))
-                .username(requestDto.getUsername())
-                .build());
-
-List<RolesDefaultPermissions> defaultPermissions= rolesDefaultPermissionsRepo.findByRoleId(role.getId());
 
 
-        newUser.getUsersPermissions().addAll(defaultPermissions.stream()
-                .map(r -> UsersPermissions.builder()
+    User newUser = userRepo.save(User.builder()
+            .firstName(requestDto.getFirstName())
+            .lastName(requestDto.getLastName())
+            .email(requestDto.getEmail())
+            .dob(requestDto.getDob())
+            .role(role)
+            .phone(requestDto.getPhone())
+            .gender(gender)
+            .parent((currentUser != null && currentUser.getRole().getName().equals("OWNER") ? currentUser : null))
+            .password(passwordEncoder.encode(requestDto.getPassword()))
+            .username(requestDto.getUsername())
+            .build());
+
+    List<RolesDefaultPermissions> defaultPermissions = rolesDefaultPermissionsRepo.findByRoleId(role.getId());
+
+
+        List<UsersPermissions> userPerms = defaultPermissions.stream()
+                .map(dp -> UsersPermissions.builder()
                         .user(newUser)
-                        .permission(r.getPermission())
+                        .permission(dp.getPermission())
                         .build())
-                .toList());
-
+                .toList();
+        newUser.getUsersPermissions().addAll(userPerms);
         userRepo.save(newUser);
 
         return new UserRegisterResponseDto(newUser.getId(), newUser.getUsername());
-
     }
 
 
+public UserLoginResponseDto login(UserLoginRequestDto userLoginRequestDto) {
 
+    Authentication authentication = authenticationManager
+            .authenticate(
+                    new UsernamePasswordAuthenticationToken(userLoginRequestDto.getUsername(), userLoginRequestDto.getPassword())
+            );
 
+    User loginUser = (User) authentication.getPrincipal();
 
-    public UserLoginResponseDto login(UserLoginRequestDto userLoginRequestDto) {
+    String token = jwtUtils.createJwtToken(loginUser);
 
-        Authentication authentication = authenticationManager
-                .authenticate(
-                        new UsernamePasswordAuthenticationToken(userLoginRequestDto.getUsername(), userLoginRequestDto.getPassword())
-                );
+    return new UserLoginResponseDto(token, loginUser.getId());
 
-        User loginUser = (User) authentication.getPrincipal();
-
-        String token = jwtUtils.createJwtToken(loginUser);
-
-        return new UserLoginResponseDto(token, loginUser.getId());
-
-    }
+}
 }

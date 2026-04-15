@@ -14,9 +14,9 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SQLDelete(sql = "UPDATE accounts SET is_deleted = true,deleted_at=NOW() WHERE id=?")
+@SQLDelete(sql = "update account set is_deleted = true,deleted_at=NOW() where id=?")
 @SQLRestriction("is_deleted = false")
-public class Accounts {
+public class Account {
 
 
     @Id
@@ -24,43 +24,37 @@ public class Accounts {
     private Long id;
 
     @Builder.Default
-    private boolean isDeleted=false;
+    private boolean isDeleted = false;
     private LocalDateTime deletedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "currency_id", nullable = false)
     private Currency currency;
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "account_type_id", nullable = false)
     private AccountType accountType;
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "transaction_method_id", nullable = false)
-    private TransactionMethod transactionMethod;
+    private PaymentMethod paymentMethod;
 
 
-
-    @OneToOne(mappedBy = "accounts")
+    @OneToOne(mappedBy = "account",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Balance balance;
 
-    @OneToOne(mappedBy = "accounts")
-    private BankAccountDetails bankAccountDetails;
-
-    @OneToOne(mappedBy = "accounts")
-    private CashWalletDetails cashWalletDetails;
-
-    @OneToOne(mappedBy = "accounts")
-    private MobileBankDetails mobileBankDetails;
-
-    @OneToMany(mappedBy = "accounts")
+    @OneToMany(mappedBy = "account",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<Transactions> transactions;
+
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "account_details")
+    private AccountDetails accountDetails;
 
 }

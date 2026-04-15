@@ -8,21 +8,23 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+
 @Entity
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Getter
 @Setter
-@SQLDelete(sql = "update mobile_banking_list set is_deleted=true , deleted_at = NOW() where id= ?")
-@SQLRestriction("is_deleted=false")
-public class MobileBankingList {
 
+@SQLDelete(sql = "update payment_method set is_deleted=true ,deleted_at=NOW()where id=?")
+@SQLRestriction("is_deleted=false")
+
+public class PaymentMethod {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String providerName;
+    private String name;
 
     @Builder.Default
     private boolean isDeleted = false;
@@ -30,8 +32,8 @@ public class MobileBankingList {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "mobileBanking")
-    private Set<MobileBankDetails> mobileBankDetails;
+    @OneToMany(mappedBy = "transactionMethod",cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    private Set<Account> accounts;
 
 
 }

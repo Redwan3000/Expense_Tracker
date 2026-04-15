@@ -11,17 +11,12 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AddMobileBankingResponseDto {
+public class ModifyAccountDetailsRequestDto {
 
-    private Long id;
-
-    private String providerName;
-
-    private String accountType;
-
-    private String phoneNumber;
-
-    private BigDecimal currentBalance;
-
-
+    private Long currency;
+    private Long accountType;
+    private String accountNumber;
+    private String accountHolder;
+    private String nomineeName;
+    private BigDecimal balance;
 }

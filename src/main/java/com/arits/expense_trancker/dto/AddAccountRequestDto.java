@@ -1,7 +1,5 @@
 package com.arits.expense_trancker.dto;
 
-import com.arits.expense_trancker.entity.Currency;
-import com.arits.expense_trancker.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +11,15 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CreateCashAccountRequestDto {
+public class AddAccountRequestDto {
 
-    private String currency;
+    private Long currency;
+    private Long accountType;
+    private Long paymentMethod;
+    private String accountNumber;
+    private String nomineeName;
+    private Long provider;
     private BigDecimal balance;
+    private String accountHolder;
+
 }

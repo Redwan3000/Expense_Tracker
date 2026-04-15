@@ -3,8 +3,6 @@ package com.arits.expense_trancker.controller;
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
-import com.arits.expense_trancker.repository.BankAccountRepo;
-import com.arits.expense_trancker.service.AccountsService;
 import com.arits.expense_trancker.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

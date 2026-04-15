@@ -27,9 +27,6 @@ public class TransactionService {
     private final TransactionTypeRepo transactionTypeRepo;
     private final PaymentMethodRepo paymentMethodRepo;
     private final TransactionRepo transactionRepo;
-    private final BankAccountRepo bankAccountRepo;
-    private final MobileBankingRepo mobileBankingRepo;
-    private final CashWalletRepo cashWalletRepo;
 
 
     private void updateBalance(User user, Long accountId, BigDecimal amount, String typeName, String methodName) {
@@ -45,10 +42,10 @@ public class TransactionService {
     }
 
 
-    public TransactionMethod tmSeedding(String name) {
+    public PaymentMethod tmSeedding(String name) {
 
         return paymentMethodRepo.findByMethodName(name).orElseGet(() -> {
-                    return paymentMethodRepo.save(TransactionMethod.builder()
+                    return paymentMethodRepo.save(PaymentMethod.builder()
                             .name(name)
                             .build());
                 }
@@ -96,7 +93,7 @@ public class TransactionService {
             }
         }
 
-        TransactionMethod method = paymentMethodRepo.findById(dto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("Transaction method not found"));
+        PaymentMethod method = paymentMethodRepo.findById(dto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("Transaction method not found"));
         TransactionType type = transactionTypeRepo.findById(dto.getTransactionType()).orElseThrow(() -> new RuntimeException("Transaction type not found"));
 
         updateBalance(user, dto.getAccountId(), dto.getAmount(), type.getTypeName(), method.getName());

@@ -20,7 +20,7 @@ public class AccountType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     private String name;
 
     @Builder.Default
@@ -30,8 +30,10 @@ public class AccountType {
     private LocalDateTime updatedAt;
 
 
-    @OneToMany(mappedBy = "accountType")
-    private Set<Accounts> account;
+    @OneToMany(mappedBy = "accountType",cascade = {CascadeType.MERGE,CascadeType.PERSIST})
+    private Set<Account> account;
 
+    @OneToMany(mappedBy = "accountType",cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    private Set<AccountDetails> accountDetails;
 
 }

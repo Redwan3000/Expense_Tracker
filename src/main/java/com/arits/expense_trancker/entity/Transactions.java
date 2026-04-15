@@ -38,12 +38,12 @@ public class Transactions {
     private LocalDateTime updatedAt;
 
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     @JoinColumn(name = "account_id", nullable = false)
-    private Accounts accounts;
+    private Account account;
 
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     @JoinColumn(name = "transaction_type_id", nullable = false)
     private TransactionType transactionType;
 

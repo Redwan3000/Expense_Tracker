@@ -1,7 +1,7 @@
 package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.AccountBalanceResponseDto;
-import com.arits.expense_trancker.entity.TransactionMethod;
+import com.arits.expense_trancker.entity.PaymentMethod;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,17 +11,17 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PaymentMethodRepo extends JpaRepository<TransactionMethod, Long> {
+public interface PaymentMethodRepo extends JpaRepository<PaymentMethod, Long> {
 
 
 
 @Query(value = "select * from payment_method where name=:name",nativeQuery = true)
-    Optional<TransactionMethod> findByMethodName(@Param("name") String name);
+    Optional<PaymentMethod> findByMethodName(@Param("name") String name);
 
     @Query(value = "select * from payment_method where id=:tm_id",nativeQuery = true)
-    Optional<TransactionMethod> findByMethodId(@Param("tm_id") long tm_id);
+    Optional<PaymentMethod> findByMethodId(@Param("tm_id") long tm_id);
 
-    Optional<TransactionMethod> findByNameIgnoreCase(String name);
+    Optional<PaymentMethod> findByNameIgnoreCase(String name);
 
 
 
