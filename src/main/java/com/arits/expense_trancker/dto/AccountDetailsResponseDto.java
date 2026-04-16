@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AddAccountResponseDto {
+public class AccountDetailsResponseDto {
+
 
     private Long accountId;
     private String currency;
@@ -22,7 +23,9 @@ public class AddAccountResponseDto {
     private String nomineeName;
     private String providerName;
     private BigDecimal currentBalance;
-    private String accountHolder;
+    private LocalDateTime lastBalanceUpdatedAt;
+    private String AccountHolder;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }

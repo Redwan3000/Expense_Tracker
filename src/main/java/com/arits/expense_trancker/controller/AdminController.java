@@ -26,13 +26,19 @@ public class AdminController {
     private final AuthService authService;
 
 
-    @GetMapping("/get-user-info/{key}")
+    @GetMapping({
+            "/user/get-user-info/",
+            "/user/subuser/get-user-info/{userID}}",
+            "/admin/user/get-user-info/{userID}/",
+            "/admin/subuser/get-user-info/{userID}/{subuserId}",
+    })
     @PreAuthorize("hasAuthority('Get Any User') or hasAuthority('ADMIN')")
-    public ResponseEntity<ApiResponse<?>> getUserInfo(@PathVariable("key") String keyword) {
+    public ResponseEntity<ApiResponse<?>> getUserInfo(@AuthenticationPrincipal User user
+            , @PathVariable("keyword") String keyword) {
 
         List<UserDetailResponseDto> userDetailResponseDtos = userService.getAnyUserBySearch(keyword);
 
-        ApiResponse<List<UserDetailResponseDto>> response= ApiResponse.<List<UserDetailResponseDto>>builder()
+        ApiResponse<List<UserDetailResponseDto>> response = ApiResponse.<List<UserDetailResponseDto>>builder()
                 .status(HttpStatus.OK.value())
                 .message("fetched user info successfully")
                 .timestamp(LocalDateTime.now())
@@ -45,12 +51,11 @@ public class AdminController {
     }
 
 
-
     @DeleteMapping("/delete-user/{id}")
     @PreAuthorize("hasAuthority('Delete Users') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        softDeletedUserResponseDto deletedUser= userService.softDeleteUser(id);
-        ApiResponse<?> response= ApiResponse.<softDeletedUserResponseDto>builder()
+        softDeletedUserResponseDto deletedUser = userService.softDeleteUser(id);
+        ApiResponse<?> response = ApiResponse.<softDeletedUserResponseDto>builder()
                 .status(HttpStatus.NO_CONTENT.value())
                 .message("User deleted successfully")
                 .timestamp(LocalDateTime.now())
@@ -58,16 +63,16 @@ public class AdminController {
                 .error(null)
                 .build();
 
-        return new ResponseEntity<>(response,HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
     }
 
 
     @GetMapping("/get-users-list")
     @PreAuthorize("hasAuthority('Get Users List') or hasRole('ADMIN')")
     public ResponseEntity<?> getALlUser() {
-        List<AllUserGroupWiseResponseDto> usersList= userService.getAllUsers();
+        List<AllUserGroupWiseResponseDto> usersList = userService.getAllUsers();
 
-        ApiResponse<List<AllUserGroupWiseResponseDto>> response= ApiResponse.<List<AllUserGroupWiseResponseDto>>builder()
+        ApiResponse<List<AllUserGroupWiseResponseDto>> response = ApiResponse.<List<AllUserGroupWiseResponseDto>>builder()
                 .status(HttpStatus.OK.value())
                 .message("fateched all users list successfully")
                 .timestamp(LocalDateTime.now())
@@ -78,30 +83,27 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-
     @GetMapping("/get-deleted-users-list")
     @PreAuthorize("hasAuthority('Get Deleted Users List') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> getDeletedUsersList() {
 
-        List<DeletedUsersListDto> deletedUsers= userService.getAllDeletedUsers();
-        ApiResponse<List<DeletedUsersListDto>>response= ApiResponse.<List<DeletedUsersListDto>>builder()
+        List<DeletedUsersListDto> deletedUsers = userService.getAllDeletedUsers();
+        ApiResponse<List<DeletedUsersListDto>> response = ApiResponse.<List<DeletedUsersListDto>>builder()
                 .status(HttpStatus.OK.value())
                 .message("fetched deleted users list succressfully")
                 .timestamp(LocalDateTime.now())
                 .result(deletedUsers)
                 .error(null)
                 .build();
-    return new ResponseEntity<>(response,HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-
 
 
     @PutMapping("/retrive-users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> reviveUser(@PathVariable("id") Long userId) {
-        RetriveUserResponseDto reviveUser= userService.reviveUser(userId);
-        ApiResponse<?> response= ApiResponse.<RetriveUserResponseDto>builder()
+        RetriveUserResponseDto reviveUser = userService.reviveUser(userId);
+        ApiResponse<?> response = ApiResponse.<RetriveUserResponseDto>builder()
                 .status(HttpStatus.OK.value())
                 .message("restore user successfully")
                 .timestamp(LocalDateTime.now())
@@ -109,27 +111,9 @@ public class AdminController {
                 .error(null)
                 .build();
 
-        return new ResponseEntity<>(response,HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
 
     }
 
-
-
-    @PostMapping("/create-account")
-    @PreAuthorize("hasAuthority('Create Subuser') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<?>> createAccount(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
-
-        UserRegisterResponseDto userRegisterResponseDto = authService.register(userRegisterRequestDto, user);
-
-        ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
-                .status(HttpStatus.CREATED.value())
-                .message("Account Created successfully")
-                .timestamp(LocalDateTime.now())
-                .result(userRegisterResponseDto)
-                .error(null)
-                .build();
-
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
 
 }

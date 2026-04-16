@@ -1,6 +1,6 @@
 package com.arits.expense_trancker.repository;
 
-import com.arits.expense_trancker.dto.AccountBalanceResponseDto;
+import com.arits.expense_trancker.dto.AccountDetails;
 import com.arits.expense_trancker.entity.PaymentMethod;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -44,7 +44,7 @@ public interface PaymentMethodRepo extends JpaRepository<PaymentMethod, Long> {
                                m.is_deleted is  false or 
                                c.is_deleted is false ) 
             """,nativeQuery = true)
-    List<AccountBalanceResponseDto> getAllAccountBalance(@Param("id") Long id);
+    List<AccountDetails> getAllAccountBalance(@Param("id") Long id);
 
 
 

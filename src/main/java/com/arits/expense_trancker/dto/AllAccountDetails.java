@@ -6,19 +6,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.security.PrivateKey;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AllAccountBalanceDto {
+public class AllAccountDetails {
 
     private BigDecimal totalBalance;
-    private List<AccountBalanceResponseDto> bankAccounts;
-    private List<AccountBalanceResponseDto>mobileBankingAccounts;
-    private List<AccountBalanceResponseDto>cashAccounts;
+    private List<AccountDetails> bankAccounts;
+    private List<AccountDetails>mobileBankingAccounts;
+    private List<AccountDetails>cashWallets;
 
 
 }

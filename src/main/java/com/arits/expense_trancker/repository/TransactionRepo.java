@@ -52,4 +52,8 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
 
 
     List<Transactions> findByPaymentMethodAndAccountId(PaymentMethod paymentMethodNotFound, long id);
+
+
+    @Query(value = "select * from transactions where account_id =:accountId",nativeQuery = true)
+    List<Transactions> findByAccountId(@Param("accountId") Long accountId);
 }

@@ -43,7 +43,7 @@ public class Account {
     private AccountType accountType;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "transaction_method_id", nullable = false)
+    @JoinColumn(name = "payment_method_id", nullable = false)
     private PaymentMethod paymentMethod;
 
 

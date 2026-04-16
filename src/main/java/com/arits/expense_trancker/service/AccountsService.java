@@ -1,6 +1,7 @@
 package com.arits.expense_trancker.service;
 
 import com.arits.expense_trancker.dto.*;
+import com.arits.expense_trancker.dto.AccountDetails;
 import com.arits.expense_trancker.entity.*;
 import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
@@ -25,21 +26,34 @@ public class AccountsService {
     private final AccountTypeRepo accountTypeRepo;
     private final ProviderListRepo providerListRepo;
     private final AccountRepo accountRepo;
+    private final BalanceRepo balanceRepo;
+
+
+    public AccountType accountTypeSeeding(String accountTypeName) {
+
+        return accountTypeRepo.findByNameIgnoreCase(accountTypeName).orElseGet(() -> {
+
+            return accountTypeRepo.save(AccountType.builder()
+                    .name(accountTypeName)
+                    .build());
+        });
+    }
 
 
     @Transactional
-    public AddAccountResponseDto addAccount(User user, AddAccountRequestDto requestDto) {
-        if (accountRepo.existsByUserIdAndAccountNumber(user.getId(), requestDto.getAccountNumber())) {
+    public AddAccountResponseDto addAccount(User user, AddAccountRequestDto dto,Long userId,Long subuserId) {
+
+        if (accountRepo.existsByUserIdAndAccountNumber(userId, dto.getAccountNumber())) {
             throw new RuntimeException("account already exist");
         }
 
-        Currency currency = currencyRepo.findById(requestDto.getCurrency()).orElseThrow(() -> new RuntimeException("Invalid Currency"));
+        Currency currency = currencyRepo.findById(dto.getCurrency()).orElseThrow(() -> new RuntimeException("Invalid Currency"));
 
-        AccountType accountType = accountTypeRepo.findById(requestDto.getAccountType()).orElseThrow(() -> new RuntimeException("invalid Account Type"));
+        AccountType accountType = accountTypeRepo.findById(dto.getAccountType()).orElseThrow(() -> new RuntimeException("invalid Account Type"));
 
-        PaymentMethod paymentMethod = paymentMethodRepo.findById(requestDto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("invalid "));
+        PaymentMethod paymentMethod = paymentMethodRepo.findById(dto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("invalid "));
 
-        ProviderList provider = providerListRepo.findById(requestDto.getProvider()).orElseThrow(() -> new RuntimeException("invalid provider"));
+        ProviderList provider = providerListRepo.findById(dto.getProvider()).orElseThrow(() -> new RuntimeException("invalid provider"));
         Account newAccount = Account.builder()
                 .createdAt(LocalDateTime.now())
                 .currency(currency)
@@ -48,7 +62,7 @@ public class AccountsService {
                 .paymentMethod(paymentMethod)
                 .build();
 
-        AccountDetails accountdetails = AccountDetails.builder()
+        com.arits.expense_trancker.entity.AccountDetails accountdetails = com.arits.expense_trancker.entity.AccountDetails.builder()
                 .accountNumber(requestDto.getAccountNumber())
                 .nomineeName(requestDto.getNomineeName())
                 .createdAt(LocalDateTime.now())
@@ -85,149 +99,50 @@ public class AccountsService {
     }
 
 
-    public AccountType accountTypeSeeding(String accountTypeName) {
-
-        return accountTypeRepo.findByNameIgnoreCase(accountTypeName).orElseGet(() -> {
-
-            return accountTypeRepo.save(AccountType.builder()
-                    .name(accountTypeName)
-                    .build());
-        });
-    }
-
-
-    public ModifyBankAccountDetailsResponseDto modifyBankAccountDetails(User user, long id, ModifyBankAccountDetailsRequestDto dto) {
-
-        BankList account = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
-
-        account.setAccountNumber(dto.getAccountNumber() == null ? account.getAccountNumber() : dto.getAccountNumber());
-        account.setBankName(dto.getBankName() == null ? account.getBankName() : dto.getBankName());
-        account.setBankBranch(dto.getBankBranch() == null ? account.getBankBranch() : dto.getBankBranch());
-        account.setBalance(dto.getBalance() == null ? account.getBalance() : dto.getBalance());
-        account.setCurrency(dto.getAccountNumber() == null ? account.getCurrency() : currencyRepo.findByNameIgnoreCase(dto.getCurrencyId()).orElseThrow(() -> new RuntimeException("invalid currency")));
-        account.setAccountType(dto.getAccountType() == null ? account.getAccountType() : accountTypeRepo.findByNameIgnoreCase(dto.getAccountType()).orElseThrow(() -> new RuntimeException("Account Type Not Found")));
-
-
-        bankAccountRepo.save(account);
-        return ModifyBankAccountDetailsResponseDto.builder()
-                .bankId(account.getId())
-                .accountNumber(account.getAccountNumber())
-                .currencyId(account.getCurrency().getName())
-                .bankName(account.getBankName())
-                .bankBranch(account.getBankBranch())
-                .accountType(account.getAccountType().getName())
-                .balance(account.getBalance())
-                .build();
-    }
-
-
-    public ModifyMobileBankingDetailsResponseDto modifyMobileBankingAccountDetails(User user, long id, ModifyBankAccountDetailsRequestsDTo dto) {
-
-        MobileBankingList mobileBankAccount = mobileBankingRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("mobile banking account not found"));
-
-        mobileBankAccount.setBalance(dto.getCurrentBalance() == null ? mobileBankAccount.getBalance() : dto.getCurrentBalance());
-        mobileBankAccount.setPhoneNumber(dto.getPhoneNumber() == null ? mobileBankAccount.getPhoneNumber() : dto.getPhoneNumber());
-        mobileBankAccount.setProviderName(dto.getProviderName() == null ? mobileBankAccount.getProviderName() : dto.getProviderName());
-        mobileBankAccount.setAccountType(dto.getAccountType() == null ? mobileBankAccount.getAccountType() : accountTypeRepo.findByNameIgnoreCase(dto.getAccountType()).orElseThrow(() -> new RuntimeException("Account Type Not Found")));
-
-        mobileBankingRepo.save(mobileBankAccount);
-
-        return ModifyMobileBankingDetailsResponseDto.builder()
-                .id(mobileBankAccount.getId())
-                .providerName(mobileBankAccount.getProviderName())
-                .accountType(mobileBankAccount.getAccountType().getName())
-                .phoneNumber(mobileBankAccount.getPhoneNumber())
-                .currentBalance(mobileBankAccount.getBalance())
-                .build();
-    }
-
-
-    public CreateCashAccountResponseDto modifyCashWallet(User user, ModifyCashWalletDetailsDto dto) {
-
-        CashWalletDetails cashWalletDetails = cashWalletRepo.findByUserId(user.getId()).orElseThrow(() -> new RuntimeException("Users Cash Wallet Not Found"));
-
-        cashWalletDetails.setBalance(dto.getBalance() == null ? cashWalletDetails.getBalance() : dto.getBalance());
-        cashWalletDetails.setCurrency(dto.getCurrency() == null ? cashWalletDetails.getCurrency() : currencyRepo.findByNameIgnoreCase(dto.getCurrency()).orElseThrow(() -> new RuntimeException("invalid currency")));
-        cashWalletRepo.save(cashWalletDetails);
-
-        return CreateCashAccountResponseDto.builder()
-                .id(cashWalletDetails.getId())
-                .currencyName(cashWalletDetails.getCurrency().getName())
-                .currentBalance(cashWalletDetails.getBalance())
-                .paymentMethod(cashWalletDetails.getPaymentMethod().getName())
-                .build();
-
-
-    }
-
-
     @Transactional
-    public DeleteAccountDto deleteCashWallet(Long userId) {
+    public AddAccountResponseDto modifyAccountDetails(ModifyAccountDetailsRequestDto requestDTo, Long accountId) {
 
-        CashWalletDetails cashWalletDetails = cashWalletRepo.findByUserId(userId).orElseThrow(() -> new RuntimeException("Users wallet not found"));
-        List<Transactions> deletedWalletTransactions = transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(1L).orElseThrow(() -> new RuntimeException("transaction method not found")), cashWalletDetails.getId());
+        Account accountToModify = accountRepo.findById(accountId).orElseThrow(() -> new RuntimeException("account does not exist"));
 
-        transactionRepo.deleteAll(deletedWalletTransactions);
-        cashWalletRepo.delete(cashWalletDetails);
-        return DeleteAccountDto.builder()
-                .accountId(cashWalletDetails.getId())
-                .paymentType(cashWalletDetails.getPaymentMethod().getName())
-                .deletedStatus(true)
-                .build();
-    }
+        accountToModify.setAccountType(requestDTo.getAccountType() != null ? accountTypeRepo.findById(requestDTo.getAccountType()).orElseThrow(() -> new RuntimeException("invalid AccountType")) : accountToModify.getAccountType());
+        accountToModify.getAccountDetails().setAccountNumber(requestDTo.getAccountNumber() != null ? requestDTo.getAccountNumber() : accountToModify.getAccountDetails().getAccountNumber());
+        accountToModify.getAccountDetails().setAccountHolder(requestDTo.getAccountHolder() != null ? requestDTo.getAccountHolder() : accountToModify.getAccountDetails().getAccountHolder());
+        accountToModify.getAccountDetails().setNomineeName(requestDTo.getNomineeName() != null ? requestDTo.getNomineeName() : accountToModify.getAccountDetails().getNomineeName());
+        accountToModify.setCurrency(currencyRepo.findById(requestDTo.getCurrency()).orElseThrow(() -> new RuntimeException("invalid CurrencyId")));
+        accountToModify.getBalance().setBalance(requestDTo.getBalance() != null ? requestDTo.getBalance() : accountToModify.getBalance().getBalance());
 
+        accountRepo.save(accountToModify);
 
-    @Transactional
-    public DeleteAccountDto deleteBankAccount(User user, long id) {
-
-        BankList bank = bankAccountRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("bank account not found"));
-        List<Transactions> deletedAccountTransactions = transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(2L).orElseThrow(() -> new RuntimeException("transaction method not found")), id);
-
-        transactionRepo.deleteAll(deletedAccountTransactions);
-        bankAccountRepo.delete(bank);
-
-
-        return DeleteAccountDto.builder()
-                .accountId(bank.getId())
-                .paymentType(bank.getPaymentMethod().getName())
-                .deletedStatus(true)
+        return AddAccountResponseDto.builder()
+                .accountId(accountToModify.getId())
+                .currency(accountToModify.getCurrency().getName())
+                .accountType(accountToModify.getAccountType().getName())
+                .paymentMethod(accountToModify.getPaymentMethod().getName())
+                .accountNumber(accountToModify.getAccountDetails().getAccountNumber())
+                .nomineeName(accountToModify.getAccountDetails().getNomineeName())
+                .providerName(accountToModify.getAccountDetails().getProvider().getName())
+                .currentBalance(accountToModify.getBalance().getBalance())
+                .AccountHolder(accountToModify.getAccountDetails().getAccountHolder())
+                .createdAt(accountToModify.getCreatedAt())
                 .build();
 
-    }
-
-    @Transactional
-    public DeleteAccountDto deleteMobileBankingAccount(Long userId, Long accountId) {
-
-        MobileBankingList mobileBankingListAccount = mobileBankingRepo.findByUserIdAndAccountId(userId, accountId).orElseThrow(() -> new RuntimeException("mobile banking not found"));
-
-
-        List<Transactions> deletedAccountTransactions = transactionRepo.findByPaymentMethodAndAccountId(paymentMethodRepo.findByMethodId(3L).orElseThrow(() -> new RuntimeException("transaction method not found")), accountId);
-
-        transactionRepo.deleteAll(deletedAccountTransactions);
-        mobileBankingRepo.delete(mobileBankingListAccount);
-
-        return DeleteAccountDto.builder()
-                .accountId(mobileBankingListAccount.getId())
-                .paymentType(mobileBankingListAccount.getPaymentMethod().getName())
-                .deletedStatus(true)
-                .build();
     }
 
 
     //Service to Get the Account Balance Group Wise
     @Transactional
-    public AllAccountBalanceDto getAccountsBalance(User user) {
+    public AllAccountDetails getAccountsBalance(User user) {
 
-        List<AccountBalanceResponseDto> allAccount = paymentMethodRepo.getAllAccountBalance(user.getId());
+        List<AccountDetails> allAccount = paymentMethodRepo.getAllAccountBalance(user.getId());
 
-        Map<String, List<AccountBalanceResponseDto>> groupedBalance = allAccount
+        Map<String, List<AccountDetails>> groupedBalance = allAccount
                 .stream()
                 .collect(Collectors.
                         groupingBy(a -> a.getPaymentMethod().toUpperCase()));
 
         groupedBalance.forEach((key, value) -> System.out.println(">>> key: " + key + " size: " + value.size()));
 
-        return AllAccountBalanceDto.builder()
+        return AllAccountDetails.builder()
                 .totalBalance(userRepo.getAllAccountBalance(user.getId()))
                 .bankAccounts(groupedBalance.getOrDefault("BANK", List.of()))
                 .mobileBankingAccounts(groupedBalance.getOrDefault("MOBILE_BANKING", List.of()))
@@ -236,36 +151,57 @@ public class AccountsService {
     }
 
 
-    //Service method for bank account details through accountId
-    public List<BankAccountsDetailDto> getBankAccountDetails(User user, Long accountId) {
+    //    service level to delete any Account
+    @Transactional
+    public DeleteAccountDto deleteAccount(Account validAccount) {
 
-        List<BankAccountsDetailDto> response = bankAccountRepo.getAccountDetails(user.getId(), accountId);
+        List<Transactions> deletedAccountTransactions = transactionRepo.findByAccountId(validAccount.getId());
+        transactionRepo.deleteAll(deletedAccountTransactions);
+        accountRepo.delete(validAccount);
 
-        if (response.isEmpty()) {
-            throw new RuntimeException("Bank Account Detail Not Found");
-        }
-
-        return response;
-    }
-
-
-    //Service method for mobile banking account details through accountId
-    public List<MobileAccountsDetailsDto> getMobileBankingAccountDetails(Long userId, Long accountId) {
-
-        return mobileBankingRepo.getAccountDetials(userId, accountId);
+        return DeleteAccountDto.builder()
+                .accountId(validAccount.getId())
+                .paymentType(validAccount.getPaymentMethod().getName())
+                .deletedStatus(true)
+                .build();
 
     }
 
 
-    //Service method for Cash wallet account detail
-    public CashWalletDetailsDto getCashWalletAccountDetails(User user) {
+    //    service level for getting Account details
+    public AccountDetailsResponseDto getAccountDetials(Account validAccount) {
 
-        return cashWalletRepo.getCashWalletDetails(user.getId()).orElseThrow(() -> new RuntimeException("Cash Wallet Not Found"));
-
+        return AccountDetailsResponseDto.builder()
+                .accountId(validAccount.getId())
+                .currency(validAccount.getCurrency().getName())
+                .accountType(validAccount.getAccountType().getName())
+                .paymentMethod(validAccount.getPaymentMethod().getName())
+                .accountNumber(validAccount.getAccountDetails().getAccountNumber())
+                .nomineeName(validAccount.getAccountDetails().getNomineeName())
+                .providerName(validAccount.getAccountDetails().getProvider().getName())
+                .currentBalance(validAccount.getBalance().getBalance())
+                .lastBalanceUpdatedAt(validAccount.getBalance().getUpdatedAt())
+                .AccountHolder(validAccount.getAccountDetails().getAccountHolder())
+                .createdAt(validAccount.getCreatedAt())
+                .updatedAt(validAccount.getUpdatedAt())
+                .build();
     }
 
-    public AddAccountResponseDto  modifyAccountDetails(Long userId, ModifyAccountDetailsRequestDto requestDTo,Long paymentMethod,Long accountId) {
 
+    @Transactional
+    public AllAccountDetails getAllAccounts(Long userId){
+
+        List<AccountDetails> allAccount= accountRepo.findByUserId(userId);
+
+    Map<String , List<AccountDetails>> groupedAccounts=allAccount.stream()
+            .collect(Collectors.groupingBy(a -> a.getPaymentMethod() != null ? a.getPaymentMethod().toUpperCase() : "UNKNOWN"));
+
+    return AllAccountDetails.builder()
+            .totalBalance(balanceRepo.getAllAccountBalance(userId))
+            .bankAccounts(groupedAccounts.getOrDefault("BANK", List.of()))
+            .mobileBankingAccounts(groupedAccounts.getOrDefault("MOBILE_BANKING",List.of()))
+            .cashWallets(groupedAccounts.getOrDefault("CASH",List.of()))
+            .build();
 
     }
 }
