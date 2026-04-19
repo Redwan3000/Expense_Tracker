@@ -117,4 +117,8 @@ public interface UserRepo extends JpaRepository<User, Long> {
     BigDecimal getAllAccountBalance(@Param("id") Long id);
 
 
+    List<User> parent(User parent);
+
+    @Query(value = "select id from users where parent_id=:parentId and id=:userId", nativeQuery = true)
+    Optional<Long> findUserIdByParentIdAndUserId(@Param("parentId") Long parentId, @Param("userId") Long userId);
 }

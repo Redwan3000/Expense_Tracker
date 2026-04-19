@@ -22,7 +22,7 @@ public class Balance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private BigDecimal balance;
+    private BigDecimal amount;
 
     @Builder.Default
     private boolean isDeleted = false;
@@ -34,4 +34,16 @@ public class Balance {
     @JoinColumn(name = "account_id")
     private Account account;
 
+
+
+
+    @PrePersist
+    public void prePersist(){
+        this.createdAt= LocalDateTime.now();
+        this.updatedAt= LocalDateTime.now();
+    }
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt= LocalDateTime.now();
+    }
 }

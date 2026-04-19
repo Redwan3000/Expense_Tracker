@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -17,11 +16,11 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class AuthTokenFilter extends OncePerRequestFilter {
+public class AuthFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserRepo userRepo;
-
+    private final UrlPermissionChecker urlPermissionChecker;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -34,10 +33,28 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
 
-                //enhancing authentication
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//                //enhancing authentication
+//                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                 boolean isAllowed = urlPermissionChecker.isAllowed(
+                         request.getRequestURI(),
+                         request.getMethod(),
+                         user.getAuthorities()
+                 );
+
+
+
+                 if(!isAllowed){
+                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                     response.setContentType("application/json");
+                     response.getWriter().write("{\"error\": \"Access Denied\"}");
+                     response.getWriter().flush();
+                     return;
+                 }
+
+
             }
         } catch (Exception e) {
             logger.debug("Authentication error : {}", e);

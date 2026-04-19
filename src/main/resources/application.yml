@@ -1,0 +1,72 @@
+security:
+  url-rules:
+    #    add Account
+    - pattern: /user/add-account
+      method: POST
+      any-of-permissions:
+        - Add Account
+
+    - pattern: /owner/subuser/add-account/*
+      method: POST
+      any-of-permissions:
+        - Add Account For Subowner
+
+    - pattern: /admin/user/add-account/*
+      method: POST
+      any-of-permissions:
+        - Add Account For Any User
+
+    - pattern: /admin/subuser/add-account/*/*
+      method: POST
+      any-of-permissions:
+        - Add Account For Any Owners Subowner
+
+
+
+    #      modify account
+    - pattern: /user/modify-account-details/*/*
+      method: PUT
+      any-of-permissions:
+        - Modify Account Details
+
+    - pattern: /owner/subuser/modify-account-details/*/*/*
+      method: PUT
+      any-of-permissions:
+        - Modify Account Details For Subuser
+
+    - pattern: /admin/user/modify-account-details/*/*/*
+      method: PUT
+      any-of-permissions:
+        - Modify Account Details For Any User
+
+    - pattern: /admin/subowner/modify-account-details/*/*/*/*
+      method: PUT
+      any-of-permissions:
+        - Modify Account Details For Any Users Subuser
+
+
+#Delete account
+
+    - pattern: /user/delete-account/*/*
+      method: DELETE
+      any-of-permissions:
+        - Delete Account
+
+    - pattern: /owner/subuser/delete-account/*/*/*
+      method: DELETE
+      any-of-permissions:
+        - Delete Subuser Account
+
+    - pattern: /admin/user/delete-account/*/*/*
+      method: DELETE
+      any-of-permissions:
+        - Delete Any User Account
+
+    - pattern: /admin/subuser/delete-account/*/*/*/*
+      method: DELETE
+      any-of-permissions:
+        - Delete Any Users Subuser Account
+
+
+
+

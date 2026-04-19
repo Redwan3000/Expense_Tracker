@@ -98,4 +98,16 @@ public class User implements UserDetails {
         return authorities;
     }
 
+
+
+
+    @PrePersist
+    public void prePersist(){
+        this.createdAt= LocalDateTime.now();
+        this.updatedAt= LocalDateTime.now();
+    }
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt= LocalDateTime.now();
+    }
 }

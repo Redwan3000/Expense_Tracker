@@ -1,14 +1,17 @@
 package com.arits.expense_trancker.service;
 
+import com.arits.expense_trancker.Mapper.AccountMapper;
 import com.arits.expense_trancker.dto.*;
-import com.arits.expense_trancker.dto.AccountDetails;
+import com.arits.expense_trancker.dto.AccountDetailsDto;
 import com.arits.expense_trancker.entity.*;
+import com.arits.expense_trancker.handler.EntityProvider;
+import com.arits.expense_trancker.handler.Resolver;
+import com.arits.expense_trancker.handler.Verifier;
 import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,10 +27,13 @@ public class AccountsService {
     private final PaymentMethodRepo paymentMethodRepo;
     private final UserRepo userRepo;
     private final AccountTypeRepo accountTypeRepo;
-    private final ProviderListRepo providerListRepo;
+    private final ProviderRepo providerRepo;
     private final AccountRepo accountRepo;
     private final BalanceRepo balanceRepo;
-
+    private final Verifier helper;
+    private final Resolver resolver;
+    private final AccountMapper accountMapper;
+    private final EntityProvider entityProvider;
 
     public AccountType accountTypeSeeding(String accountTypeName) {
 
@@ -40,12 +46,17 @@ public class AccountsService {
     }
 
 
-    @Transactional
-    public AddAccountResponseDto addAccount(User user, AddAccountRequestDto dto,Long userId,Long subuserId) {
+    //Service for Users to add account
 
-        if (accountRepo.existsByUserIdAndAccountNumber(userId, dto.getAccountNumber())) {
+    @Transactional
+    public AccountResponseDto addAccount(User user, AddAccountRequestDto dto, Long userId, Long subuserId) {
+
+        User targetUser = resolver.getTargetUser(user, userId, subuserId);
+
+        if (accountRepo.existsByUserIdAndAccountNumber(targetUser.getId(), dto.getAccountNumber())) {
             throw new RuntimeException("account already exist");
         }
+
 
         Currency currency = currencyRepo.findById(dto.getCurrency()).orElseThrow(() -> new RuntimeException("Invalid Currency"));
 
@@ -53,78 +64,55 @@ public class AccountsService {
 
         PaymentMethod paymentMethod = paymentMethodRepo.findById(dto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("invalid "));
 
-        ProviderList provider = providerListRepo.findById(dto.getProvider()).orElseThrow(() -> new RuntimeException("invalid provider"));
+        Provider provider = providerRepo.findById(dto.getProvider()).orElseThrow(() -> new RuntimeException("invalid provider"));
+
         Account newAccount = Account.builder()
-                .createdAt(LocalDateTime.now())
                 .currency(currency)
-                .user(user)
+                .user(targetUser)
                 .accountType(accountType)
                 .paymentMethod(paymentMethod)
                 .build();
 
-        com.arits.expense_trancker.entity.AccountDetails accountdetails = com.arits.expense_trancker.entity.AccountDetails.builder()
-                .accountNumber(requestDto.getAccountNumber())
-                .nomineeName(requestDto.getNomineeName())
-                .createdAt(LocalDateTime.now())
+        AccountDetails accountDetails = AccountDetails.builder()
+                .accountNumber(dto.getAccountNumber())
+                .nomineeName(dto.getNomineeName())
                 .provider(provider)
-                .accountHolder(requestDto.getAccountHolder())
+                .accountHolder(dto.getAccountHolder())
                 .account(newAccount).build();
 
 
         Balance currentBalance = Balance.builder()
-                .balance(requestDto.getBalance())
-                .createdAt(LocalDateTime.now())
+                .amount(dto.getBalance())
                 .account(newAccount)
                 .build();
 
-        newAccount.setAccountDetails(accountdetails);
+        newAccount.setAccountDetails(accountDetails);
         newAccount.setBalance(currentBalance);
-        newAccount.setCreatedAt(LocalDateTime.now());
-        newAccount.setUpdatedAt(LocalDateTime.now());
+
         accountRepo.save(newAccount);
 
-        return AddAccountResponseDto.builder()
-                .accountId(newAccount.getId())
-                .currency(newAccount.getCurrency().getName())
-                .accountType(newAccount.getAccountType().getName())
-                .paymentMethod(newAccount.getPaymentMethod().getName())
-                .accountNumber(newAccount.getAccountDetails().getAccountNumber())
-                .nomineeName(newAccount.getAccountDetails().getNomineeName())
-                .providerName(newAccount.getAccountDetails().getProvider().getName())
-                .currentBalance(newAccount.getBalance().getBalance())
-                .AccountHolder(newAccount.getAccountDetails().getAccountHolder())
-                .createdAt(newAccount.getCreatedAt())
-                .build();
+        return accountMapper.toDto(newAccount);
 
     }
 
 
     @Transactional
-    public AddAccountResponseDto modifyAccountDetails(ModifyAccountDetailsRequestDto requestDTo, Long accountId) {
+    public AccountResponseDto modifyAccountDetails(User user, ModifyAccountDetailsRequestDto dto, Long accountId, Long userId, Long subuserId) {
 
-        Account accountToModify = accountRepo.findById(accountId).orElseThrow(() -> new RuntimeException("account does not exist"));
+        User targetUser = resolver.getTargetUser(user, userId, subuserId);
 
-        accountToModify.setAccountType(requestDTo.getAccountType() != null ? accountTypeRepo.findById(requestDTo.getAccountType()).orElseThrow(() -> new RuntimeException("invalid AccountType")) : accountToModify.getAccountType());
-        accountToModify.getAccountDetails().setAccountNumber(requestDTo.getAccountNumber() != null ? requestDTo.getAccountNumber() : accountToModify.getAccountDetails().getAccountNumber());
-        accountToModify.getAccountDetails().setAccountHolder(requestDTo.getAccountHolder() != null ? requestDTo.getAccountHolder() : accountToModify.getAccountDetails().getAccountHolder());
-        accountToModify.getAccountDetails().setNomineeName(requestDTo.getNomineeName() != null ? requestDTo.getNomineeName() : accountToModify.getAccountDetails().getNomineeName());
-        accountToModify.setCurrency(currencyRepo.findById(requestDTo.getCurrency()).orElseThrow(() -> new RuntimeException("invalid CurrencyId")));
-        accountToModify.getBalance().setBalance(requestDTo.getBalance() != null ? requestDTo.getBalance() : accountToModify.getBalance().getBalance());
+        Account accountToModify = accountRepo.findByUserIdAndId(targetUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belong to this User"));
+
+        accountToModify.setAccountType(entityProvider.resolveAccountType(dto.getAccountType(), accountToModify.getAccountType()));
+        accountToModify.getAccountDetails().setAccountNumber(entityProvider.resolveString(dto.getAccountNumber(), accountToModify.getAccountDetails().getAccountNumber()));
+        accountToModify.getAccountDetails().setAccountHolder(entityProvider.resolveString(dto.getAccountHolder(), accountToModify.getAccountDetails().getAccountHolder()));
+        accountToModify.getAccountDetails().setNomineeName(entityProvider.resolveString(dto.getNomineeName(), accountToModify.getAccountDetails().getNomineeName()));
+        accountToModify.setCurrency(entityProvider.resolveCurrency(dto.getCurrency(), accountToModify.getCurrency()));
+        accountToModify.getBalance().setAmount(entityProvider.resolveBalance(dto.getBalance(), accountToModify.getBalance().getAmount()));
 
         accountRepo.save(accountToModify);
 
-        return AddAccountResponseDto.builder()
-                .accountId(accountToModify.getId())
-                .currency(accountToModify.getCurrency().getName())
-                .accountType(accountToModify.getAccountType().getName())
-                .paymentMethod(accountToModify.getPaymentMethod().getName())
-                .accountNumber(accountToModify.getAccountDetails().getAccountNumber())
-                .nomineeName(accountToModify.getAccountDetails().getNomineeName())
-                .providerName(accountToModify.getAccountDetails().getProvider().getName())
-                .currentBalance(accountToModify.getBalance().getBalance())
-                .AccountHolder(accountToModify.getAccountDetails().getAccountHolder())
-                .createdAt(accountToModify.getCreatedAt())
-                .build();
+        return accountMapper.toDto(accountToModify);
 
     }
 
@@ -133,9 +121,9 @@ public class AccountsService {
     @Transactional
     public AllAccountDetails getAccountsBalance(User user) {
 
-        List<AccountDetails> allAccount = paymentMethodRepo.getAllAccountBalance(user.getId());
+        List<AccountDetailsDto> allAccount = paymentMethodRepo.getAllAccountBalance(user.getId());
 
-        Map<String, List<AccountDetails>> groupedBalance = allAccount
+        Map<String, List<AccountDetailsDto>> groupedBalance = allAccount
                 .stream()
                 .collect(Collectors.
                         groupingBy(a -> a.getPaymentMethod().toUpperCase()));
@@ -153,15 +141,19 @@ public class AccountsService {
 
     //    service level to delete any Account
     @Transactional
-    public DeleteAccountDto deleteAccount(Account validAccount) {
+    public DeleteAccountDto deleteAccount(Long systemUserId, Long accountId, Long userId, Long subuserId) {
 
-        List<Transactions> deletedAccountTransactions = transactionRepo.findByAccountId(validAccount.getId());
+        Long mainUser= resolver.getTargetUserId(systemUserId,userId,subuserId);
+
+        Account accountToDelete= accountRepo.findByUserIdAndId(mainUser,accountId).orElseThrow(()->new RuntimeException("Account does not belong to user"));
+
+
+        List<Transactions> deletedAccountTransactions = transactionRepo.findByAccountId(accountId);
         transactionRepo.deleteAll(deletedAccountTransactions);
-        accountRepo.delete(validAccount);
+        accountRepo.delete(accountToDelete);
 
         return DeleteAccountDto.builder()
-                .accountId(validAccount.getId())
-                .paymentType(validAccount.getPaymentMethod().getName())
+                .accountId(accountId)
                 .deletedStatus(true)
                 .build();
 
@@ -189,19 +181,19 @@ public class AccountsService {
 
 
     @Transactional
-    public AllAccountDetails getAllAccounts(Long userId){
+    public AllAccountDetails getAllAccounts(Long userId) {
 
-        List<AccountDetails> allAccount= accountRepo.findByUserId(userId);
+        List<AccountDetailsDto> allAccount = accountRepo.findByUserId(userId);
 
-    Map<String , List<AccountDetails>> groupedAccounts=allAccount.stream()
-            .collect(Collectors.groupingBy(a -> a.getPaymentMethod() != null ? a.getPaymentMethod().toUpperCase() : "UNKNOWN"));
+        Map<String, List<AccountDetailsDto>> groupedAccounts = allAccount.stream()
+                .collect(Collectors.groupingBy(a -> a.getPaymentMethod() != null ? a.getPaymentMethod().toUpperCase() : "UNKNOWN"));
 
-    return AllAccountDetails.builder()
-            .totalBalance(balanceRepo.getAllAccountBalance(userId))
-            .bankAccounts(groupedAccounts.getOrDefault("BANK", List.of()))
-            .mobileBankingAccounts(groupedAccounts.getOrDefault("MOBILE_BANKING",List.of()))
-            .cashWallets(groupedAccounts.getOrDefault("CASH",List.of()))
-            .build();
+        return AllAccountDetails.builder()
+                .totalBalance(balanceRepo.getAllAccountBalance(userId))
+                .bankAccounts(groupedAccounts.getOrDefault("BANK", List.of()))
+                .mobileBankingAccounts(groupedAccounts.getOrDefault("MOBILE_BANKING", List.of()))
+                .cashWallets(groupedAccounts.getOrDefault("CASH", List.of()))
+                .build();
 
     }
 }

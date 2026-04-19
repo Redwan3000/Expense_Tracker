@@ -57,4 +57,15 @@ public class Account {
     @JoinColumn(name = "account_details")
     private AccountDetails accountDetails;
 
+
+    @PrePersist
+    public void prePersist(){
+        this.createdAt= LocalDateTime.now();
+        this.updatedAt= LocalDateTime.now();
+    }
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt= LocalDateTime.now();
+    }
+
 }

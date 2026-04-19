@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AddAccountResponseDto {
+public class AccountResponseDto {
 
     private Long accountId;
     private String currency;

@@ -47,9 +47,19 @@ public class AccountDetails {
 
     @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     @JoinColumn(name = "provider_id")
-    private ProviderList provider;
+    private Provider provider;
 
     @OneToOne(mappedBy = "accountDetails",cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     private Account account;
 
+
+    @PrePersist
+    public void prePersist(){
+        this.createdAt= LocalDateTime.now();
+        this.updatedAt= LocalDateTime.now();
+    }
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt= LocalDateTime.now();
+    }
 }

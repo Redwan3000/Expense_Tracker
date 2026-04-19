@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DeleteAccountDto {
     private long accountId;
-    private String paymentType;
     private boolean deletedStatus;
 }

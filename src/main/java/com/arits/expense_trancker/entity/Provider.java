@@ -14,9 +14,9 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SQLDelete(sql = "update provider_list set is_deleted = true,deleted_at=now() where id=?")
+@SQLDelete(sql = "update provider set is_deleted = true,deleted_at=now() where id=?")
 @SQLRestriction("is_deleted = false")
-public class ProviderList {
+public class Provider {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,4 +32,16 @@ public class ProviderList {
     @OneToMany(mappedBy = "provider")
     private Set<AccountDetails> accountDetails;
 
+
+
+
+    @PrePersist
+    public void prePersist(){
+        this.createdAt= LocalDateTime.now();
+        this.updatedAt= LocalDateTime.now();
+    }
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt= LocalDateTime.now();
+    }
 }

@@ -4,9 +4,9 @@ import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.Account;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
+import com.arits.expense_trancker.handler.Verifier;
 import com.arits.expense_trancker.repository.*;
 import com.arits.expense_trancker.service.AccountsService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,7 +27,7 @@ public class AccountController {
     private final PaymentMethodRepo paymentMethodRepo;
     private final CurrencyRepo currencyRepo;
     private final AccountRepo accountRepo;
-
+    private final Verifier verifier;
 
     public void checkPermission(User user, String permission) {
 
@@ -47,45 +47,18 @@ public class AccountController {
             "/user/add-account/{subUserId}",
             "/admin/user/add-account/{userId}",
             "/admin/user/add-account/{userId}/{subUserId}"})
-    @PreAuthorize("hasAnyAuthority(" +
-            "'Add Account'," +
-            "'Add Account For Any User'," +
-            "'Add Account For Subowner'," +
-            "'Add Account For Any Owners Subowner')")
+
     public ResponseEntity<ApiResponse<?>> addAccount(@AuthenticationPrincipal User user,
-                                                     @Valid@RequestBody AddAccountRequestDto requestDto,
-                                                      @PathVariable(name = "userId", required = false) Long userId,
-                                                      @PathVariable(name = "subUserId", required = false) Long subuserId,
-                                                     HttpServletRequest request) {
+                                                     @Valid @RequestBody AddAccountRequestDto requestDto,
+                                                     @PathVariable(name = "userId", required = false) Long userId,
+                                                     @PathVariable(name = "subUserId", required = false) Long subuserId) {
 
 
-        if (userId != null && !userRepo.existsById(userId)) {
-            throw new IllegalArgumentException("invalid userID");
-        }
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
 
-        if (subuserId != null && !userRepo.existsById(subuserId)) {
-            throw new IllegalArgumentException("invalid userID");
-        }
-
-
-        if (request.getRequestURI().contains("/user/add-account")) {
-            if (subuserId != null) {
-                checkPermission(user, "Add Account For Subowner");
-            } else {
-                checkPermission(user, "Add Account");
-            }
-
-        } else if (request.getRequestURI().contains("/admin/user/add-account/")) {
-
-            if (subuserId != null && userId!=null) {
-                checkPermission(user, "Add Account For Any Owners Subowner");
-            } else {
-                checkPermission(user, "Add Account For Any User");
-            }
-        }
-
-        AddAccountResponseDto newAccount = accountsService.addAccount(user, requestDto, userId, subuserId);
-        ApiResponse<?> response = ApiResponse.<AddAccountResponseDto>builder()
+        AccountResponseDto newAccount = accountsService.addAccount(user, requestDto, userId, subuserId);
+        ApiResponse<AccountResponseDto> response = ApiResponse.<AccountResponseDto>builder()
                 .status(HttpStatus.CREATED.value())
                 .message("Account Added Successfully")
                 .timestamp(LocalDateTime.now())
@@ -97,62 +70,29 @@ public class AccountController {
 
 
     //Controller for Modifying Accounts Detail
-    // for modifying bank details
+    // for modifying account details
     @PutMapping({
-            "/user/modify-account-details/{paymentMethod}/{accountId}",
-            "/owner/subuser/modify-account-details/{paymentMethod}/{accountId}/{subUserId}",
-            "/admin/user/modify-account-details/{paymentMethod}/{accountId}/{userId}",
-            "/admin/subowner/modify-account-details/{paymentMethod}/{accountId}/{subUserId}/{userId}"})
-    @PreAuthorize("hasAnyAuthority(" +
-            "'Modify Account Details'," +
-            "'Modify Account Details For Subuser'," +
-            "'Modify Account Details For Any User'," +
-            "'Modify Account Details For Any Users Subuser')")
-    public ResponseEntity<?> modifyBankingDetails(@AuthenticationPrincipal User user,
-                                                  @PathVariable(value = "paymentMethod", required = false) Long paymentMethod,
-                                                  @PathVariable(value = "accountId", required = false) Long accountId,
+            "/user/modify-account-details/{methodId}/{accountId}",
+            "/owner/subuser/modify-account-details/{methodId}/{accountId}/{subUserId}",
+            "/admin/user/modify-account-details/{methodId}/{accountId}/{userId}",
+            "/admin/subowner/modify-account-details/{methodId}/{accountId}/{subUserId}/{userId}"})
+    public ResponseEntity<?> modifyAccountDetails(@AuthenticationPrincipal User user,
+                                                  @PathVariable(value = "methodId") Long methodId,
+                                                  @PathVariable(value = "accountId") Long accountId,
                                                   @PathVariable(value = "userId", required = false) Long userId,
                                                   @PathVariable(value = "subUserId", required = false) Long subuserId,
-                                                  @RequestBody ModifyAccountDetailsRequestDto requestDto) {
+                                                  @Valid @RequestBody ModifyAccountDetailsRequestDto requestDto) {
+
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+        verifier.checkAccountExistence(accountId);
+        verifier.checkPaymentMethodExistence(methodId);
+        verifier.checkAccountIdExistByPaymentMethod(methodId, accountId);
 
 
-        if (!accountRepo.existsByPaymentMethodAndId(paymentMethod, accountId)) {
-            throw new IllegalArgumentException("invalid account details");
-        }
+        AccountResponseDto modifyAccountDetails = accountsService.modifyAccountDetails(user, requestDto, accountId, userId, subuserId);
 
-        User passengerUser;
-        Account validAccount;
-
-        boolean canModifyOwnAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Modify Account Details"));
-        boolean canModifySubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Modify Account Details For Subuser"));
-        boolean canModifyAnyUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Account Details For Any User"));
-        boolean canModifyAnySubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Account Details For Any Users Subuser"));
-
-        if (canModifyOwnAccount && userId == null && subuserId == null) {
-
-            validAccount = accountRepo.findByUserIdAndId(user.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else if (canModifyAnyUserAccount && userId != null && subuserId == null) {
-            validAccount = accountRepo.findByUserIdAndId(userId, accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else if (canModifySubUserAccount && userId != null && subuserId == null) {
-            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("invalid userID"));
-            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else if (canModifyAnySubUserAccount && userId != null && subuserId != null) {
-            passengerUser = userRepo.findByParentIdAndUserId(userId, subuserId).orElseThrow(() -> new RuntimeException("invalid subUser"));
-            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else {
-            throw new IllegalArgumentException("Invalid User");
-        }
-
-        if (paymentMethodRepo.findById(paymentMethod).stream().anyMatch(a -> a.getName().equals("CASH"))) {
-            requestDto.setAccountHolder(null);
-            requestDto.setAccountNumber(null);
-            requestDto.setNomineeName(null);
-        }
-
-
-        AddAccountResponseDto modifyAccountDetails = accountsService.modifyAccountDetails(requestDto, validAccount.getId());
-
-        ApiResponse<?> response = ApiResponse.<AddAccountResponseDto>builder()
+        ApiResponse<AccountResponseDto> response = ApiResponse.<AccountResponseDto>builder()
                 .status(HttpStatus.OK.value())
                 .message("Modified Account Details Successfully")
                 .timestamp(LocalDateTime.now())
@@ -165,6 +105,7 @@ public class AccountController {
     }
 
 
+
 //Controller for Deleteing Accounts
 
     @DeleteMapping({
@@ -173,60 +114,30 @@ public class AccountController {
             "/admin/user/delete-account/{paymentMethod}/{accountId}/{userId}",
             "/admin/subuser/delete-account/{paymentMethod}/{accountId}/{userId}/{subuserId}"})
 
-    @PreAuthorize("hasAnyAuthority(" +
-            "'Delete Account'," +
-            "'Delete Subuser Account'," +
-            "'Delete Any User Account'," +
-            "'Delete Any Users Subuser Account')")
-
     public ResponseEntity<ApiResponse<?>> deleteAccount(@AuthenticationPrincipal User user,
-                                                        @PathVariable(value = "paymentMethod", required = false) Long paymentMethod,
-                                                        @PathVariable(value = "accountId", required = false) Long accountId,
+                                                        @PathVariable(value = "paymentMethod") Long paymentMethod,
+                                                        @PathVariable(value = "accountId") Long accountId,
                                                         @PathVariable(value = "userId", required = false) Long userId,
                                                         @PathVariable(value = "subuserId", required = false) Long subuserId
     ) {
 
-
-        if (!accountRepo.existsByPaymentMethodAndId(paymentMethod, accountId)) {
-            throw new IllegalArgumentException("invalid account details");
-        }
-
-
-        User passengerUser;
-        Account validAccount;
-
-        boolean canDeleteOwnAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete Account"));
-        boolean canDeleteSubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete Subuser Account"));
-        boolean canDeleteAnyUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete Any User Account"));
-        boolean canDeleteAnySubUserAccount = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Delete Any Users Subuser Account"));
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+        verifier.checkAccountExistence(accountId);
+        verifier.checkPaymentMethodExistence(paymentMethod);
+        verifier.checkAccountIdExistByPaymentMethod(paymentMethod, accountId);
 
 
-        if (canDeleteOwnAccount && userId == null && subuserId == null) {
+        DeleteAccountDto deletedBankAccount = accountsService.deleteAccount(user.getId(),accountId,userId,subuserId);
 
-            validAccount = accountRepo.findByUserIdAndId(user.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else if (canDeleteAnyUserAccount && userId != null && subuserId == null) {
-            validAccount = accountRepo.findByUserIdAndId(userId, accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else if (canDeleteSubUserAccount && userId != null && subuserId == null) {
-            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("Invalid Subuser"));
-            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else if (canDeleteAnySubUserAccount && userId != null && subuserId != null) {
-            passengerUser = userRepo.findByParentIdAndUserId(userId, subuserId).orElseThrow(() -> new RuntimeException("invalid subUser"));
-            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else {
-            throw new IllegalArgumentException("Invalid Account");
-        }
-
-
-        DeleteAccountDto deletedBankAccount = accountsService.deleteAccount(validAccount);
-
-        ApiResponse<?> response = ApiResponse.<DeleteAccountDto>builder()
-                .status(HttpStatus.NO_CONTENT.value())
+        ApiResponse<DeleteAccountDto> response = ApiResponse.<DeleteAccountDto>builder()
+                .status(HttpStatus.OK.value())
                 .message("Account Deleted Successfully Along With The Transactions")
                 .timestamp(LocalDateTime.now())
                 .result(deletedBankAccount)
                 .error(null)
                 .build();
-        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(response, HttpStatus.OK);
 
     }
 

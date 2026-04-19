@@ -36,4 +36,16 @@ public class AccountType {
     @OneToMany(mappedBy = "accountType",cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<AccountDetails> accountDetails;
 
+
+
+
+    @PrePersist
+    public void prePersist(){
+        this.createdAt= LocalDateTime.now();
+        this.updatedAt= LocalDateTime.now();
+    }
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt= LocalDateTime.now();
+    }
 }
