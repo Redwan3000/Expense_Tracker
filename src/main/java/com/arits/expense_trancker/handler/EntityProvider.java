@@ -156,4 +156,9 @@ public class EntityProvider {
     public Long getUserIdByParentIdAndUserId(Long parentId, Long userId) {
         return userRepo.findUserIdByParentIdAndUserId(parentId,userId).orElseThrow(()->new RuntimeException("subUser does not exist"));
     }
+
+    public Account findByUserIdAndIdAndIsDeleted(Long targetUserId, Long accountId, boolean status) {
+        return accountRepo.findByUserIdAndIdAndIsDeleted(targetUserId,accountId,status).orElseThrow(()->new RuntimeException("account not found"));
+    }
+
 }

@@ -30,19 +30,19 @@ private final UserRepo userRepo;
         return targetUser;
     }
 
-    public Long getTargetUserId(Long systemUserId, Long userId, Long subuserId) {
+    public Long getTargetUserId(User user, Long userId, Long subuserId) {
 
-        Long targetUser;
-        boolean isHeAdmin = entityProvider.getUserById(systemUserId).getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        Long parentId = isHeAdmin ? userId : systemUserId;
+        Long targetUserId;
+        boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        Long parentId = isHeAdmin ? userId : user.getId();
 
         if (subuserId != null) {
-            targetUser = entityProvider.getUserIdByParentIdAndUserId(parentId, subuserId);
+            targetUserId = userRepo.findUserIdByParentIdAndUserId(parentId, subuserId).orElseThrow(()->new RuntimeException("subuser does not exist"));
 
         } else {
-            targetUser = isHeAdmin?userId: systemUserId;
+            targetUserId = isHeAdmin?userId: user.getId();
         }
 
-        return targetUser;
+        return targetUserId;
     }
 }

@@ -16,6 +16,7 @@ public class Verifier {
     private final PaymentMethodRepo paymentMethodRepo;
     private final AccountDetailsRepo accountDetailsRepo;
     private final AccountTypeRepo accountTypeRepo;
+    private final CurrencyRepo currencyRepo;
 
 
     public void checkUserExistence(Long userId) {
@@ -26,6 +27,11 @@ public class Verifier {
 
     public void checkAccountExistence(Long accountId) {
         if (accountId != null && !accountRepo.existsById(accountId)) {
+            throw new RuntimeException("Account not found with id: " + accountId);
+        }
+    }
+    public void checkSoftDeletedAccountExistence(Long accountId) {
+        if (accountId != null && !accountRepo.existsByIdAndIsDeleted(accountId,true)) {
             throw new RuntimeException("Account not found with id: " + accountId);
         }
     }
@@ -51,14 +57,37 @@ public class Verifier {
         }
     }
 
+    public void checkSoftDeletedPaymentMethodExistence(Long paymentMethod) {
+        if (paymentMethod != null && !paymentMethodRepo.existsByIdAndIsDeleted(paymentMethod,true)) {
+            throw new RuntimeException("paymentMethod not found with id: " + paymentMethod);
+        }
+    }
+
 
     public void checkAccountIdExistByPaymentMethod(Long paymentMethod, Long accountId) {
         if (!accountRepo.existsByPaymentMethodAndId(paymentMethod, accountId)) {
-            throw new RuntimeException("Account not found with id: " + accountId);
+            throw new RuntimeException("Account not found with id: " + accountId +"in this method id: "+paymentMethod);
+        }
+    }
+
+    public void checkSoftDeletedAccountIdExistByPaymentMethod(Long paymentMethod, Long accountId) {
+        if (!accountRepo.existsByPaymentMethodAndIdAndIsDeleted(paymentMethod, accountId,true)) {
+            throw new RuntimeException("Account not found with id: " + accountId +"in this method id: "+paymentMethod);
         }
     }
 
 
 
+    public void checkAccountIdExistByUserId(Long targetUserId, Long accountId , boolean status) {
+        if(!accountRepo.existsByIdUserIdAndIdAndIsDeleted(targetUserId,accountId, status)){
+            throw new RuntimeException("account does not belong to the userId : "+targetUserId);
+        }
+    }
 
+    public void checkCurrencyExistance(Long currencyId) {
+        if(!currencyRepo.existsById(currencyId)){
+
+            throw new RuntimeException("currency does not belong to the userId : "+currencyId);
+        }
+    }
 }

@@ -1,13 +1,20 @@
 package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.AccountDetailsDto;
+import com.arits.expense_trancker.dto.SoftDeletedAccountDto;
 import com.arits.expense_trancker.entity.Account;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.cdi.Eager;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.lang.ScopedValue;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -18,8 +25,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
 
 
     boolean existsByPaymentMethodAndId(Long paymentMethod, Long accountId);
-
-    Optional<Account> findByUserIdAndId(Long id, Long accountId);
 
 
     @Query(value = """
@@ -38,7 +43,7 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             left join account_type at on a.account_type_id = at.id
             left join payment_method pm on a.payment_method_id = pm.id
             left join account_details ad on a.account_details = ad.id
-            left join provider_list p on ad.provider_id = p.id
+            left join provider p on ad.provider_id = p.id
             left join balance b on b.account_id = a.id
             
             where a.user_id=:userId
@@ -48,4 +53,109 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
 
 
     Long userId(Long userId);
+
+
+    @Query(value = """
+            select a.id as accountId,
+            c.name as currency,
+            at.name as accountType,
+            pm.name as paymentMethod, 
+            ad.account_number as accountNumber,
+            ad.nominee_name as nomineeName,
+            p.name as providerName,
+            b.balance as currentBalance,
+            ad.account_holder as accountHolder,
+            a.created_at as createdAt
+            from account a 
+                left join currency c on a.currency_id = c.id
+            left join account_type at on a.account_type_id = at.id
+            left join payment_method pm on a.payment_method_id = pm.id
+            left join account_details ad on a.account_details = ad.id
+            left join provider p on ad.provider_id = p.id
+            left join balance b on b.account_id = a.id
+            
+            where a.user_id=:targetUserId
+            and a.payment_method_id=:paymentMethodId 
+            and a.is_deleted = false
+            """, nativeQuery = true)
+    List<AccountDetailsDto> findByuserIdAndMethodId(@Param("targetUserId") Long targetUserId, @Param("paymentMethodId") Long paymentMethodId);
+
+
+    @Transactional
+    @Query(value = """
+            select 
+                a.id,
+                a.deleted_at,
+                ad.account_number,
+                pm.name,
+                p.name,
+                at.name,
+                b.amount
+            from account a
+            join account_details ad on ad.account_id = a.id
+            join account_type at on at.id = a.account_type_id
+            join payment_method pm on pm.id = a.payment_method_id
+            join provider p on p.id = ad.provider_id
+            join currency c on c.id  = a.currency_id
+            join balance b on b.account_id = a.id
+            where a.user_id = :targetUserId
+            and a.is_deleted = true
+            """, nativeQuery = true)
+    List<Object[]> findSoftDeletedListByUserId(@Param("targetUserId") Long targetUserId);
+
+    boolean existsByIdAndIsDeleted(Long accountId, boolean b);
+
+    boolean existsByPaymentMethodAndIdAndIsDeleted(Long paymentMethod, Long accountId, boolean b);
+
+
+    @Modifying
+    @Query(value = """
+            update account
+            set is_deleted = false , deleted_at= null
+            where id=:accountId and is_deleted =true;
+            """, nativeQuery = true)
+    void reviveAccount(@Param("accountId") Long accountId);
+
+
+    boolean existsByIdUserIdAndIdAndIsDeleted(Long targetUserId, Long accountId, boolean status);
+
+    @Query(value = """
+            select * 
+            from account 
+            where id=:accountId  
+                and user_id =: targetUserId
+                and is_deleted=:status;
+            """,nativeQuery = true)
+    Optional<Account> findByUserIdAndIdAndIsDeleted(@Param("targetUserId") Long targetUserId,@Param("accountId") Long accountId, @Param("status")boolean status);
+
+
+
+
+    @Modifying
+    @Query(value = """
+                    delete
+                    from account
+                    where account_id=:accountId 
+                    and is_deleted= true
+                    """
+            , nativeQuery = true)
+    void hardDeleteById(@Param("accountId") Long accountId);
+
+
+    Optional<Account> findByUserIdAndId(@Param("targetUserId") Long targetUserId,@Param("accountId") Long accountId);
+
+
+    @Query(value = """
+
+select
+    sum(b.amount) as totalAmount,
+    count(a.id) as totalAccount,
+    c.name as currencyName
+from account a
+join balance b on b.account_id=a.id
+join currency c on c.id = a.currency_id
+where a.currency_id=:currencyId
+and a.user_id=:targetUserId
+""",nativeQuery = true)
+    Optional[] getTotalBalanceByCurrency(@Param("targetUserId")Long targetUserId,@Param("currencyId") Long currencyId);
 }

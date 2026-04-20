@@ -30,7 +30,7 @@ public class Account {
     private LocalDateTime updatedAt;
 
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne
     @JoinColumn(name = "currency_id", nullable = false)
     private Currency currency;
 
@@ -38,22 +38,22 @@ public class Account {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne
     @JoinColumn(name = "account_type_id", nullable = false)
     private AccountType accountType;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne
     @JoinColumn(name = "payment_method_id", nullable = false)
     private PaymentMethod paymentMethod;
 
 
-    @OneToOne(mappedBy = "account",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToOne(mappedBy = "account",cascade = CascadeType.ALL)
     private Balance balance;
 
-    @OneToMany(mappedBy = "account",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "account",cascade = CascadeType.ALL)
     private Set<Transactions> transactions;
 
-    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_details")
     private AccountDetails accountDetails;
 

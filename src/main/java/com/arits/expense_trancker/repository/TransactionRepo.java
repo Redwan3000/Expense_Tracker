@@ -56,4 +56,28 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
 
     @Query(value = "select * from transactions where account_id =:accountId",nativeQuery = true)
     List<Transactions> findByAccountId(@Param("accountId") Long accountId);
+
+
+
+
+    @Modifying
+    @Query(value = """
+            update transactions
+            set is_deleted = false , deleted_at= null
+            where account_id=:accountId and is_deleted =true;
+            """, nativeQuery = true)
+    void reviveTransactionsByAccountId(@Param("accountId") Long accountId);
+
+
+
+
+    @Modifying
+    @Query(value = """
+                    delete
+                    from transactions
+                    where account_id=:accountId 
+                    and is_deleted= true
+                    """
+            , nativeQuery = true)
+    void hardDeleteByAccountId(@Param("accountId") Long accountId);
 }

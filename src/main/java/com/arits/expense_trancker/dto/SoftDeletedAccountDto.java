@@ -5,26 +5,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AccountResponseDto {
+public class SoftDeletedAccountDto {
 
     private Long accountId;
-    private String currency;
-    private String accountType;
-    private String paymentMethod;
     private String accountNumber;
-    private String nomineeName;
+    private String paymentMethod;
     private String providerName;
-    private BigDecimal currentBalance;
-    private String accountHolder;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 
 
 }

@@ -1,21 +1,19 @@
 package com.arits.expense_trancker.controller;
 
 import com.arits.expense_trancker.dto.*;
-import com.arits.expense_trancker.entity.Account;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
 import com.arits.expense_trancker.handler.Verifier;
-import com.arits.expense_trancker.repository.*;
 import com.arits.expense_trancker.service.AccountsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,20 +21,8 @@ public class AccountController {
 
 
     private final AccountsService accountsService;
-    private final UserRepo userRepo;
-    private final PaymentMethodRepo paymentMethodRepo;
-    private final CurrencyRepo currencyRepo;
-    private final AccountRepo accountRepo;
     private final Verifier verifier;
 
-    public void checkPermission(User user, String permission) {
-
-        boolean haspermission = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(permission));
-        if (!haspermission) {
-            throw new RuntimeException("Do Not Have Permission");
-        }
-
-    }
 
 //Controller for the Adding an Account
     //owner can add account for them also for their subowner
@@ -85,12 +71,12 @@ public class AccountController {
 
         verifier.checkUserExistence(userId);
         verifier.checkUserExistence(subuserId);
-        verifier.checkAccountExistence(accountId);
-        verifier.checkPaymentMethodExistence(methodId);
+//        verifier.checkAccountExistence(accountId);
+//        verifier.checkPaymentMethodExistence(methodId);
         verifier.checkAccountIdExistByPaymentMethod(methodId, accountId);
 
 
-        AccountResponseDto modifyAccountDetails = accountsService.modifyAccountDetails(user, requestDto, accountId, userId, subuserId);
+        AccountResponseDto modifyAccountDetails = accountsService.modifyAccountDetails(user, requestDto, userId, subuserId, accountId);
 
         ApiResponse<AccountResponseDto> response = ApiResponse.<AccountResponseDto>builder()
                 .status(HttpStatus.OK.value())
@@ -103,7 +89,6 @@ public class AccountController {
         return ResponseEntity.ok(response);
 
     }
-
 
 
 //Controller for Deleteing Accounts
@@ -123,12 +108,10 @@ public class AccountController {
 
         verifier.checkUserExistence(userId);
         verifier.checkUserExistence(subuserId);
-        verifier.checkAccountExistence(accountId);
-        verifier.checkPaymentMethodExistence(paymentMethod);
         verifier.checkAccountIdExistByPaymentMethod(paymentMethod, accountId);
 
 
-        DeleteAccountDto deletedBankAccount = accountsService.deleteAccount(user.getId(),accountId,userId,subuserId);
+        DeleteAccountDto deletedBankAccount = accountsService.deleteAccount(user, userId, subuserId, accountId);
 
         ApiResponse<DeleteAccountDto> response = ApiResponse.<DeleteAccountDto>builder()
                 .status(HttpStatus.OK.value())
@@ -142,59 +125,27 @@ public class AccountController {
     }
 
 
-//Controller For Getting Account Details
+//Controller For Getting any Account Details
 
-    //Detailed Account Balance
     @GetMapping({
             "/user/get-account-detials/{paymentMethod}/{accountId}",
             "/owner/subuser/get-account-detials/{paymentMethod}/{accountId}/{userId}",
             "/admin/user/get-account-detials/{paymentMethod}/{accountId}/{userId}",
             "/admin/subuser/get-account-detials/{paymentMethod}/{accountId}/{userId}/{subuserId}",
     })
-    @PreAuthorize("hasAnyAuthority(" +
-            "'Get Own Account Details'," +
-            "'Get Subuser Account Details'," +
-            "'Get Any User Account Details'," +
-            "'Get Any Users Subuser Account Details')")
-
     public ResponseEntity<ApiResponse<?>> getAccountDetails(@AuthenticationPrincipal User user,
-                                                            @PathVariable(value = "paymentMethod", required = false) Long paymentMethod,
-                                                            @PathVariable(value = "accountId", required = false) Long accountId,
+                                                            @PathVariable(value = "paymentMethod") Long paymentMethod,
+                                                            @PathVariable(value = "accountId") Long accountId,
                                                             @PathVariable(value = "userId", required = false) Long userId,
-                                                            @PathVariable(value = "subuserId", required = false) Long subuserId
-    ) {
+                                                            @PathVariable(value = "subuserId", required = false) Long subuserId) {
 
-        if (!accountRepo.existsByPaymentMethodAndId(paymentMethod, accountId)) {
-            throw new IllegalArgumentException("invalid account details");
-        }
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+        verifier.checkAccountIdExistByPaymentMethod(paymentMethod, accountId);
 
-        User passengerUser;
-        Account validAccount;
+        AccountResponseDto allAccountBalance = accountsService.getAccountDetials(user, userId, subuserId, accountId);
 
-        boolean canGetOwnAccountDetails = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Own Account Details"));
-        boolean canGetSubuserAccountDetails = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Subuser Account Details"));
-        boolean canGetAnyAccountDetails = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any User Account Details"));
-        boolean canGetAnySubuserAccountDetails = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any Users Subuser Account Details"));
-
-
-        if (canGetOwnAccountDetails && userId == null && subuserId == null) {
-            validAccount = accountRepo.findByUserIdAndId(user.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else if (canGetAnyAccountDetails && userId != null && subuserId == null) {
-            validAccount = accountRepo.findByUserIdAndId(userId, accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else if (canGetSubuserAccountDetails && userId != null && subuserId == null) {
-            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("Invalid Subuser"));
-            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else if (canGetAnySubuserAccountDetails && userId != null && subuserId != null) {
-            passengerUser = userRepo.findByParentIdAndUserId(userId, subuserId).orElseThrow(() -> new RuntimeException("invalid subUser"));
-            validAccount = accountRepo.findByUserIdAndId(passengerUser.getId(), accountId).orElseThrow(() -> new RuntimeException("Account does not belongs to this user"));
-        } else {
-            throw new IllegalArgumentException("Invalid Account");
-        }
-
-
-        AccountDetailsResponseDto allAccountBalance = accountsService.getAccountDetials(validAccount);
-
-        ApiResponse<?> response = ApiResponse.<AccountDetailsResponseDto>builder()
+        ApiResponse<?> response = ApiResponse.<AccountResponseDto>builder()
                 .status(HttpStatus.OK.value())
                 .message("Fatched Account Details")
                 .timestamp(LocalDateTime.now())
@@ -205,51 +156,27 @@ public class AccountController {
     }
 
 
+    //Controller For Getting all Account Details
     @GetMapping({
             "/user/get-all-account-details",
-            "/owner/subuser/get-all-account-details/{userId}",
+            "/owner/subuser/get-all-account-details/{subuserId}",
             "/admin/user/get-all-account-details/{userId}",
             "/admin/subuser/get-all-account-details/{userId}/{subuserId}",
     })
-    @PreAuthorize("hasAnyAuthority(" +
-            "'Get Own All Account Details'," +
-            "'Get Subuser All Account Details'," +
-            "'Get Any User All Account Details'," +
-            "'Get Any Users Subuser All Account Details')")
-
     public ResponseEntity<ApiResponse<?>> getAllAccountDetails(@AuthenticationPrincipal User user,
-
                                                                @PathVariable(value = "userId", required = false) Long userId,
                                                                @PathVariable(value = "subuserId", required = false) Long subuserId
     ) {
 
-        User passengerUser;
-        Account validAccount;
-
-        boolean canGetOwnAccountDetails = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Own All Account Details"));
-        boolean canGetSubuserAccountDetails = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Subuser All Account Details"));
-        boolean canGetAnyAccountDetails = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any User All Account Details"));
-        boolean canGetAnySubuserAccountDetails = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("Get Any Users Subuser All Account Details"));
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
 
 
-        if (canGetOwnAccountDetails && userId == null && subuserId == null) {
-            passengerUser = user;
-        } else if (canGetAnyAccountDetails && userId != null && subuserId == null) {
-            passengerUser = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("user does not exist"));
-        } else if (canGetSubuserAccountDetails && userId != null && subuserId == null) {
-            passengerUser = userRepo.findByParentIdAndUserId(user.getId(), userId).orElseThrow(() -> new RuntimeException("Subuser does not exist"));
-        } else if (canGetAnySubuserAccountDetails && userId != null && subuserId != null) {
-            passengerUser = userRepo.findByParentIdAndUserId(userId, subuserId).orElseThrow(() -> new RuntimeException("Subuser does not exist"));
-        } else {
-            throw new IllegalArgumentException("invelid userIds");
-        }
+        AllAccountDetails allAccountDetails = accountsService.getAllAccounts(user, userId, subuserId);
 
-
-        AllAccountDetails allAccountDetails = accountsService.getAllAccounts(passengerUser.getId());
-
-        ApiResponse<?> response = ApiResponse.<AllAccountDetails>builder()
+        ApiResponse<AllAccountDetails> response = ApiResponse.<AllAccountDetails>builder()
                 .status(HttpStatus.OK.value())
-                .message("Fatched All Account Details At a Time")
+                .message("Fatched All Account Details Successfully")
                 .timestamp(LocalDateTime.now())
                 .result(allAccountDetails)
                 .error(null)
@@ -258,7 +185,199 @@ public class AccountController {
     }
 
 
-}
+    //Controller For Getting all Account Details method Wise
+    @GetMapping({
+            "/user/get-any-method-all-account-details/{paymentMethodId}",
+            "/owner/subuser/get-any-method-all-account-details/{paymentMethodId}/{subuserId}",
+            "/admin/user/get-any-method-all-account-details/{paymentMethodId}/{userId}",
+            "/admin/subuser/get-all-any-method-account-details/{paymentMethodId}/{userId}/{subuserId}",
+    })
+    public ResponseEntity<ApiResponse<?>> getAnyMethodAllAccountDetails(@AuthenticationPrincipal User user,
+                                                                        @PathVariable(value = "paymentMethodId") Long paymentMethodId,
+                                                                        @PathVariable(value = "userId", required = false) Long userId,
+                                                                        @PathVariable(value = "subuserId", required = false) Long subuserId
+    ) {
+
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+        verifier.checkPaymentMethodExistence(paymentMethodId);
+
+        List<AccountDetailsDto> allAccountDetails = accountsService.getAllAccountsOfMethodId(user, userId, subuserId, paymentMethodId);
+
+        ApiResponse<List<AccountDetailsDto>> response = ApiResponse.<List<AccountDetailsDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Fatched All Account Details By Methods Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(allAccountDetails)
+                .error(null)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+
+    //Controller For Getting all softDeleted Account Details
+    @GetMapping({
+            "/user/get-soft-deleted-account-list",
+            "/owner/subuser/get-soft-deleted-account-list/{subuserId}",
+            "/admin/user/get-soft-deleted-account-list/{userId}",
+            "/admin/subuser/get-soft-deleted-account-list/{userId}/{subuserId}",
+    })
+    public ResponseEntity<ApiResponse<?>> getAllDeletedAccounts(@AuthenticationPrincipal User user,
+                                                                @PathVariable(value = "userId", required = false) Long userId,
+                                                                @PathVariable(value = "subuserId", required = false) Long subuserId
+    ) {
+
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+
+        List<SoftDeletedAccountDto> softDeletedAccountDetails = accountsService.getSoftDeletedAccounts(user, userId, subuserId);
+
+        ApiResponse<List<SoftDeletedAccountDto>> response = ApiResponse.<List<SoftDeletedAccountDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Fatched All Account Details By Methods Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(softDeletedAccountDetails)
+                .error(null)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+
+    //Controller For restoring accounts from softDeleted
+    @PutMapping({
+            "/user/restore-account/{methodId}/{accountId}",
+            "/owner/subuser/restore-account/{methodId}/{accountId}/{subuserId}",
+            "/admin/user/restore-account/{methodId}/{accountId}/{userId}",
+            "/admin/subuser/restore-account/{methodId}/{accountId}/{userId}/{subuserId}",
+    })
+    public ResponseEntity<ApiResponse<?>> restoreAccount(@AuthenticationPrincipal User user,
+                                                         @PathVariable(value = "userId", required = false) Long userId,
+                                                         @PathVariable(value = "subuserId", required = false) Long subuserId,
+                                                         @PathVariable(value = "accountId") Long accountId,
+                                                         @PathVariable(value = "methodId") Long methodId
+    ) {
+
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+//        verifier.checkSoftDeletedPaymentMethodExistence(methodId);
+//        verifier.checkSoftDeletedAccountExistence(accountId);
+        verifier.checkSoftDeletedAccountIdExistByPaymentMethod(methodId,accountId);
+
+
+        AccountResponseDto softDeletedAccountDetails = accountsService.reviveAccountFromSoftDelete(user, userId, subuserId,accountId);
+
+        ApiResponse<AccountResponseDto> response = ApiResponse.<AccountResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("recovered Account Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(softDeletedAccountDetails)
+                .error(null)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    //Controller For permanently deleting the accounts from the softdelete
+    @PutMapping({
+            "/user/delete-account-permanently/{methodId}/{accountId}",
+            "/owner/subuser/delete-account-permanently/{methodId}/{accountId}/{subuserId}",
+            "/admin/user/delete-account-permanently/{methodId}/{accountId}/{userId}",
+            "/admin/subuser/delete-account-permanently/{methodId}/{accountId}/{userId}/{subuserId}",
+    })
+    public ResponseEntity<ApiResponse<?>> deleteAccountPermanently(@AuthenticationPrincipal User user,
+                                                         @PathVariable(value = "userId", required = false) Long userId,
+                                                         @PathVariable(value = "subuserId", required = false) Long subuserId,
+                                                         @PathVariable(value = "accountId") Long accountId,
+                                                         @PathVariable(value = "methodId") Long methodId
+    ) {
+
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+//      verifier.checkSoftDeletedPaymentMethodExistence(methodId);
+//      verifier.checkSoftDeletedAccountExistence(accountId);
+        verifier.checkSoftDeletedAccountIdExistByPaymentMethod(methodId, accountId);
+
+
+        DeleteAccountDto softDeletedAccountDetails = accountsService.deleteAccountPermanently(user, userId, subuserId, accountId);
+
+        ApiResponse<DeleteAccountDto> response = ApiResponse.<DeleteAccountDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("recovered Account Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(softDeletedAccountDetails)
+                .error(null)
+                .build();
+        return ResponseEntity.ok(response);
+
+    }
+
+        //Controller For getting account balance
+        @GetMapping({
+                "/user/get-account-balance/{methodId}/{accountId}",
+                "/owner/subuser/get-account-balance/{methodId}/{accountId}/{subuserId}",
+                "/admin/user/get-account-balance/{methodId}/{accountId}/{userId}",
+                "/admin/subuser/get-account-balance/{methodId}/{accountId}/{userId}/{subuserId}",
+        })
+        public ResponseEntity<ApiResponse<?>> getAccountBalance (@AuthenticationPrincipal User user,
+                                                                 @PathVariable(value = "userId", required = false) Long userId,
+                                                                 @PathVariable(value = "subuserId", required = false) Long subuserId,
+                                                                 @PathVariable(value = "accountId") Long accountId,
+                                                                 @PathVariable(value = "methodId") Long methodId
+    ){
+
+            verifier.checkUserExistence(userId);
+            verifier.checkUserExistence(subuserId);
+            verifier.checkAccountIdExistByPaymentMethod(methodId, accountId);
+
+
+            AccountBalnaceDto softDeletedAccountDetails = accountsService.getAccountBalance(user, userId, subuserId, accountId);
+
+            ApiResponse<AccountBalnaceDto> response = ApiResponse.<AccountBalnaceDto>builder()
+                    .status(HttpStatus.OK.value())
+                    .message("recovered Account Successfully")
+                    .timestamp(LocalDateTime.now())
+                    .result(softDeletedAccountDetails)
+                    .error(null)
+                    .build();
+            return ResponseEntity.ok(response);
+
+
+        }
+
+
+    //Controller For getting account total balance
+    @GetMapping({
+            "/user/get-total-balance/{currencyId}",
+            "/owner/subuser/get-total-balance/{currencyId}/{subuserId}",
+            "/admin/user/get-total-balance/{currencyId}/{userId}",
+            "/admin/subuser/get-total-balance/{currencyId}/{userId}/{subuserId}",
+    })
+    public ResponseEntity<ApiResponse<?>> getTotalBalance (@AuthenticationPrincipal User user,
+                                                           @PathVariable(value = "userId", required = false) Long userId,
+                                                           @PathVariable(value = "subuserId", required = false) Long subuserId,
+                                                           @PathVariable(value = "currencyId") Long currencyId
+    ){
+
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+        verifier.checkCurrencyExistance(currencyId);
+
+
+        TotalBalanceDto softDeletedAccountDetails = accountsService.getTotalBalanceCurrencyWise(user, userId, subuserId, currencyId);
+
+        ApiResponse<TotalBalanceDto> response = ApiResponse.<TotalBalanceDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("recovered Account Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(softDeletedAccountDetails)
+                .error(null)
+                .build();
+        return ResponseEntity.ok(response);
+
+
+    }
+
+    }
+
 
 
 

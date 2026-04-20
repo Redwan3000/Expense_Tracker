@@ -121,4 +121,6 @@ public interface UserRepo extends JpaRepository<User, Long> {
 
     @Query(value = "select id from users where parent_id=:parentId and id=:userId", nativeQuery = true)
     Optional<Long> findUserIdByParentIdAndUserId(@Param("parentId") Long parentId, @Param("userId") Long userId);
+
+
 }

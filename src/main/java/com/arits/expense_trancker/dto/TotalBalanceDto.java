@@ -5,12 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DeleteAccountDto {
-    private long accountId;
-    @Builder.Default
-    private boolean deletedStatus=true;
+public class TotalBalanceDto {
+
+private BigDecimal totalBalance;
+private Long totalAccounts;
+private String currency;
+
 }

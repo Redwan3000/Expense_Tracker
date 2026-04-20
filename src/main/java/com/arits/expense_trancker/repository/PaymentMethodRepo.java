@@ -47,6 +47,5 @@ public interface PaymentMethodRepo extends JpaRepository<PaymentMethod, Long> {
     List<AccountDetailsDto> getAllAccountBalance(@Param("id") Long id);
 
 
-
-
+    boolean existsByIdAndIsDeleted(Long paymentMethod, boolean b);
 }

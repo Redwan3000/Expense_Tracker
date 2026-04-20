@@ -67,6 +67,69 @@ security:
       any-of-permissions:
         - Delete Any Users Subuser Account
 
+    #get account details
+
+    - pattern: /user/get-account-detials/*/*
+      method: GET
+      any-of-permissions:
+        - Get Own Account Details
+
+    - pattern: /owner/subuser/get-account-detials/*/*/*
+      method: GET
+      any-of-permissions:
+        - Get Subuser Account Details
+
+    - pattern: /admin/user/get-account-detials/*/*/*
+      method: GET
+      any-of-permissions:
+        - Get Any User Account Details
+
+    - pattern: /admin/subuser/get-account-detials/*/*/*/*
+      method: GET
+      any-of-permissions:
+        - Get Any Users Subuser Account Details
 
 
+    #get all account details
+
+    - pattern: /user/get-all-account-details
+      method: GET
+      any-of-permissions:
+        - Get Own All Account Details
+
+    - pattern: /owner/subuser/get-all-account-details/*
+      method: GET
+      any-of-permissions:
+        - Get Subuser All Account Details
+
+    - pattern: /admin/user/get-all-account-details/*
+      method: GET
+      any-of-permissions:
+        - Get Any User All Account Details
+
+    - pattern: /admin/subuser/get-all-account-details/*/*
+      method: GET
+      any-of-permissions:
+        - Get Any Users Subuser All Account Details
+
+#get methods all account details
+    - pattern: /user/get-any-method-all-account-details/*
+      method: GET
+      any-of-permissions:
+        - Get Own All Account Method Wise Details
+
+    - pattern: /owner/subuser/get-any-method-all-account-details/*/*
+      method: GET
+      any-of-permissions:
+        - Get Subuser All Account Method Wise Details
+
+    - pattern: /admin/user/get-any-method-all-account-details/*/*
+      method: GET
+      any-of-permissions:
+        - Get Any User All Account Method Wise Details
+
+    - pattern: /admin/subuser/get-all-any-method-account-details/*/*/*
+      method: GET
+      any-of-permissions:
+        - Get Any Users Subuser All Account Method Wise Details
 
