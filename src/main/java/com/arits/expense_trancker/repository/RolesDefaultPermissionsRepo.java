@@ -1,7 +1,6 @@
 package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.PermissionResponseDto;
-import com.arits.expense_trancker.entity.Permission;
 import com.arits.expense_trancker.entity.RolesDefaultPermissions;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,10 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import javax.swing.text.html.Option;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -49,22 +45,32 @@ public interface RolesDefaultPermissionsRepo extends JpaRepository<RolesDefaultP
     );
 
 
-    @Modifying
-    @Transactional
-    @Query(value = """
-            INSERT INTO roles_default_permissions (role_id, permission_id, is_deleted, deleted_at)
-            SELECT :roleId, p.id, false, NULL
-            FROM permission p
-            WHERE p.id IN (:validPermissionsIds)
-            ON CONFLICT (role_id, permission_id) 
-            DO UPDATE SET 
-                is_deleted = false, 
-                deleted_at = NULL
-            """, nativeQuery = true)
-    void setNewPermissions(Long roleId, Set<Long> validPermissionsIds);
 
 
     List<RolesDefaultPermissions> findByRoleId(long id);
 
 
+@Modifying
+    @Query(value = """
+            update roles_default_permissions
+            set is_deleted= true , deleted_at= now()
+            where role_id=:roleId 
+              and permission_id not in :newPermissions
+              and is_deleted=false
+            """,nativeQuery = true)
+    void softDeleteUnwantedPermissions(@Param("roleId") Long roleId,
+                                       @Param("newPermissions") Set<Long> newPermissions);
+
+    @Modifying
+    @Query(value = """
+        insert into roles_default_permissions (role_id, permission_id)
+        select :roleId, unnest(CAST(:newPermissions as bigint[]))
+        on conflict (role_id, permission_id)
+        do update set 
+            is_deleted  = false,
+            deleted_at  = null,
+            updated_at  = now()
+        """, nativeQuery = true)
+    void setNewPermissions(@Param("roleId") Long roleId,
+                           @Param("newPermissions") Long[] newPermissions);
 }

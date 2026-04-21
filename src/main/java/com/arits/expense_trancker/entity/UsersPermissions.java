@@ -44,8 +44,6 @@ public class UsersPermissions {
 
 
 
-
-
     @PrePersist
     public void prePersist(){
         this.createdAt= LocalDateTime.now();

@@ -12,13 +12,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AccountBalnaceDto {
+public class BalanceTransferResponseDto {
 
-    private Long accountId;
-    private String accountNumber;
-    private String paymentMethod;
-    private String currency;
-    private BigDecimal balance;
-    private LocalDateTime lastUpdatedAt;
+    private Long fromAccountId;
+    private String fromAccountNumber;
+    private BigDecimal transferredAmount;
+    private BigDecimal remainingBalance;
+    private LocalDateTime transferredAt;
 
 }

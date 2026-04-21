@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -80,7 +81,7 @@ public class AccountController {
 
         ApiResponse<AccountResponseDto> response = ApiResponse.<AccountResponseDto>builder()
                 .status(HttpStatus.OK.value())
-                .message("Modified Account Details Successfully")
+                .message("Account Details Modified Successfully")
                 .timestamp(LocalDateTime.now())
                 .result(modifyAccountDetails)
                 .error(null)
@@ -91,8 +92,7 @@ public class AccountController {
     }
 
 
-//Controller for Deleteing Accounts
-
+    //Controller for Deleteing Accounts
     @DeleteMapping({
             "/user/delete-account/{paymentMethod}/{accountId}",
             "/owner/subuser/delete-account/{paymentMethod}/{accountId}/{userId}",
@@ -125,13 +125,12 @@ public class AccountController {
     }
 
 
-//Controller For Getting any Account Details
-
+    //Controller For Getting any Account Details
     @GetMapping({
-            "/user/get-account-detials/{paymentMethod}/{accountId}",
-            "/owner/subuser/get-account-detials/{paymentMethod}/{accountId}/{userId}",
-            "/admin/user/get-account-detials/{paymentMethod}/{accountId}/{userId}",
-            "/admin/subuser/get-account-detials/{paymentMethod}/{accountId}/{userId}/{subuserId}",
+            "/user/get-account-details/{paymentMethod}/{accountId}",
+            "/owner/subuser/get-account-details/{paymentMethod}/{accountId}/{userId}",
+            "/admin/user/get-account-details/{paymentMethod}/{accountId}/{userId}",
+            "/admin/subuser/get-account-details/{paymentMethod}/{accountId}/{userId}/{subuserId}",
     })
     public ResponseEntity<ApiResponse<?>> getAccountDetails(@AuthenticationPrincipal User user,
                                                             @PathVariable(value = "paymentMethod") Long paymentMethod,
@@ -143,11 +142,11 @@ public class AccountController {
         verifier.checkUserExistence(subuserId);
         verifier.checkAccountIdExistByPaymentMethod(paymentMethod, accountId);
 
-        AccountResponseDto allAccountBalance = accountsService.getAccountDetials(user, userId, subuserId, accountId);
+        AccountResponseDto allAccountBalance = accountsService.getAccountDetails(user, userId, subuserId, accountId);
 
         ApiResponse<?> response = ApiResponse.<AccountResponseDto>builder()
                 .status(HttpStatus.OK.value())
-                .message("Fatched Account Details")
+                .message("Account Details Fetched Successfully")
                 .timestamp(LocalDateTime.now())
                 .result(allAccountBalance)
                 .error(null)
@@ -176,7 +175,7 @@ public class AccountController {
 
         ApiResponse<AllAccountDetails> response = ApiResponse.<AllAccountDetails>builder()
                 .status(HttpStatus.OK.value())
-                .message("Fatched All Account Details Successfully")
+                .message("All Account Details Fetched Successfully")
                 .timestamp(LocalDateTime.now())
                 .result(allAccountDetails)
                 .error(null)
@@ -206,7 +205,7 @@ public class AccountController {
 
         ApiResponse<List<AccountDetailsDto>> response = ApiResponse.<List<AccountDetailsDto>>builder()
                 .status(HttpStatus.OK.value())
-                .message("Fatched All Account Details By Methods Successfully")
+                .message("All Account Details Fetched By Methods Successfully")
                 .timestamp(LocalDateTime.now())
                 .result(allAccountDetails)
                 .error(null)
@@ -234,7 +233,7 @@ public class AccountController {
 
         ApiResponse<List<SoftDeletedAccountDto>> response = ApiResponse.<List<SoftDeletedAccountDto>>builder()
                 .status(HttpStatus.OK.value())
-                .message("Fatched All Account Details By Methods Successfully")
+                .message("All SoftDeleted Account list Fetched Successfully")
                 .timestamp(LocalDateTime.now())
                 .result(softDeletedAccountDetails)
                 .error(null)
@@ -259,16 +258,14 @@ public class AccountController {
 
         verifier.checkUserExistence(userId);
         verifier.checkUserExistence(subuserId);
-//        verifier.checkSoftDeletedPaymentMethodExistence(methodId);
-//        verifier.checkSoftDeletedAccountExistence(accountId);
-        verifier.checkSoftDeletedAccountIdExistByPaymentMethod(methodId,accountId);
+        verifier.checkSoftDeletedAccountIdExistByPaymentMethod(methodId, accountId);
 
 
-        AccountResponseDto softDeletedAccountDetails = accountsService.reviveAccountFromSoftDelete(user, userId, subuserId,accountId);
+        AccountResponseDto softDeletedAccountDetails = accountsService.reviveAccountFromSoftDelete(user, userId, subuserId, accountId);
 
         ApiResponse<AccountResponseDto> response = ApiResponse.<AccountResponseDto>builder()
                 .status(HttpStatus.OK.value())
-                .message("recovered Account Successfully")
+                .message("Account Restored From Soft Delete Successfully")
                 .timestamp(LocalDateTime.now())
                 .result(softDeletedAccountDetails)
                 .error(null)
@@ -277,23 +274,21 @@ public class AccountController {
     }
 
     //Controller For permanently deleting the accounts from the softdelete
-    @PutMapping({
+    @DeleteMapping({
             "/user/delete-account-permanently/{methodId}/{accountId}",
             "/owner/subuser/delete-account-permanently/{methodId}/{accountId}/{subuserId}",
             "/admin/user/delete-account-permanently/{methodId}/{accountId}/{userId}",
             "/admin/subuser/delete-account-permanently/{methodId}/{accountId}/{userId}/{subuserId}",
     })
     public ResponseEntity<ApiResponse<?>> deleteAccountPermanently(@AuthenticationPrincipal User user,
-                                                         @PathVariable(value = "userId", required = false) Long userId,
-                                                         @PathVariable(value = "subuserId", required = false) Long subuserId,
-                                                         @PathVariable(value = "accountId") Long accountId,
-                                                         @PathVariable(value = "methodId") Long methodId
+                                                                   @PathVariable(value = "userId", required = false) Long userId,
+                                                                   @PathVariable(value = "subuserId", required = false) Long subuserId,
+                                                                   @PathVariable(value = "accountId") Long accountId,
+                                                                   @PathVariable(value = "methodId") Long methodId
     ) {
 
         verifier.checkUserExistence(userId);
         verifier.checkUserExistence(subuserId);
-//      verifier.checkSoftDeletedPaymentMethodExistence(methodId);
-//      verifier.checkSoftDeletedAccountExistence(accountId);
         verifier.checkSoftDeletedAccountIdExistByPaymentMethod(methodId, accountId);
 
 
@@ -301,7 +296,7 @@ public class AccountController {
 
         ApiResponse<DeleteAccountDto> response = ApiResponse.<DeleteAccountDto>builder()
                 .status(HttpStatus.OK.value())
-                .message("recovered Account Successfully")
+                .message("Account Deleted Permanently")
                 .timestamp(LocalDateTime.now())
                 .result(softDeletedAccountDetails)
                 .error(null)
@@ -310,52 +305,53 @@ public class AccountController {
 
     }
 
-        //Controller For getting account balance
-        @GetMapping({
-                "/user/get-account-balance/{methodId}/{accountId}",
-                "/owner/subuser/get-account-balance/{methodId}/{accountId}/{subuserId}",
-                "/admin/user/get-account-balance/{methodId}/{accountId}/{userId}",
-                "/admin/subuser/get-account-balance/{methodId}/{accountId}/{userId}/{subuserId}",
-        })
-        public ResponseEntity<ApiResponse<?>> getAccountBalance (@AuthenticationPrincipal User user,
-                                                                 @PathVariable(value = "userId", required = false) Long userId,
-                                                                 @PathVariable(value = "subuserId", required = false) Long subuserId,
-                                                                 @PathVariable(value = "accountId") Long accountId,
-                                                                 @PathVariable(value = "methodId") Long methodId
-    ){
 
-            verifier.checkUserExistence(userId);
-            verifier.checkUserExistence(subuserId);
-            verifier.checkAccountIdExistByPaymentMethod(methodId, accountId);
+    //Controller For getting account balance
+    @GetMapping({
+            "/user/get-account-balance/{methodId}/{accountId}",
+            "/owner/subuser/get-account-balance/{methodId}/{accountId}/{subuserId}",
+            "/admin/user/get-account-balance/{methodId}/{accountId}/{userId}",
+            "/admin/subuser/get-account-balance/{methodId}/{accountId}/{userId}/{subuserId}",
+    })
+    public ResponseEntity<ApiResponse<?>> getAccountBalance(@AuthenticationPrincipal User user,
+                                                            @PathVariable(value = "userId", required = false) Long userId,
+                                                            @PathVariable(value = "subuserId", required = false) Long subuserId,
+                                                            @PathVariable(value = "accountId") Long accountId,
+                                                            @PathVariable(value = "methodId") Long methodId
+    ) {
 
-
-            AccountBalnaceDto softDeletedAccountDetails = accountsService.getAccountBalance(user, userId, subuserId, accountId);
-
-            ApiResponse<AccountBalnaceDto> response = ApiResponse.<AccountBalnaceDto>builder()
-                    .status(HttpStatus.OK.value())
-                    .message("recovered Account Successfully")
-                    .timestamp(LocalDateTime.now())
-                    .result(softDeletedAccountDetails)
-                    .error(null)
-                    .build();
-            return ResponseEntity.ok(response);
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+        verifier.checkAccountIdExistByPaymentMethod(methodId, accountId);
 
 
-        }
+        AccountBalanceDto softDeletedAccountDetails = accountsService.getAccountBalance(user, userId, subuserId, accountId);
+
+        ApiResponse<AccountBalanceDto> response = ApiResponse.<AccountBalanceDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Account Balance Fetched Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(softDeletedAccountDetails)
+                .error(null)
+                .build();
+        return ResponseEntity.ok(response);
 
 
-    //Controller For getting account total balance
+    }
+
+
+    //Controller For getting account total balance currency wise
     @GetMapping({
             "/user/get-total-balance/{currencyId}",
             "/owner/subuser/get-total-balance/{currencyId}/{subuserId}",
             "/admin/user/get-total-balance/{currencyId}/{userId}",
             "/admin/subuser/get-total-balance/{currencyId}/{userId}/{subuserId}",
     })
-    public ResponseEntity<ApiResponse<?>> getTotalBalance (@AuthenticationPrincipal User user,
-                                                           @PathVariable(value = "userId", required = false) Long userId,
-                                                           @PathVariable(value = "subuserId", required = false) Long subuserId,
-                                                           @PathVariable(value = "currencyId") Long currencyId
-    ){
+    public ResponseEntity<ApiResponse<?>> getTotalBalance(@AuthenticationPrincipal User user,
+                                                          @PathVariable(value = "userId", required = false) Long userId,
+                                                          @PathVariable(value = "subuserId", required = false) Long subuserId,
+                                                          @PathVariable(value = "currencyId") Long currencyId
+    ) {
 
         verifier.checkUserExistence(userId);
         verifier.checkUserExistence(subuserId);
@@ -366,7 +362,7 @@ public class AccountController {
 
         ApiResponse<TotalBalanceDto> response = ApiResponse.<TotalBalanceDto>builder()
                 .status(HttpStatus.OK.value())
-                .message("recovered Account Successfully")
+                .message("Accounts total Balanced Fetched By Currency Successfully")
                 .timestamp(LocalDateTime.now())
                 .result(softDeletedAccountDetails)
                 .error(null)
@@ -376,7 +372,106 @@ public class AccountController {
 
     }
 
+    //Controller for updating account balance
+    @PutMapping({
+            "/user/update-account-balance/{methodId}/{accountId}",
+            "/owner/subuser/update-account-balance/{methodId}/{accountId}/{subuserId}",
+            "/admin/user/update-account-balance/{methodId}/{accountId}/{userId}",
+            "/admin/subuser/update-account-balance/{methodId}/{accountId}/{userId}/{subuserId}",
+    })
+    public ResponseEntity<ApiResponse<?>> updateAccountBalance(@AuthenticationPrincipal User user,
+                                                               @PathVariable(value = "userId", required = false) Long userId,
+                                                               @PathVariable(value = "subuserId", required = false) Long subuserId,
+                                                               @RequestBody BigDecimal amount,
+                                                               @PathVariable(value = "methodId") Long methodId,
+                                                               @PathVariable(value = "accountId") Long accountId
+
+    ) {
+
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+        verifier.checkAccountIdExistByPaymentMethod(methodId, accountId);
+
+
+        AccountBalanceDto updatedBalance = accountsService.updateAccountBalance(user, userId, subuserId, accountId, amount);
+
+        ApiResponse<AccountBalanceDto> response = ApiResponse.<AccountBalanceDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Account Balance Updated Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(updatedBalance)
+                .error(null)
+                .build();
+        return ResponseEntity.ok(response);
+
+
     }
+
+    //    controller for transfering balance to any account
+    @PostMapping({
+            "/user/transfer-balance",
+            "/owner/subuser/transfer-balance/{subuserId}",
+            "/admin/user/transfer-balance/{userId}",
+            "/admin/subuser/transfer-balance/{userId}/{subuserId}",
+    })
+    public ResponseEntity<ApiResponse<?>> transferAccountBalance(@AuthenticationPrincipal User user,
+                                                                 @PathVariable(value = "userId", required = false) Long userId,
+                                                                 @PathVariable(value = "subuserId", required = false) Long subuserId,
+                                                                 @Valid @RequestBody BalanceTransferRequestDto requestDto
+    ) {
+
+        verifier.checkUserExistence(userId);
+        verifier.checkUserExistence(subuserId);
+        verifier.checkAccountIdExistByPaymentMethod(requestDto.getFromMethodId(), requestDto.getFromAccountId());
+        verifier.checkAccountIdExistByPaymentMethod(requestDto.getToMethodId(), requestDto.getToAccountId());
+        verifier.checkUserExistence(requestDto.getReceiverUserId());
+
+        BalanceTransferResponseDto updatedBalance = accountsService.balanceTransfer(user, userId, subuserId, requestDto);
+
+        ApiResponse<BalanceTransferResponseDto> response = ApiResponse.<BalanceTransferResponseDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Balance Transfered Successfully")
+                .timestamp(LocalDateTime.now())
+                .result(updatedBalance)
+                .error(null)
+                .build();
+        return ResponseEntity.ok(response);
+
+
+    }
+
+
+    //Controller for the search accounts
+    @GetMapping({
+            "/user/search-accounts",
+            "/admin/search-accounts",
+            "/admin/search-accounts/{userId}",
+    })
+    public ResponseEntity<ApiResponse<?>> seachAccounts( @AuthenticationPrincipal User user,
+                                                         @PathVariable(required = false) Long userId,
+                                                         @RequestParam String keyword,
+                                                         @RequestParam(defaultValue = "0") int page,
+                                                         @RequestParam(defaultValue = "50") int size
+    ) {
+
+        verifier.checkUserExistence(userId);
+
+        PaginatedResponseDto<AccountResponseDto> result = accountsService.searchAccounts(user, userId, keyword, page, size);
+        ApiResponse<?> response = ApiResponse.<PaginatedResponseDto<AccountResponseDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Searched Accounts Fetched Succesfully")
+                .timestamp(LocalDateTime.now())
+                .result(result)
+                .error(null)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
+
+}
 
 
 

@@ -5,12 +5,9 @@ import com.arits.expense_trancker.entity.*;
 import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,26 +43,20 @@ public class PermissionService {
 
 
     @Transactional
-    public SetPermissionDto setPermissionToRole(Long roleId, List<Long> permissionIds) {
+    public SetPermissionDto setPermissionToRole(Long roleId, SetPermissionDto dto) {
+        Long[] permissionArray = dto.getPermissionIds().toArray(new Long[0]);
 
-        Set<Long> validPermissionsIds = permissionRepo.getPermissionID(permissionIds);
+        rolesDefaultPermissionsRepo.softDeleteUnwantedPermissions(roleId, dto.getPermissionIds());
+        rolesDefaultPermissionsRepo.setNewPermissions(roleId, permissionArray);
 
-        rolesDefaultPermissionsRepo.softdeleteOldPermissions(roleId, validPermissionsIds);
+        usersPermissionsRepo.softDeleteUnwantedUsersPermissions(roleId, permissionArray);
+        usersPermissionsRepo.setNewRolePermissionsToUsers(roleId, permissionArray);
 
-        Set<Long> newPermissionsToAdd = permissionRepo.getNewPermissionsToAdd(roleId, validPermissionsIds);
-
-        rolesDefaultPermissionsRepo.setNewPermissions(roleId, newPermissionsToAdd);
-
-        List<Long> userIds = userRepo.findUsersIdByRoleId(roleId);
-
-        if (!userIds.isEmpty()) {
-            usersPermissionsRepo.softDeleteUsersOldPermissions(userIds, validPermissionsIds);
-            usersPermissionsRepo.setUsersPermissions(roleId, validPermissionsIds);
-        }
-
-
-        return new SetPermissionDto(roleId, permissionIds);
+        return SetPermissionDto.builder()
+                .permissionIds(dto.getPermissionIds())
+                .build();
     }
+
 
 
     public List<PermissionResponseDto> permissionList(Long roleId) {
@@ -110,7 +101,7 @@ public class PermissionService {
     @Transactional
     public SetPermissionDto setPermissionToSubusersRole(User user, SetPermissionDto setPermissionDto) {
 
-        Set<Long> validPermissionsIds = permissionRepo.getPermissionID(setPermissionDto.getPermissionId());
+        Set<Long> validPermissionsIds = permissionRepo.getPermissionID(setPermissionDto.getPermissionIds());
 
         usersPermissionsRepo.softdeleteOldPermissionsForSubusers(user.getId(), setPermissionDto.getRoleId(), validPermissionsIds);
 
@@ -120,14 +111,13 @@ public class PermissionService {
         usersPermissionsRepo.setSubUsersPermissions(user.getId(), setPermissionDto.getRoleId(), newPermissionsToAdd);
 
 
-        return new SetPermissionDto(setPermissionDto.getRoleId(), setPermissionDto.getPermissionId());
+        return new SetPermissionDto(setPermissionDto.getRoleId(), setPermissionDto.getPermissionIds());
     }
-
 
 
     public List<PermissionResponseDto> subUsersPermission(User user, Long roleId) {
 
-        List<PermissionResponseDto> response = usersPermissionsRepo.findSubUserRolesPermission(user.getId(),roleId);
+        List<PermissionResponseDto> response = usersPermissionsRepo.findSubUserRolesPermission(user.getId(), roleId);
 
         return response;
     }

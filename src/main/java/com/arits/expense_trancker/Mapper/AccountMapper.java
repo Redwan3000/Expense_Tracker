@@ -1,15 +1,12 @@
 package com.arits.expense_trancker.Mapper;
 
 
-import com.arits.expense_trancker.dto.AccountBalnaceDto;
+import com.arits.expense_trancker.dto.AccountBalanceDto;
 import com.arits.expense_trancker.dto.AccountResponseDto;
 import com.arits.expense_trancker.dto.DeleteAccountDto;
 import com.arits.expense_trancker.entity.Account;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 
 @Mapper(componentModel = "spring")
@@ -37,7 +34,10 @@ public interface AccountMapper {
     @Mapping(source = "currency.name", target = "currency")
     @Mapping(source = "balance.amount", target = "currentBalance")
     @Mapping(source = "updatedAt",target = "lastUpdatedAt")
-    AccountBalnaceDto toAccountBalanceDto(Account account);
+    AccountBalanceDto toAccountBalanceDto(Account account);
 
 
-}
+
+
+
+    }

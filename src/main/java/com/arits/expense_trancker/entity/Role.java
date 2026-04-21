@@ -36,7 +36,7 @@ public class Role {
     private Set<User> user;
 
     @Builder.Default
-    @OneToMany(mappedBy = "role")
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
     private Set<RolesDefaultPermissions> rolesDefaultPermissions = new HashSet<>();
 
 

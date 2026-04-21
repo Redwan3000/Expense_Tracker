@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -135,7 +135,7 @@ public class AccountsService {
 
 
     //    service level for getting any 1 Account details
-    public AccountResponseDto getAccountDetials(User user, Long userId, Long subuserId, Long accountId) {
+    public AccountResponseDto getAccountDetails(User user, Long userId, Long subuserId, Long accountId) {
 
         Long targetUserId = resolver.getTargetUserId(user, userId, subuserId);
         Account account = accountRepo.findByUserIdAndId(targetUserId, accountId).orElseThrow(() -> new RuntimeException("Account does not belong to that User"));
@@ -227,7 +227,7 @@ public class AccountsService {
 
 
     //    service for getting account balance
-    public AccountBalnaceDto getAccountBalance(User user, Long userId, Long subuserId, Long accountId) {
+    public AccountBalanceDto getAccountBalance(User user, Long userId, Long subuserId, Long accountId) {
 
         Long targetUserId = resolver.getTargetUserId(user, userId, subuserId);
         verifier.checkAccountIdExistByUserId(targetUserId, accountId, false);
@@ -237,12 +237,11 @@ public class AccountsService {
     }
 
 
-
     public TotalBalanceDto getTotalBalanceCurrencyWise(User user, Long userId, Long subuserId, Long currencyId) {
 
-        Long targetUserId= resolver.getTargetUserId(user,userId,subuserId);
+        Long targetUserId = resolver.getTargetUserId(user, userId, subuserId);
 
-        Object[] result = accountRepo.getTotalBalanceByCurrency(targetUserId,currencyId);
+        Object[] result = accountRepo.getTotalBalanceByCurrency(targetUserId, currencyId);
 
         return TotalBalanceDto.builder()
                 .totalBalance((BigDecimal) result[0])
@@ -250,5 +249,104 @@ public class AccountsService {
                 .currency((String) result[2])
                 .build();
     }
+
+    public AccountBalanceDto updateAccountBalance(User user, Long userId, Long subuserId, Long accountId, BigDecimal amount) {
+
+        Long targetUserId = resolver.getTargetUserId(user, userId, subuserId);
+
+        Account validAccount = accountRepo.findByUserIdAndId(targetUserId, accountId).orElseThrow(() -> new RuntimeException("account does not belong to the user"));
+
+        balanceRepo.updateAccountBalance(accountId, amount);
+        return accountMapper.toAccountBalanceDto(validAccount);
+    }
+
+
+    @Transactional
+    public BalanceTransferResponseDto balanceTransfer(User user, Long userId, Long subuserId, BalanceTransferRequestDto dto) {
+
+        Long targetUserId = resolver.getTargetUserId(user, userId, subuserId);
+
+        if (dto.getFromAccountId().equals(dto.getToAccountId())) {
+            throw new IllegalArgumentException("can transfer money to the same account");
+        }
+
+        Account fromAccount = accountRepo.findByUserIdAndId(targetUserId, dto.getFromAccountId()).orElseThrow(() -> new RuntimeException("account does not belong to the user"));
+        Account toAccount = accountRepo.findByUserIdAndId(dto.getReceiverUserId(), dto.getToAccountId()).orElseThrow(() -> new RuntimeException("account does not belong to the reciver"));
+
+
+        if (!fromAccount.getCurrency().getName().equals(toAccount.getCurrency().getName())) {
+            throw new RuntimeException("currency mismatched...you cannot transfer to that account");
+        }
+        if (fromAccount.getBalance().getAmount().compareTo(dto.getTransferAmount()) < 0) {
+            throw new RuntimeException("insufficient balance");
+        }
+
+        balanceRepo.debitBalance(targetUserId, dto.getFromAccountId(), dto.getTransferAmount());
+        balanceRepo.creditBalance(dto.getReceiverUserId(), dto.getToAccountId(), dto.getTransferAmount());
+
+
+        return BalanceTransferResponseDto.builder()
+                .fromAccountId(fromAccount.getId())
+                .fromAccountNumber(fromAccount.getAccountDetails().getAccountNumber())
+                .transferredAmount(dto.getTransferAmount())
+                .remainingBalance(fromAccount.getBalance().getAmount())
+                .transferredAt(LocalDateTime.now())
+                .build();
+
+    }
+
+
+    @Transactional
+    public PaginatedResponseDto<AccountResponseDto> searchAccounts(User user, Long userId, String keyword, int page, int size) {
+
+        int offset = page * size;
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        List<Object[]> searchedAccounts;
+        Long totalElements;
+
+        if (isAdmin && userId == null) {
+            searchedAccounts = accountRepo.searchAccountsAllDatabase(keyword, size, offset);
+            totalElements = accountRepo.countSearchAccountsAllDatabase(keyword);
+
+        } else {
+            Long targetUserId = isAdmin ? userId : user.getId();
+            searchedAccounts = accountRepo.searchAccountsByUserId(targetUserId, keyword, size, offset);
+            totalElements = accountRepo.countSearchedAccountByUserId(targetUserId, keyword);
+        }
+
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        List<AccountResponseDto> content = searchedAccounts.stream()
+                .map(row -> AccountResponseDto.builder()
+                        .accountId(((Number) row[0]).longValue())                   // account.id
+                        .accountNumber((String) row[1])                            // accountDetails.account_number
+                        .accountHolder((String) row[2])                           // accountDetails.account_holder
+                        .nomineeName((String) row[3])                            // accountDetails.nominee_name
+                        .paymentMethod((String) row[4])                         // paymentMethod.name
+                        .providerName((String) row[5])                         // provider.name
+                        .accountType((String) row[6])                         // accountType.name
+                        .currentBalance((BigDecimal) row[7])                 // balance.amount
+                        .currency((String) row[8])                          // currency.name
+                        .createdAt(((Timestamp) row[9]).toLocalDateTime()) // account.created_at
+                        .build())
+                .toList();
+
+        return PaginatedResponseDto.<AccountResponseDto>builder()
+                .content(content)
+                .currentPage(page)
+                .pageSize(size)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .isFirst(page == 0)
+                .isLast(page >= totalPages - 1)
+                .build();
+    }
+
+
 }
+
+
+
 

@@ -1,12 +1,12 @@
 package com.arits.expense_trancker.dto;
 
-import com.arits.expense_trancker.entity.Permission;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -14,9 +14,7 @@ import java.util.List;
 @Builder
 public class SetPermissionDto {
 
-    private Long roleId;
-    private List<Long> permissionId;
-
+    private Set<Long> permissionIds;
 
 
 

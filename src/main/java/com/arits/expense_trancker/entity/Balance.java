@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE balance SET is_deleted = true,deleted_at=NOW() WHERE id=?")
+@SQLDelete(sql = "update balance set is_deleted = true,deleted_at=NOW() where id=?")
 @SQLRestriction("is_deleted = false")
 public class Balance {
 
