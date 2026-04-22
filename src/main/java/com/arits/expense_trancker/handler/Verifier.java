@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Set;
 
 @Component
@@ -22,6 +21,8 @@ public class Verifier {
     private final CurrencyRepo currencyRepo;
     private final RoleRepo roleRepo;
     private final PermissionRepo permissionRepo;
+    private final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
+    private final UsersPermissionsRepo usersPermissionsRepo;
 
 
     public void checkUserExistence(Long userId) {
@@ -105,9 +106,38 @@ public class Verifier {
 
     public void checkPermissionIds(Set<Long> permissionIds) {
         for (Long p : permissionIds) {
-            if (permissionRepo.existsById(p)) {
+            if (!permissionRepo.existsById(p)) {
                 throw new RuntimeException("Permission Does not exist by Id : " + p);
             }
         }
+    }
+
+    public void checkUserExistanceAsParentOfRole(Long parentId, Long roleId) {
+
+        if (!userRepo.existsUserByParentIdAndRoleId(parentId, roleId)) {
+            throw new RuntimeException("user does not have any subuser with the role");
+        }
+    }
+
+
+    public void checkPermissionIdsExistsInRole(Long roleId, Set<Long> permissionIds) {
+
+        if (rolesDefaultPermissionsRepo.countPermissionsInRole(roleId, permissionIds) != permissionIds.size()) {
+            throw new RuntimeException("One or more permissions are not associated with this role.");
+        }
+    }
+
+    public void checkPermissionIdsEmptyOrNot(Set<Long> permissionIds) {
+        if (permissionIds.isEmpty()) {
+            throw new RuntimeException("permission sets cannot be null or empty");
+        }
+    }
+
+    public void checkPermissionIdsExistsInUser(Long targetUserId, Set<Long> permissionIds) {
+        if(usersPermissionsRepo.countPermissionsInUser(targetUserId,permissionIds)!=permissionIds.size()){
+            throw new RuntimeException("One or more permissions are not associated with this role.");
+        }
+
+
     }
 }

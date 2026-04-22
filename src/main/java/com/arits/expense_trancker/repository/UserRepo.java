@@ -2,16 +2,12 @@ package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.User;
-import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import javax.swing.text.html.Option;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -123,4 +119,5 @@ public interface UserRepo extends JpaRepository<User, Long> {
     Optional<Long> findUserIdByParentIdAndUserId(@Param("parentId") Long parentId, @Param("userId") Long userId);
 
 
+    boolean existsUserByParentIdAndRoleId(Long parentId, Long roleId);
 }

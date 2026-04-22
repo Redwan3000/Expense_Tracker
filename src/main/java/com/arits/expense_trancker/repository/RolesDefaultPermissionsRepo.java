@@ -1,6 +1,7 @@
 package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.PermissionResponseDto;
+import com.arits.expense_trancker.entity.Role;
 import com.arits.expense_trancker.entity.RolesDefaultPermissions;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -61,6 +62,8 @@ public interface RolesDefaultPermissionsRepo extends JpaRepository<RolesDefaultP
     void softDeleteUnwantedPermissions(@Param("roleId") Long roleId,
                                        @Param("newPermissions") Set<Long> newPermissions);
 
+
+
     @Modifying
     @Query(value = """
         insert into roles_default_permissions (role_id, permission_id)
@@ -73,4 +76,15 @@ public interface RolesDefaultPermissionsRepo extends JpaRepository<RolesDefaultP
         """, nativeQuery = true)
     void setNewPermissions(@Param("roleId") Long roleId,
                            @Param("newPermissions") Long[] newPermissions);
+
+
+    List<RolesDefaultPermissions> role(Role role);
+
+
+    @Query("select count(rdp.id) " +
+            "from RolesDefaultPermissions rdp " +
+            "where rdp.role.id = :roleId " +
+            "and rdp.permission.id in :permissionIds " +
+            "and rdp.isDeleted = false")
+    long countPermissionsInRole(@Param("roleId") Long roleId, @Param("permissionIds") Set<Long> permissionIds);
 }

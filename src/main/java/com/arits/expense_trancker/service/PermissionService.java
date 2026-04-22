@@ -2,9 +2,12 @@ package com.arits.expense_trancker.service;
 
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.*;
+import com.arits.expense_trancker.handler.Resolver;
+import com.arits.expense_trancker.handler.Verifier;
 import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -16,10 +19,10 @@ public class PermissionService {
 
 
     public final PermissionRepo permissionRepo;
-    public final RoleRepo roleRepo;
-    public final UserRepo userRepo;
     public final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
     public final UsersPermissionsRepo usersPermissionsRepo;
+    private final Resolver resolver;
+    private final Verifier verifier;
 
 
     public void permissionsSeeding(String name, String des) {
@@ -41,84 +44,121 @@ public class PermissionService {
 
     }
 
-
+    //service for setting new sets of permissions to the role
     @Transactional
-    public SetPermissionDto setPermissionToRole(Long roleId, SetPermissionDto dto) {
+    public SetPermissionDto setPermissionToRole(User user, Long roleId, SetPermissionDto dto) {
+
+        Long userID;
+        boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
         Long[] permissionArray = dto.getPermissionIds().toArray(new Long[0]);
 
-        rolesDefaultPermissionsRepo.softDeleteUnwantedPermissions(roleId, dto.getPermissionIds());
-        rolesDefaultPermissionsRepo.setNewPermissions(roleId, permissionArray);
 
-        usersPermissionsRepo.softDeleteUnwantedUsersPermissions(roleId, permissionArray);
-        usersPermissionsRepo.setNewRolePermissionsToUsers(roleId, permissionArray);
+        if (isHeAdmin) {
+            userID = null;
+            rolesDefaultPermissionsRepo.softDeleteUnwantedPermissions(roleId, dto.getPermissionIds());
+            rolesDefaultPermissionsRepo.setNewPermissions(roleId, permissionArray);
+        } else {
+            userID = user.getId();
+            verifier.checkPermissionIdsExistsInRole(roleId, dto.getPermissionIds());
+        }
+
+        usersPermissionsRepo.softDeleteUnwantedUsersPermissions(roleId, permissionArray, userID);
+        usersPermissionsRepo.setNewRolePermissionsToUsers(roleId, permissionArray, userID);
 
         return SetPermissionDto.builder()
+                .roleId(roleId)
+                .permissionIds(dto.getPermissionIds())
+                .build();
+
+    }
+
+
+    //    service for adding a new permission to the roles
+    @Transactional
+    public SetPermissionDto addNewPermissionToRole(User user, Long roleId, SetPermissionDto dto) {
+
+        Long userID;
+        boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        Long[] permissionArray = dto.getPermissionIds().toArray(new Long[0]);
+
+
+        if (isHeAdmin) {
+            userID = null;
+            rolesDefaultPermissionsRepo.setNewPermissions(roleId, permissionArray);
+        } else {
+            userID = user.getId();
+
+        }
+
+        usersPermissionsRepo.setNewRolePermissionsToUsers(roleId, permissionArray, userID);
+
+        return SetPermissionDto.builder()
+                .roleId(roleId)
                 .permissionIds(dto.getPermissionIds())
                 .build();
     }
 
 
+    //    service for getting the roles active PermissionsList
+    public List<RolesPermissionsRepsonseDto> rolesPermissionList(User user, Long roleId) {
 
-    public List<PermissionResponseDto> permissionList(Long roleId) {
+        boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        List<PermissionResponseDto> response = rolesDefaultPermissionsRepo.findRolesPermission(roleId);
+        if (isHeAdmin) {
+            return usersPermissionsRepo.findRolesActivePermissions(roleId, null);
+        } else if (!roleId.equals(user.getRole().getId())) {
+            verifier.checkUserExistanceAsParentOfRole(user.getId(), roleId);
+        }
 
-        return response;
+        return usersPermissionsRepo.findRolesActivePermissions(roleId, user.getId());
     }
 
-//
-//    @Transactional
-//    public UpdatePermssionResponseDto updatePermission(String roleName, List<Long> replacedTo, List<Long> replacedWith) {
-//
-//        Role role = roleRepo.findByName(roleName)
-//                .orElseThrow(() -> new IllegalArgumentException("role does not exist"));
-//
-//        Set<RolesDefaultPermissions> validateNewPermission = replacedWith.stream()
-//                .map(p -> permissionRepo.findById(p).orElseThrow(() -> new IllegalArgumentException("permission does not exist")))
-//                .map(permission -> RolesDefaultPermissions.builder()
-//                        .role(role)
-//                        .permission(permission)
-//                        .isDeleted(false)
-//                        .build())
-//                .collect(Collectors.toSet());
-//
-//        Set<RolesDefaultPermissions> validateOldPermission = role.getRolesDefaultPermissions().stream()
-//                .filter(rolePerm -> replacedTo.contains(rolePerm.getPermission().getId()))
-//                .collect(Collectors.toSet());
-//
-//
-//        role.getRolesDefaultPermissions().removeAll(validateOldPermission);
-//        role.getRolesDefaultPermissions().addAll(validateNewPermission);
-//
-//        List<Long> updatedPermissionIds = role.getRolesDefaultPermissions().stream()
-//                .map(p -> p.getPermission().getId())
-//                .collect(Collectors.toList());
-//
-//        return new UpdatePermssionResponseDto(roleName, updatedPermissionIds);
-//    }
+
+    //    service for getting the user active permission list
+    public List<RolesPermissionsRepsonseDto> usersActivePermissionsList(User user, Long userId, Long subuserId) {
+
+        Long targetId = resolver.getTargetUserId(user, userId, subuserId);
+        return usersPermissionsRepo.getUsersActivePermissionList(targetId);
+
+    }
 
 
     @Transactional
-    public SetPermissionDto setPermissionToSubusersRole(User user, SetPermissionDto setPermissionDto) {
+//service for removing permissions from role
+    public SetPermissionDto removePermissionFromRole(User user, Long roleId, SetPermissionDto dto) {
 
-        Set<Long> validPermissionsIds = permissionRepo.getPermissionID(setPermissionDto.getPermissionIds());
+        Long userID;
+        boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        usersPermissionsRepo.softdeleteOldPermissionsForSubusers(user.getId(), setPermissionDto.getRoleId(), validPermissionsIds);
-
-        Set<Long> newPermissionsToAdd = permissionRepo.getNewPermissionsToAdd(setPermissionDto.getRoleId(), validPermissionsIds);
-
-
-        usersPermissionsRepo.setSubUsersPermissions(user.getId(), setPermissionDto.getRoleId(), newPermissionsToAdd);
+        Long[] permissionArray = dto.getPermissionIds().toArray(new Long[0]);
 
 
-        return new SetPermissionDto(setPermissionDto.getRoleId(), setPermissionDto.getPermissionIds());
+        if (isHeAdmin) {
+            userID = null;
+            rolesDefaultPermissionsRepo.softDeleteUnwantedPermissions(roleId, dto.getPermissionIds());
+        } else {
+            userID = user.getId();
+        }
+        usersPermissionsRepo.softDeleteUnwantedUsersPermissions(roleId, permissionArray, userID);
+
+        return SetPermissionDto.builder()
+                .roleId(roleId)
+                .permissionIds(dto.getPermissionIds())
+                .build();
+
     }
 
 
-    public List<PermissionResponseDto> subUsersPermission(User user, Long roleId) {
+    public SetPermissionDto removePermissionFromUser(User user, Long userId, Long subuserId, SetPermissionDto dto) {
 
-        List<PermissionResponseDto> response = usersPermissionsRepo.findSubUserRolesPermission(user.getId(), roleId);
+        Long targetUserid = resolver.getTargetUserId(user, userId, subuserId);
+        usersPermissionsRepo.softDeleteUsersPermissions(targetUserid, dto.getPermissionIds());
 
-        return response;
+        return SetPermissionDto.builder()
+                .permissionIds(dto.getPermissionIds())
+                .build();
+
     }
 }
