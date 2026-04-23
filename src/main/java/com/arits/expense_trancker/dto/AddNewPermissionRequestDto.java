@@ -5,15 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class ModifyCashWalletDetailsDto {
+public class AddNewPermissionRequestDto {
 
-private String currency;
-private BigDecimal balance;
+private String name;
+private String description;
 
 }

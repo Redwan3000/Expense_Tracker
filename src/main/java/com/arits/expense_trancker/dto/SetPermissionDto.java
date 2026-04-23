@@ -14,8 +14,8 @@ import java.util.Set;
 @Builder
 public class SetPermissionDto {
 
-    @Builder.Default
-    private Long roleId=null;
+
+    private Long roleId;
     private Set<Long> permissionIds;
 
 

@@ -1,13 +1,23 @@
 package com.arits.expense_trancker.dto;
 
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public interface PermissionResponseDto {
+import java.time.LocalDateTime;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 
-     Long getRoleName();
+public class PermissionResponseDto {
 
-     String getRole();
+    private Long id;
+    private String name;
+    private String description;
+    private LocalDateTime createdAt;
 
-     String getDescription();
 }

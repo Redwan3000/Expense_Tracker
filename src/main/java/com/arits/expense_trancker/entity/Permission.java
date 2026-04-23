@@ -32,25 +32,23 @@ public class Permission {
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+    @Builder.Default
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
 
     @Builder.Default
-    @OneToMany(mappedBy = "permission")
+    @OneToMany(mappedBy = "permission",cascade = CascadeType.ALL)
     private Set<RolesDefaultPermissions> rolesDefaultPermissions = new HashSet<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "permission")
+    @OneToMany(mappedBy = "permission",cascade = CascadeType.ALL)
     private Set<UsersPermissions> usersPermissions = new HashSet<>();
 
 
 
     @PrePersist
-    public void prePersist(){
-        this.createdAt= LocalDateTime.now();
-        this.updatedAt= LocalDateTime.now();
-    }
+    public void prePersist(){ this.createdAt= LocalDateTime.now(); }
     @PreUpdate
     public void preUpdate(){
         this.updatedAt= LocalDateTime.now();

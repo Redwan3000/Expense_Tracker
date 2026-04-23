@@ -134,8 +134,44 @@ public class Verifier {
     }
 
     public void checkPermissionIdsExistsInUser(Long targetUserId, Set<Long> permissionIds) {
-        if(usersPermissionsRepo.countPermissionsInUser(targetUserId,permissionIds)!=permissionIds.size()){
+        if (usersPermissionsRepo.countPermissionsInUser(targetUserId, permissionIds) != permissionIds.size()) {
             throw new RuntimeException("One or more permissions are not associated with this role.");
+        }
+
+
+    }
+
+    public void checkIsNamesNullOrNot(String name) {
+        if (name.isBlank()) {
+            throw new RuntimeException("names can not be null or empty");
+        }
+    }
+
+    public boolean checkpermissionExistance(String name) {
+        return permissionRepo.existsByNameIncludingSofted(name);
+    }
+
+    public void checkPermissionExistanceById(Long permissionId) {
+        if (!permissionRepo.existsById(permissionId)) {
+            throw new RuntimeException("permission does not exist with the id : " + permissionId);
+        }
+    }
+
+    public void checkPermissionExistanceInSofted(Long permissionId) {
+        if(!permissionRepo.existsAfterSoftDelete(permissionId)){
+            throw new RuntimeException("permission is not present as softdeleted id :"+permissionId);
+        }
+    }
+
+    public void checkPermissionInBothWorld(Long permissionId) {
+        if(!permissionRepo.permissionExistInBothWorld(permissionId)){
+            throw new RuntimeException("permission is not present anywhere with id: "+permissionId);
+        }
+    }
+
+    public void checkPermissionId(Long permissionId) {
+        if(!permissionRepo.existsById(permissionId)){
+            throw new RuntimeException("permission does not exist by the id : "+permissionId);
         }
 
 
