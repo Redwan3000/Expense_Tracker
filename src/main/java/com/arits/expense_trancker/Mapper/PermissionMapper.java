@@ -12,5 +12,5 @@ public interface PermissionMapper {
     PermissionResponseDto toAddNewPermissionDto(Permission permission);
 
 
-    DetelePermissionResponseDto toDeletePermissionDto(Permission permission);
+    PermissionResponseDto toDeletePermissionDto(Permission permission);
 }

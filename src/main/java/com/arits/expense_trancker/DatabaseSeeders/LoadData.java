@@ -7,6 +7,7 @@ import com.arits.expense_trancker.repository.UserRepo;
 import com.arits.expense_trancker.security.AuthService;
 import com.arits.expense_trancker.service.*;
 import jakarta.transaction.Transactional;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -32,6 +33,7 @@ public class LoadData implements CommandLineRunner {
     private final CurrencyService currencyService;
     private final AuthService authService;
     private final UserRepo userRepo;
+
 
     private final UserRegisterRequestDto userRegisterRequestDto = UserRegisterRequestDto.builder()
             .firstName("ADMIN")
@@ -61,8 +63,8 @@ public class LoadData implements CommandLineRunner {
         roleService.roleSeeding("TERTIARY");
         roleService.roleSeeding("ADMIN");
 
-        transactionService.ttSeeding("EXPENSE");
-        transactionService.ttSeeding("INCOME");
+//        transactionService.ttSeeding("EXPENSE");
+//        transactionService.ttSeeding("INCOME");
 
         currencyService.currencySeeding("BDT");
         currencyService.currencySeeding("EUR");
@@ -75,12 +77,12 @@ public class LoadData implements CommandLineRunner {
         accountsService.accountTypeSeeding("DPS");
         accountsService.accountTypeSeeding("VIP");
 
-        transactionService.tmSeedding("CASH");
-        transactionService.tmSeedding("BANK");
-        transactionService.tmSeedding("MOBILE_BANKING");
+//        transactionService.tmSeedding("CASH");
+//        transactionService.tmSeedding("BANK");
+//        transactionService.tmSeedding("MOBILE_BANKING");
 
         if (userRepo.findByUsername("ADMIN").isEmpty()) {
-            authService.register(null, userRegisterRequestDto);
+            authService.register(null,null, userRegisterRequestDto);
         }
 
 

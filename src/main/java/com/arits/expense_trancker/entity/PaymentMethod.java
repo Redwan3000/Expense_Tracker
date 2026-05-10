@@ -32,7 +32,7 @@ public class PaymentMethod {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "transactionMethod",cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @OneToMany(mappedBy = "paymentMethod",cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<Account> accounts;
 
 

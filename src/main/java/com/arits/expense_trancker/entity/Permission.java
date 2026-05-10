@@ -33,7 +33,7 @@ public class Permission {
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
     @Builder.Default
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt= LocalDateTime.now();
     private LocalDateTime updatedAt;
 
 

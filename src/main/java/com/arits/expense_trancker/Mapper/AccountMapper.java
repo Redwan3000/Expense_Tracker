@@ -32,7 +32,7 @@ public interface AccountMapper {
     @Mapping(source = "accountDetails.accountNumber", target = "accountNumber")
     @Mapping(source = "paymentMethod.name", target = "paymentMethod")
     @Mapping(source = "currency.name", target = "currency")
-    @Mapping(source = "balance.amount", target = "currentBalance")
+    @Mapping(source = "balance.amount", target = "balance")
     @Mapping(source = "updatedAt",target = "lastUpdatedAt")
     AccountBalanceDto toAccountBalanceDto(Account account);
 

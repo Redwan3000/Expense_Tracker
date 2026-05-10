@@ -52,6 +52,9 @@ public class AccountDetails {
     @OneToOne(mappedBy = "accountDetails",cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     private Account account;
 
+    @ManyToOne
+    @JoinColumn(name = "account_type_id")
+    private AccountType accountType;
 
     @PrePersist
     public void prePersist(){

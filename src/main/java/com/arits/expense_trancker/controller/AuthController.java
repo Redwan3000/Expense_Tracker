@@ -6,6 +6,7 @@ import com.arits.expense_trancker.dto.UserRegisterRequestDto;
 import com.arits.expense_trancker.dto.UserRegisterResponseDto;
 import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.handler.ApiResponse;
+import com.arits.expense_trancker.handler.Verifier;
 import com.arits.expense_trancker.repository.UserRepo;
 import com.arits.expense_trancker.security.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserRepo userRepo;
+    private final Verifier verifier;
 
 
     @PostMapping({
@@ -35,23 +37,9 @@ public class AuthController {
                                                           @RequestBody UserRegisterRequestDto requestDto,
                                                           @PathVariable(value = "ownerId", required = false) Long ownerId) {
 
-        User passengerUser = null;
+        verifier.checkUserExistence(ownerId);
 
-        if (user != null) {
-            boolean canCreateSubowner = user.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("Can Create New Subowner"));
-            boolean canCreateOtherSubowner = user.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("Can Create Subowner For Other User"));
-
-            if (canCreateOtherSubowner && ownerId != null) {
-                passengerUser = userRepo.findById(ownerId)
-                        .orElseThrow(() -> new RuntimeException("Invalid OwnerId"));
-            } else if (canCreateSubowner) {
-                passengerUser = user;
-            }
-        }
-
-        UserRegisterResponseDto registers = authService.register(passengerUser, requestDto);
+        UserRegisterResponseDto registers = authService.register(user, ownerId, requestDto);
 
         ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
                 .status(HttpStatus.CREATED.value())

@@ -4,6 +4,7 @@ package com.arits.expense_trancker.security;
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.*;
 
+import com.arits.expense_trancker.handler.Resolver;
 import com.arits.expense_trancker.repository.GenderRepo;
 import com.arits.expense_trancker.repository.RoleRepo;
 import com.arits.expense_trancker.repository.RolesDefaultPermissionsRepo;
@@ -28,10 +29,12 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
+    private final Resolver resolver;
 
 
-    public UserRegisterResponseDto register(User currentUser, UserRegisterRequestDto requestDto) {
+    public UserRegisterResponseDto register(User user, Long ownerId, UserRegisterRequestDto requestDto) {
 
+        User currentUser=resolver.getTargetUser(user, ownerId, null);
 
         if (userRepo.findByUsername(requestDto.getUsername()).isPresent()) {
             throw new IllegalArgumentException("user already exist ,,,,please login");
@@ -72,22 +75,20 @@ public class AuthService {
         }
 
 
+        User newUser = userRepo.save(User.builder()
+                .firstName(requestDto.getFirstName())
+                .lastName(requestDto.getLastName())
+                .email(requestDto.getEmail())
+                .dob(requestDto.getDob())
+                .role(role)
+                .phone(requestDto.getPhone())
+                .gender(gender)
+                .parent((currentUser != null && currentUser.getRole().getName().equals("OWNER") ? currentUser : null))
+                .password(passwordEncoder.encode(requestDto.getPassword()))
+                .username(requestDto.getUsername())
+                .build());
 
-
-    User newUser = userRepo.save(User.builder()
-            .firstName(requestDto.getFirstName())
-            .lastName(requestDto.getLastName())
-            .email(requestDto.getEmail())
-            .dob(requestDto.getDob())
-            .role(role)
-            .phone(requestDto.getPhone())
-            .gender(gender)
-            .parent((currentUser != null && currentUser.getRole().getName().equals("OWNER") ? currentUser : null))
-            .password(passwordEncoder.encode(requestDto.getPassword()))
-            .username(requestDto.getUsername())
-            .build());
-
-    List<RolesDefaultPermissions> defaultPermissions = rolesDefaultPermissionsRepo.findByRoleId(role.getId());
+        List<RolesDefaultPermissions> defaultPermissions = rolesDefaultPermissionsRepo.findByRoleId(role.getId());
 
 
         List<UsersPermissions> userPerms = defaultPermissions.stream()
@@ -103,18 +104,18 @@ public class AuthService {
     }
 
 
-public UserLoginResponseDto login(UserLoginRequestDto userLoginRequestDto) {
+    public UserLoginResponseDto login(UserLoginRequestDto userLoginRequestDto) {
 
-    Authentication authentication = authenticationManager
-            .authenticate(
-                    new UsernamePasswordAuthenticationToken(userLoginRequestDto.getUsername(), userLoginRequestDto.getPassword())
-            );
+        Authentication authentication = authenticationManager
+                .authenticate(
+                        new UsernamePasswordAuthenticationToken(userLoginRequestDto.getUsername(), userLoginRequestDto.getPassword())
+                );
 
-    User loginUser = (User) authentication.getPrincipal();
+        User loginUser = (User) authentication.getPrincipal();
 
-    String token = jwtUtils.createJwtToken(loginUser);
+        String token = jwtUtils.createJwtToken(loginUser);
 
-    return new UserLoginResponseDto(token, loginUser.getId());
+        return new UserLoginResponseDto(token, loginUser.getId());
 
-}
+    }
 }

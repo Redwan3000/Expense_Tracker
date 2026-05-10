@@ -67,22 +67,6 @@ public class UserController {
 
 
 
-    @PostMapping("/create-subuser")
-    @PreAuthorize("hasAuthority('Create Subuser') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<?>> registerSubUser(@RequestBody UserRegisterRequestDto userRegisterRequestDto, @AuthenticationPrincipal User user) {
-
-        UserRegisterResponseDto userRegisterResponseDto = authService.register(userRegisterRequestDto, user);
-
-        ApiResponse<?> response = ApiResponse.<UserRegisterResponseDto>builder()
-                .status(HttpStatus.CREATED.value())
-                .message("SubUser Created successfully")
-                .timestamp(LocalDateTime.now())
-                .result(userRegisterResponseDto)
-                .error(null)
-                .build();
-
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
 
 
     @DeleteMapping("/delete-subUser/{id}")

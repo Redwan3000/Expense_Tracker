@@ -30,7 +30,8 @@ public class UsersPermissions {
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
     @Builder.Default
-    private boolean isBlocked=false;
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isBlocked = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

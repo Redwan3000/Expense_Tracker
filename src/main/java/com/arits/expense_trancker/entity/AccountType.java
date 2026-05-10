@@ -6,6 +6,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -30,7 +31,7 @@ public class AccountType {
     private LocalDateTime updatedAt;
 
 
-    @OneToMany(mappedBy = "accountType",cascade = {CascadeType.MERGE,CascadeType.PERSIST})
+    @OneToMany(mappedBy = "accountType", cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     private Set<Account> account;
 
     @OneToMany(mappedBy = "accountType",cascade = {CascadeType.MERGE, CascadeType.PERSIST})
