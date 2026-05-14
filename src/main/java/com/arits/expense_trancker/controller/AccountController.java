@@ -56,6 +56,31 @@ public class AccountController {
     }
 
 
+//    @PostMapping({
+//            "/user/assign-account/{subUserId}/{accountId}",
+//            "/admin/user/assign-account/{userId}/{subUserId}/{accountId}"})
+//
+//    public ResponseEntity<ApiResponse<?>> assignAccountToSubusers(@AuthenticationPrincipal User user,
+//                                                                  @Valid @RequestBody AddAccountRequestDto requestDto,
+//                                                                  @PathVariable(name = "userId", required = false) Long userId,
+//                                                                  @PathVariable(name = "subUserId") Long subuserId,
+//                                                                  @PathVariable(name = "accountId") Long accountId) {
+//
+//
+//        verifier.checkUserExistence(subuserId);
+//        verifier.checkAccountExistence(accountId);
+//        AccountResponseDto newAccount = accountsService.addAccount(user, requestDto, userId, subuserId);
+//        ApiResponse<AccountResponseDto> response = ApiResponse.<AccountResponseDto>builder()
+//                .status(HttpStatus.CREATED.value())
+//                .message("Account Added Successfully")
+//                .timestamp(LocalDateTime.now())
+//                .result(newAccount)
+//                .error(null)
+//                .build();
+//        return new ResponseEntity<>(response, HttpStatus.CREATED);
+//    }
+
+
     //Controller for Modifying Accounts Detail
     // for modifying account details
     @PutMapping({
@@ -318,6 +343,7 @@ public class AccountController {
                                                             @PathVariable(value = "subuserId", required = false) Long subuserId,
                                                             @PathVariable(value = "accountId") Long accountId,
                                                             @PathVariable(value = "methodId") Long methodId
+
     ) {
 
         verifier.checkUserExistence(userId);
@@ -447,11 +473,11 @@ public class AccountController {
             "/admin/search-accounts",
             "/admin/search-accounts/{userId}",
     })
-    public ResponseEntity<ApiResponse<?>> seachAccounts( @AuthenticationPrincipal User user,
-                                                         @PathVariable(required = false) Long userId,
-                                                         @RequestParam String keyword,
-                                                         @RequestParam(defaultValue = "0") int page,
-                                                         @RequestParam(defaultValue = "50") int size
+    public ResponseEntity<ApiResponse<?>> seachAccounts(@AuthenticationPrincipal User user,
+                                                        @PathVariable(required = false) Long userId,
+                                                        @RequestParam String keyword,
+                                                        @RequestParam(defaultValue = "0") int page,
+                                                        @RequestParam(defaultValue = "50") int size
     ) {
 
         verifier.checkUserExistence(userId);
@@ -467,8 +493,6 @@ public class AccountController {
 
         return ResponseEntity.ok(response);
     }
-
-
 
 
 }

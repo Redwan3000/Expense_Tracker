@@ -9,8 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserLoginResponseDto {
+public class AssignAccountRequestDto {
 
-    private  String jwt;
-    private Long userid;
+public boolean limitBalance;
+
+
+
+
+
 }

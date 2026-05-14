@@ -10,6 +10,7 @@ import com.arits.expense_trancker.repository.RoleRepo;
 import com.arits.expense_trancker.repository.RolesDefaultPermissionsRepo;
 import com.arits.expense_trancker.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.bcel.Const;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -104,7 +105,7 @@ public class AuthService {
     }
 
 
-    public UserLoginResponseDto login(UserLoginRequestDto userLoginRequestDto) {
+    public String login(UserLoginRequestDto userLoginRequestDto) {
 
         Authentication authentication = authenticationManager
                 .authenticate(
@@ -113,9 +114,8 @@ public class AuthService {
 
         User loginUser = (User) authentication.getPrincipal();
 
-        String token = jwtUtils.createJwtToken(loginUser);
+         String token = jwtUtils.createJwtToken(loginUser);
 
-        return new UserLoginResponseDto(token, loginUser.getId());
-
+        return token;
     }
 }
