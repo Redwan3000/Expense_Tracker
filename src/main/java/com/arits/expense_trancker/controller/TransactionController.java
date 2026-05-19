@@ -27,6 +27,8 @@ public class TransactionController {
     private final Verifier verifier;
 
 
+
+
     @PostMapping(value = {
             "/user/add-transaction",
             "/user/add-transaction/{subuserId}",
@@ -36,9 +38,8 @@ public class TransactionController {
     public ResponseEntity<ApiResponse<AddTransactionResponseDto>> addTransaction(@AuthenticationPrincipal User user,
                                                                                  @RequestPart("data") AddTransactionRequestDto requestDto,
                                                                                  @RequestPart(value = "file", required = false) MultipartFile file,
-                                                                                 @PathVariable("accountId") Long accountId,
-                                                                                 @PathVariable("subuserId") long subuserId,
-                                                                                 @PathVariable("subuserId") long userId) {
+                                                                                 @PathVariable(value = "subuserId" ,required = false) long subuserId,
+                                                                                 @PathVariable(value = "subuserId",required = false) long userId) {
 
 
         verifier.checkUserExistence(userId);

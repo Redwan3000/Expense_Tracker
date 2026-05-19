@@ -2,6 +2,7 @@ package com.arits.expense_trancker.service;
 
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.*;
+import com.arits.expense_trancker.handler.Resolver;
 import com.arits.expense_trancker.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,24 +23,17 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
-    public AddTransactionResponseDto addTransaction(User user, long userId, long subuserId, AddTransactionRequestDto requestDto, MultipartFile file) {
-    }
-
 
     private final TransactionTypeRepo transactionTypeRepo;
     private final PaymentMethodRepo paymentMethodRepo;
     private final TransactionRepo transactionRepo;
+    private final Resolver resolver;
 
 
-    private void updateBalance(User user, Long accountId, BigDecimal amount, String typeName, String methodName) {
-        boolean isIncome = typeName.equalsIgnoreCase("INCOME");
+    public AddTransactionResponseDto addTransaction(User user, long userId, long subuserId, AddTransactionRequestDto requestDto, MultipartFile file) {
 
-        switch (methodName.toUpperCase()) {
-            case "BANK" -> bankAccountRepo.updateBankBalance(user.getId(), accountId, amount, isIncome);
-            case "MOBILE_BANKING" -> mobileBankingRepo.updateMobileBalance(user.getId(), accountId, amount, isIncome);
-            case "CASH" -> cashWalletRepo.updateCashBalance(user.getId(), amount, isIncome);
-            default -> throw new RuntimeException("Unsupported transaction method: " + methodName);
-        }
+    Long targetUserId=resolver.getTargetUserId(user, userId,subuserId);
+
 
     }
 
