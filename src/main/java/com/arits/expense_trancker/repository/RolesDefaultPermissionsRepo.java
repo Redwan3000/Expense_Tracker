@@ -40,14 +40,15 @@ public interface RolesDefaultPermissionsRepo extends JpaRepository<RolesDefaultP
 
     @Modifying
     @Query(value = """
-        insert into roles_default_permissions (role_id, permission_id)
-        select :roleId, unnest(CAST(:newPermissions as bigint[]))
-        on conflict (role_id, permission_id)
-        do update set 
-            is_deleted  = false,
-            deleted_at  = null,
-            updated_at  = now()
-        """, nativeQuery = true)
+    insert into roles_default_permissions
+        (role_id, permission_id, is_deleted, created_at, updated_at)
+    select :roleId, unnest(CAST(:newPermissions as bigint[])), false, now(), now()
+    on conflict (role_id, permission_id)
+    do update set
+        is_deleted = false,
+        deleted_at = null,
+        updated_at = now()
+    """, nativeQuery = true)
     void setNewPermissions(@Param("roleId") Long roleId,
                            @Param("newPermissions") Long[] newPermissions);
 

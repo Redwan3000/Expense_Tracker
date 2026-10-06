@@ -36,6 +36,22 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
                                                           @Param("toDate") LocalDate toDate);
 
 
+    @Query(value = """
+            select t.* 
+            from transactions t 
+            join users u  on t.user_id = u.id 
+            where (:itemName is null or t.item_name=:itemName)
+                        and(:username is null or u.username=:username)
+                        and(cast(:singleDate as date) is null or t.date = cast(:singleDate as date))
+                        and(cast(:fromDate as date) is null or t.date >= cast(:fromDate as date))
+                        and(cast(:toDate as date) is null or t.date <= cast(:toDate as date))
+            """,nativeQuery = true)
+    List<Transactions> findAllTransactionsByFilters(@Param("username") String username,
+                                                          @Param("itemName") String itemName,
+                                                          @Param("singleDate") LocalDate singleDate,
+                                                          @Param("fromDate") LocalDate fromDate,
+                                                          @Param("toDate") LocalDate toDate);
+
 
 
 @Query(value = "select * from transactions where user_id=:userId and is_deleted=true and id=:tId",nativeQuery = true)

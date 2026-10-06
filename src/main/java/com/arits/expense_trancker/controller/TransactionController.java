@@ -39,7 +39,7 @@ public class TransactionController {
                                                                                  @RequestPart("data") AddTransactionRequestDto requestDto,
                                                                                  @RequestPart(value = "file", required = false) MultipartFile file,
                                                                                  @PathVariable(value = "subuserId" ,required = false) long subuserId,
-                                                                                 @PathVariable(value = "subuserId",required = false) long userId) {
+                                                                                 @PathVariable(value = "userId",required = false) long userId) {
 
 
         verifier.checkUserExistence(userId);
@@ -61,11 +61,29 @@ public class TransactionController {
     }
 
 
-    @GetMapping("/see-expenses")
-    @PreAuthorize("hasAuthority('See Expenses') or hasAnyRole('OWNER','SUBOWNER')")
-    public ResponseEntity<ApiResponse<?>> showExpenses(@AuthenticationPrincipal User user, @RequestBody(required = false) GetTransactionHistoryRequestDto getTransactionHistoryRequestDto) {
 
-        GetTransactionHistoryAllDto ExpensesList = transactionService.showExpenses(user, getTransactionHistoryRequestDto);
+
+
+    @GetMapping({
+            "/user/get-transaction/All",
+            "/admin/user/add-transaction/All",
+            "/admin/user/add-transaction/All/{userId}"
+
+    })
+    @PreAuthorize("hasAuthority('See Expenses') or hasAnyRole('OWNER','SUBOWNER')")
+    public ResponseEntity<ApiResponse<?>> getAllTransactions(@AuthenticationPrincipal User user,
+                                                          @RequestBody(required = false) TrnxHistoryRequestDto trnxHistoryRequestDto,
+                                                          @PathVariable(value = "userId",required = false) long userId,
+                                                             @PathVariable(value = "subUserId",required = false) long subUserId,
+                                                             @PathVariable(value = "tId",required = false) long tId
+                                                             )
+
+
+    {
+
+        verifier.checkUserExistence(userId);
+
+        GetTransactionHistoryAllDto ExpensesList = transactionService.getTransactions(user,userId,subUserId,tId,trnxHistoryRequestDto);
         ApiResponse<GetTransactionHistoryAllDto> response = ApiResponse.<GetTransactionHistoryAllDto>builder()
                 .status(HttpStatus.CREATED.value())
                 .message("showing expenses")

@@ -1,6 +1,8 @@
 package com.arits.expense_trancker.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Null;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -29,6 +31,7 @@ public class Transactions {
     private String itemName;
     private String description;
     private LocalDate date;
+    @Nullable
     private String invoicePath;
 
     @Builder.Default
@@ -48,6 +51,11 @@ public class Transactions {
     private TransactionType transactionType;
 
 
+   @ManyToOne
+    private User user;
+
+   @ManyToOne
+private PaymentMethod paymentMethod;
 
 
 

@@ -3,7 +3,9 @@ package com.arits.expense_trancker.service;
 import com.arits.expense_trancker.dto.*;
 import com.arits.expense_trancker.entity.*;
 import com.arits.expense_trancker.handler.Resolver;
+import com.arits.expense_trancker.handler.Verifier;
 import com.arits.expense_trancker.repository.*;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,11 +13,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,48 +29,22 @@ public class TransactionService {
     private final TransactionTypeRepo transactionTypeRepo;
     private final PaymentMethodRepo paymentMethodRepo;
     private final TransactionRepo transactionRepo;
+    private final AccountRepo accountRepo;
     private final Resolver resolver;
+private final Verifier verifier;
 
 
-    public AddTransactionResponseDto addTransaction(User user, long userId, long subuserId, AddTransactionRequestDto requestDto, MultipartFile file) {
+
+    public AddTransactionResponseDto addTransaction(User user, long userId, long subuserId, AddTransactionRequestDto dto, MultipartFile invoiceFile) {
 
     Long targetUserId=resolver.getTargetUserId(user, userId,subuserId);
 
-
-    }
-
-
-    public PaymentMethod tmSeedding(String name) {
-
-        return paymentMethodRepo.findByMethodName(name).orElseGet(() -> {
-                    return paymentMethodRepo.save(PaymentMethod.builder()
-                            .name(name)
-                            .build());
-                }
-        );
+    TransactionType tType= transactionTypeRepo.findById(dto.getTransactionType()).orElseThrow(() -> new RuntimeException("invalid Account Type"));
+    Account account=accountRepo.findByUserIdAndId(targetUserId,dto.getAccountId()).orElseThrow(()->new RuntimeException("invalid Account"));
 
 
-    }
-
-    public TransactionType ttSeeding(String name) {
-
-
-        return transactionTypeRepo.findByTypeName(name).orElseGet(() -> {
-                    return transactionTypeRepo.save(TransactionType.builder()
-                            .typeName(name)
-                            .build());
-                }
-        );
-
-    }
-
-
-    @Transactional
-    public AddTransactionResponseDto addTransaction(User user, AddTransactionRequestDto dto, MultipartFile multipartFile) {
-
-
-        String savedFilePath = null;
-        if (multipartFile != null && !multipartFile.isEmpty()) {
+        String savedInvoicePath = null;
+        if (invoiceFile != null && !invoiceFile.isEmpty()) {
 
             try {
                 String uploadDir = "uploads/invoices/";
@@ -76,91 +52,98 @@ public class TransactionService {
                 if (!dir.exists()) {
                     dir.mkdirs();
                 }
-                String fileName = System.currentTimeMillis() + "_" + multipartFile.getOriginalFilename();
+                String fileName = System.currentTimeMillis() + "_" + invoiceFile.getOriginalFilename();
 
                 Path filePath = Paths.get(uploadDir + fileName);
 
-                Files.write(filePath, multipartFile.getBytes());
+                Files.write(filePath, invoiceFile.getBytes());
 
-                savedFilePath = filePath.toString();
+                savedInvoicePath = filePath.toString();
 
             } catch (IOException e) {
                 throw new RuntimeException("failed to store the invoices" + e.getMessage());
             }
         }
 
-        PaymentMethod method = paymentMethodRepo.findById(dto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("Transaction method not found"));
-        TransactionType type = transactionTypeRepo.findById(dto.getTransactionType()).orElseThrow(() -> new RuntimeException("Transaction type not found"));
+        Transactions addTrnx= Transactions.builder()
+              .amount(dto.getAmount())
+              .itemName(dto.getItemName())
+              .description(dto.getDescription())
+              .date(LocalDate.now())
+              .invoicePath(savedInvoicePath)
+              .account(account)
+              .transactionType(tType)
+              .build();
 
-        updateBalance(user, dto.getAccountId(), dto.getAmount(), type.getTypeName(), method.getName());
-
-        Transactions transactions = Transactions.builder()
-                .amount(dto.getAmount())
-                .itemName(dto.getItemName())
-                .description(dto.getDescription())
-                .date(LocalDate.now())
-                .user(user)
-                .accountId(dto.getAccountId())
-                .transactionType(type)
-                .transactionMethod(method)
-                .invoicePath(savedFilePath)
-                .build();
-
-        transactionRepo.save(transactions);
-
-
-        return AddTransactionResponseDto.builder()
-                .trxId(transactions.getId())
-                .itemName(transactions.getItemName())
-                .amount(transactions.getAmount())
-                .tMethod(transactions.getTransactionMethod().getName())
-                .tType(transactions.getTransactionType().getTypeName())
-                .description(transactions.getDescription())
-                .invoicePath(transactions.getInvoicePath())
-                .accountId(transactions.getAccountId())
-                .build();
-
+return AddTransactionResponseDto.builder().
+        itemName(addTrnx.getItemName()).
+        amount(addTrnx.getAmount()).
+        tMethod(addTrnx.getTransactionType().toString()).
+        tType(addTrnx.getTransactionType().toString()).
+        accountId(addTrnx.getAccount().getId()).
+        description(addTrnx.getDescription()).
+        invoicePath(addTrnx.getInvoicePath()).
+        build();
 
     }
 
 
 
-    public GetTransactionHistoryAllDto showExpenses(User user, GetTransactionHistoryRequestDto request) {
 
-        long mainId = (user.getParent() != null) ? user.getParent().getId() : user.getId();
 
-        List<Transactions> allTransactionsOfUser = transactionRepo.findTransactionsOfOwnerAndSubowner(
-                mainId,
-                request.getItemName(),
-                request.getUsername(),
-                request.getToDate(),
-                request.getFromDate(),
-                request.getSingleDate());
 
-        List<GetTransactionHistoryDto> owner = allTransactionsOfUser.stream().filter(t -> t.getUser().getId() == mainId)
+
+
+
+
+    public GetTransactionHistoryAllDto getTransactions(User user, Long userId, Long subUserId, Long tId ,TrnxHistoryRequestDto dto) {
+
+        Long targetUserID= resolver.getTargetUserId(user,userId,subUserId);
+        Long trnxId = verifier.checkTransactionExistance(tId);
+
+        List<Transactions> allTransactionsOfUser =new ArrayList<>();
+
+
+        if(trnxId!= null && tId != 0) {
+
+            transactionRepo.findById(trnxId).ifPresent(allTransactionsOfUser::add);
+
+        }else {
+            allTransactionsOfUser = transactionRepo.findTransactionsOfOwnerAndSubowner(
+                    targetUserID,
+                    dto.getItemName(),
+                    dto.getUsername(),
+                    dto.getToDate(),
+                    dto.getFromDate(),
+                    dto.getSingleDate());
+        }
+
+
+
+        List<GetTransactionHistoryDto> owner = allTransactionsOfUser.stream().filter(t -> t.getAccount().getUser().getId() == targetUserID)
                 .map(t -> GetTransactionHistoryDto.builder()
                         .transactionId(t.getId())
-                        .userId(t.getUser().getId())
-                        .username(t.getUser().getUsername())
+                        .userId(t.getAccount().getUser().getId())
+                        .username(t.getAccount().getUser().getUsername())
                         .amount(t.getAmount())
-                        .transactionMethod(t.getTransactionMethod().getName())
+                        .paymentMethod(t.getAccount().getPaymentMethod().getName())
                         .transactionType(t.getTransactionType().getTypeName())
-                        .accountId(t.getAccountId())
+                        .accountId(t.getAccount().getId())
                         .itemName(t.getItemName())
                         .description(t.getDescription())
                         .hasInvoice(t.getInvoicePath() != null ? true : false)
                         .build()
                 ).toList();
 
-        List<GetTransactionHistoryDto> subowner = allTransactionsOfUser.stream().filter(t -> t.getUser().getId() != mainId)
+        List<GetTransactionHistoryDto> subowner = allTransactionsOfUser.stream().filter(t -> t.getAccount().getUser().getId() != targetUserID)
                 .map(t -> GetTransactionHistoryDto.builder()
                         .transactionId(t.getId())
-                        .userId(t.getUser().getId())
-                        .username(t.getUser().getUsername())
+                        .userId(t.getAccount().getUser().getId())
+                        .username(t.getAccount().getUser().getUsername())
                         .amount(t.getAmount())
-                        .transactionMethod(t.getTransactionMethod().getName())
+                        .paymentMethod(t.getAccount().getPaymentMethod().getName())
                         .transactionType(t.getTransactionType().getTypeName())
-                        .accountId(t.getAccountId())
+                        .accountId(t.getAccount().getId())
                         .itemName(t.getItemName())
                         .description(t.getDescription())
                         .hasInvoice(t.getInvoicePath() != null ? true : false)
@@ -178,11 +161,10 @@ public class TransactionService {
     public AddTransactionResponseDto modifyTransaction(User user, AddTransactionRequestDto addTransactionRequestDTO, MultipartFile multipartFile, long id) {
 
         Transactions transaction = transactionRepo.findByUserAndId(user, id).orElseThrow(() -> new RuntimeException("Transaction not found"));
-
+Account accountOfTransaction= accountRepo.findById(transaction.getAccount().getId()).orElseThrow(()->new RuntimeException("invalid Account"));
 
         if (addTransactionRequestDTO.getAmount() != null) {
             String inverseTtype = transaction.getTransactionType().getTypeName().equalsIgnoreCase("EXPENSE") ? "INCOME" : "EXPENSE";
-            updateBalance(user, transaction.getAccountId(), transaction.getAmount(), inverseTtype, transaction.getTransactionMethod().getName());
 
         }
 
@@ -192,14 +174,10 @@ public class TransactionService {
 
         transaction.setDescription((addTransactionRequestDTO.getDescription() != null) ? addTransactionRequestDTO.getDescription() : transaction.getDescription());
 
-        transaction.setTransactionMethod(paymentMethodRepo.findById
-                (
-                        (addTransactionRequestDTO.getPaymentMethod() != null)
-                                ? addTransactionRequestDTO.getPaymentMethod()
-                                : transaction.getTransactionMethod()
-                                  .getId()).orElseThrow(() -> new RuntimeException("transaction method not found")));
+        accountOfTransaction.setPaymentMethod(null);
 
-        transaction.setAccountId(addTransactionRequestDTO.getAccountId());
+
+        transaction.setAccount(null);
         transaction.setTransactionType(transactionTypeRepo.findById
                 (
                         (addTransactionRequestDTO.getTransactionType() != null)
@@ -235,16 +213,14 @@ public class TransactionService {
         transactionRepo.save(transaction);
 
 
-        updateBalance(user, transaction.getAccountId(), transaction.getAmount(), transaction.getTransactionType().getTypeName(), transaction.getTransactionMethod().getName());
-
 
         return AddTransactionResponseDto.builder()
                 .trxId(transaction.getId())
                 .itemName(transaction.getItemName())
                 .amount(transaction.getAmount())
-                .tMethod(transaction.getTransactionMethod().getName())
+                .tMethod(transaction.getAccount().getPaymentMethod().getName())
                 .tType(transaction.getTransactionType().getTypeName())
-                .accountId(transaction.getAccountId())
+                .accountId(transaction.getAccount().getId())
                 .description(transaction.getDescription())
                 .invoicePath(transaction.getInvoicePath())
                 .build();
@@ -274,7 +250,7 @@ public class TransactionService {
                 .tId(p.getId())
                 .itemName(p.getItemName())
                 .amount(p.getAmount())
-                .tMethod(p.getTransactionMethod().getName())
+                .tMethod(p.getAccount().getPaymentMethod().getName())
                 .tType(p.getTransactionType().getTypeName())
                 .description(p.getDescription())
                 .invoicePath(p.getInvoicePath())
@@ -289,8 +265,8 @@ public class TransactionService {
 
         ReviveTransactionResponseDto revivedTransaction = ReviveTransactionResponseDto.builder()
                 .trxId(transaction.getId())
-                .userId(transaction.getUser().getId())
-                .transactionMethod(transaction.getTransactionMethod().getName())
+                .userId(transaction.getAccount().getUser().getId())
+                .transactionMethod(transaction.getAccount().getPaymentMethod().getName())
                 .transactionType(transaction.getTransactionType().getTypeName())
                 .description(transaction.getDescription())
                 .build();
@@ -300,4 +276,36 @@ public class TransactionService {
         transactionRepo.save(transaction);
         return revivedTransaction;
     }
+
+
+
+
+
+    //Seeders Service
+    public PaymentMethod pMethodSeeding(String name) {
+
+        return paymentMethodRepo.findByMethodName(name).orElseGet(() -> {
+                    return paymentMethodRepo.save(PaymentMethod.builder()
+                            .name(name)
+                            .build());
+                }
+        );
+
+
+    }
+
+    public TransactionType tTypeSeeding(String name) {
+
+
+        return transactionTypeRepo.findByTypeName(name).orElseGet(() -> {
+                    return transactionTypeRepo.save(TransactionType.builder()
+                            .typeName(name)
+                            .build());
+                }
+        );
+
+    }
+
+
+
 }

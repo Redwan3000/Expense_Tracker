@@ -29,6 +29,7 @@ public class RolesDefaultPermissions {
     private Long id;
 
     @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
     private LocalDateTime createdAt;

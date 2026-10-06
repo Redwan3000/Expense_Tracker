@@ -15,7 +15,7 @@ private Long transactionId;
 private Long userId;
 private String username;
 private BigDecimal amount;
-private String transactionMethod;
+private String paymentMethod;
 private String transactionType;
 private long accountId;
 private String itemName;

@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class GetTransactionHistoryRequestDto {
+public class TrnxHistoryRequestDto {
     private String itemName;
     private String username;
     private LocalDate singleDate;

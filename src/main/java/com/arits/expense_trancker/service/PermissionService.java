@@ -57,6 +57,11 @@ public class PermissionService {
 
     }
 
+    @Transactional
+    public void seedRolePermissions(Long roleId, Set<Long> permissionIds) {
+        rolesDefaultPermissionsRepo.setNewPermissions(roleId, permissionIds.toArray(new Long[0]));
+    }
+
 
     //    service for adding a new permission to the roles
     @Transactional

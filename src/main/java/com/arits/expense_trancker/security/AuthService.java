@@ -9,6 +9,7 @@ import com.arits.expense_trancker.repository.GenderRepo;
 import com.arits.expense_trancker.repository.RoleRepo;
 import com.arits.expense_trancker.repository.RolesDefaultPermissionsRepo;
 import com.arits.expense_trancker.repository.UserRepo;
+import com.arits.expense_trancker.service.GenderService;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.bcel.Const;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,6 +32,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
     private final Resolver resolver;
+    private final GenderService genderService;
 
 
     public UserRegisterResponseDto register(User user, Long ownerId, UserRegisterRequestDto requestDto) {
@@ -43,7 +45,13 @@ public class AuthService {
 
 
         Role role;
-        Gender gender = genderRepo.findById(requestDto.getGenderId()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
+        Gender gender;
+if(!genderRepo.findById(requestDto.getGenderId()).isPresent()){
+    genderService.genderSeeding("Male");
+    genderService.genderSeeding("Female");
+    genderService.genderSeeding("Others");
+}
+        gender = genderRepo.findById(requestDto.getGenderId()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
 
         if (currentUser == null) {
             role = roleRepo.findByName("OWNER").orElseThrow(() -> new RuntimeException("Role Not Found"));

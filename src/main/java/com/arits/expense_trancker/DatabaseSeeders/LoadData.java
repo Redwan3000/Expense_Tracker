@@ -2,8 +2,7 @@ package com.arits.expense_trancker.DatabaseSeeders;
 
 import com.arits.expense_trancker.dto.SetPermissionDto;
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
-import com.arits.expense_trancker.repository.AccountTypeRepo;
-import com.arits.expense_trancker.repository.UserRepo;
+import com.arits.expense_trancker.repository.*;
 import com.arits.expense_trancker.security.AuthService;
 import com.arits.expense_trancker.service.*;
 import jakarta.transaction.Transactional;
@@ -15,6 +14,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -27,15 +28,16 @@ public class LoadData implements CommandLineRunner {
 
     private final PermissionService permissionService;
 
-
+private final PermissionRepo permissionRepo;
     private final TransactionService transactionService;
 
     private final CurrencyService currencyService;
     private final AuthService authService;
     private final UserRepo userRepo;
+private final GenderRepo genderRepo;
+private final RoleRepo roleRepo;
 
-
-    private final UserRegisterRequestDto userRegisterRequestDto = UserRegisterRequestDto.builder()
+    private final UserRegisterRequestDto adminDto = UserRegisterRequestDto.builder()
             .firstName("ADMIN")
             .lastName("ADMIN")
             .email("admin@gmail.com")
@@ -63,8 +65,8 @@ public class LoadData implements CommandLineRunner {
         roleService.roleSeeding("TERTIARY");
         roleService.roleSeeding("ADMIN");
 
-//        transactionService.ttSeeding("EXPENSE");
-//        transactionService.ttSeeding("INCOME");
+        transactionService.tTypeSeeding("EXPENSE");
+        transactionService.tTypeSeeding("INCOME");
 
         currencyService.currencySeeding("BDT");
         currencyService.currencySeeding("EUR");
@@ -77,14 +79,26 @@ public class LoadData implements CommandLineRunner {
         accountsService.accountTypeSeeding("DPS");
         accountsService.accountTypeSeeding("VIP");
 
-//        transactionService.tmSeedding("CASH");
-//        transactionService.tmSeedding("BANK");
-//        transactionService.tmSeedding("MOBILE_BANKING");
+        transactionService.pMethodSeeding("CASH");
+        transactionService.pMethodSeeding("BANK");
+        transactionService.pMethodSeeding("MOBILE_BANKING");
 
-        if (userRepo.findByUsername("ADMIN").isEmpty()) {
-            authService.register(null,null, userRegisterRequestDto);
-        }
-
+//        if (userRepo.findByUsername("ADMIN").isEmpty()) {
+//            Long maleId  = genderRepo.findByName("Male").orElseThrow().getId();
+//            Long adminId = roleRepo.findByName("ADMIN").orElseThrow().getId();
+//
+//            UserRegisterRequestDto adminDto = UserRegisterRequestDto.builder()
+//                    .firstName("ADMIN").lastName("ADMIN")
+//                    .email("admin@gmail.com").phone("123456789")
+//                    .password("ADMIN")
+//                    .dob(LocalDate.of(2001, 9, 5))
+//                    .genderId(maleId)
+//                    .roleId(adminId)
+//                    .username("ADMIN")
+//                    .build();
+//
+//            authService.register(null, null, adminDto);
+//        }
 
         permissionService.addNewPermission("Login", "users can login");//1
         permissionService.addNewPermission("Register", "can register as owner");//2
@@ -117,29 +131,43 @@ public class LoadData implements CommandLineRunner {
         permissionService.addNewPermission("Get Any Bank Account Detail", "Where any user can delete his Expenses");//24
 
 
-        SetPermissionDto ownerPermission = SetPermissionDto.builder()
-                .roleId(1L)
-                .permissionIds(Set.of(1L, 2L, 3L))
-                .build();
+//        SetPermissionDto ownerPermission = SetPermissionDto.builder()
+//                .roleId(1L)
+//                .permissionIds(Set.of(1L, 2L, 3L))
+//                .build();
+//
+//        SetPermissionDto subownerPermission = SetPermissionDto.builder()
+//                .roleId(2L)
+//                .permissionIds(Set.of(1L, 2L, 3L))
+//                .build();
+//
+//        SetPermissionDto childPermission = SetPermissionDto.builder()
+//                .roleId(3L)
+//                .permissionIds(Set.of(1L, 2L, 3L))
+//                .build();
+//        SetPermissionDto adminPermission = SetPermissionDto.builder()
+//                .roleId(4L)
+//                .permissionIds(Set.of(1L, 2L, 3L))
+//                .build();
 
-        SetPermissionDto subownerPermission = SetPermissionDto.builder()
-                .roleId(2L)
-                .permissionIds(Set.of(1L, 2L, 3L))
-                .build();
+        Long ownerRoleId    = roleRepo.findByName("OWNER").orElseThrow().getId();
+        Long subownerRoleId = roleRepo.findByName("SUBOWNER").orElseThrow().getId();
+        Long tertiaryRoleId = roleRepo.findByName("TERTIARY").orElseThrow().getId();
+        Long adminRoleId    = roleRepo.findByName("ADMIN").orElseThrow().getId();
+        Set<Long> basicPerms = Stream.of("Login", "Register", "User Info")
+                .map(n -> permissionRepo.findByNameIncludingSoft(n).orElseThrow().getId())
+                .collect(Collectors.toSet());
 
-        SetPermissionDto childPermission = SetPermissionDto.builder()
-                .roleId(3L)
-                .permissionIds(Set.of(1L, 2L, 3L))
-                .build();
-        SetPermissionDto adminPermission = SetPermissionDto.builder()
-                .roleId(4L)
-                .permissionIds(Set.of(1L, 2L, 3L))
-                .build();
+        permissionService.seedRolePermissions(ownerRoleId, basicPerms);
 
-        permissionService.setPermissionToRole(userRepo.findByUsername("ADMIN").orElseThrow(), ownerPermission);
-        permissionService.setPermissionToRole(userRepo.findByUsername("OWNER").orElseThrow(), subownerPermission);
-        permissionService.setPermissionToRole(userRepo.findByUsername("SUBOWNER").orElseThrow(), childPermission);
-        permissionService.setPermissionToRole(userRepo.findByUsername("CHILD").orElseThrow(), adminPermission);
+        permissionService.seedRolePermissions(subownerRoleId, basicPerms);
+        permissionService.seedRolePermissions(tertiaryRoleId, basicPerms);
+        permissionService.seedRolePermissions(adminRoleId,    basicPerms);
+
+
+        if (userRepo.findByUsername("ADMIN").isEmpty()) {
+            authService.register(null, null, adminDto);
+        }
     }
 
 

@@ -1,5 +1,6 @@
 package com.arits.expense_trancker.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -22,6 +23,8 @@ public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Nullable
+private String accountNumber;
 
     @Builder.Default
     private boolean isDeleted = false;
@@ -41,6 +44,8 @@ public class Account {
     @ManyToOne
     @JoinColumn(name = "account_type_id", nullable = false)
     private AccountType accountType;
+
+
 
     @ManyToOne
     @JoinColumn(name = "payment_method_id", nullable = false)

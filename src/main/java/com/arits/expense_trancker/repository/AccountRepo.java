@@ -2,6 +2,7 @@ package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.AccountDetailsDto;
 import com.arits.expense_trancker.entity.Account;
+import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,7 +17,7 @@ import java.util.Optional;
 public interface AccountRepo extends JpaRepository<Account, Long> {
 
 
-    boolean existsByUserIdAndAccountNumber(Long id, String accountNumber);
+    boolean existsByUserIdAndAccountNumber(Long id,String accountNumebr);
 
 
     boolean existsByPaymentMethodAndId(Long paymentMethod, Long accountId);
@@ -27,7 +28,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             c.name as currency,
             at.name as accountType,
             pm.name as paymentMethod, 
-            ad.account_number as accountNumber,
             ad.nominee_name as nomineeName,
             p.name as providerName,
             b.balance as currentBalance,
@@ -132,21 +132,16 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
 
 
 
-    boolean existsByIdUserIdAndIdAndIsDeleted(Long targetUserId,
-                                              Long accountId,
-                                              boolean status);
-
-
 
 
     @Query(value = """
             select * 
             from account 
             where id=:accountId  
-                and user_id =:userId
+                and user =:user
                 and is_deleted=:status;
             """,nativeQuery = true)
-    Optional<Account> findByUserIdAndIdAndIsDeleted(@Param("userId") Long userId,
+    Optional<Account> findByUserIdAndIdAndIsDeleted(@Param("user") User user,
                                                     @Param("accountId") Long accountId,
                                                     @Param("status")boolean status);
 

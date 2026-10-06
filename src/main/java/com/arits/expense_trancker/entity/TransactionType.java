@@ -25,7 +25,8 @@ public class TransactionType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+    private String typeName;
+
 
     @Builder.Default
     private boolean isDeleted = false;

@@ -23,6 +23,7 @@ public class Verifier {
     private final PermissionRepo permissionRepo;
     private final RolesDefaultPermissionsRepo rolesDefaultPermissionsRepo;
     private final UsersPermissionsRepo usersPermissionsRepo;
+    private final TransactionRepo transactionRepo;
 
 
     public void checkUserExistence(Long userId) {
@@ -83,9 +84,9 @@ public class Verifier {
 
 
     public void checkAccountIdExistByUserId(Long targetUserId, Long accountId, boolean status) {
-        if (!accountRepo.existsByIdUserIdAndIdAndIsDeleted(targetUserId, accountId, status)) {
-            throw new RuntimeException("account does not belong to the userId : " + targetUserId);
-        }
+//        if (!accountRepo.existsByIdUserIdAndIdAndIsDeleted(targetUserId, accountId, status)) {
+//            throw new RuntimeException("account does not belong to the userId : " + targetUserId);
+//        }
     }
 
     public void checkCurrencyExistance(Long currencyId) {
@@ -175,5 +176,14 @@ public class Verifier {
         }
 
 
+    }
+
+    public Long checkTransactionExistance(Long tId) {
+
+        if (tId != null && !transactionRepo.existsById(tId)) {
+            throw new RuntimeException("Invalid Transaction Id: " + tId);
+        }
+
+        return tId;
     }
 }

@@ -158,7 +158,7 @@ public class EntityProvider {
     }
 
     public Account findByUserIdAndIdAndIsDeleted(Long targetUserId, Long accountId, boolean status) {
-        return accountRepo.findByUserIdAndIdAndIsDeleted(targetUserId,accountId,status).orElseThrow(()->new RuntimeException("account not found"));
+        return accountRepo.findByUserIdAndIdAndIsDeleted(userRepo.getById(targetUserId),accountId,status).orElseThrow(()->new RuntimeException("account not found"));
     }
 
 }

@@ -17,7 +17,7 @@ public interface AccountMapper {
     @Mapping(source = "currency.name", target = "currency")
     @Mapping(source = "accountType.name", target = "accountType")
     @Mapping(source = "paymentMethod.name", target = "paymentMethod")
-    @Mapping(source = "accountDetails.accountNumber", target = "accountNumber")
+//    @Mapping(source = "accountDetails.accountNumber", target = "accountNumber")
     @Mapping(source = "accountDetails.nomineeName", target = "nomineeName")
     @Mapping(source = "accountDetails.provider.name", target = "providerName")
     @Mapping(source = "balance.amount", target = "currentBalance")
@@ -29,7 +29,7 @@ public interface AccountMapper {
 
 
     @Mapping(source = "id", target = "accountId")
-    @Mapping(source = "accountDetails.accountNumber", target = "accountNumber")
+//    @Mapping(source = "accountDetails.accountNumber", target = "accountNumber")
     @Mapping(source = "paymentMethod.name", target = "paymentMethod")
     @Mapping(source = "currency.name", target = "currency")
     @Mapping(source = "balance.amount", target = "balance")
