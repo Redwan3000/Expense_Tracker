@@ -61,22 +61,22 @@ public class TransactionController {
     }
 
 
-    @GetMapping("/see-expenses")
-    @PreAuthorize("hasAuthority('See Expenses') or hasAnyRole('OWNER','SUBOWNER')")
-    public ResponseEntity<ApiResponse<?>> showExpenses(@AuthenticationPrincipal User user, @RequestBody(required = false) GetTransactionHistoryRequestDto getTransactionHistoryRequestDto) {
-
-        GetTransactionHistoryAllDto ExpensesList = transactionService.showExpenses(user, getTransactionHistoryRequestDto);
-        ApiResponse<GetTransactionHistoryAllDto> response = ApiResponse.<GetTransactionHistoryAllDto>builder()
-                .status(HttpStatus.CREATED.value())
-                .message("showing expenses")
-                .timestamp(LocalDateTime.now())
-                .result(ExpensesList)
-                .error(null)
-                .build();
-
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-
-    }
+//    @GetMapping("/see-expenses")
+//    @PreAuthorize("hasAuthority('See Expenses') or hasAnyRole('OWNER','SUBOWNER')")
+//    public ResponseEntity<ApiResponse<?>> showExpenses(@AuthenticationPrincipal User user, @RequestBody(required = false) GetTransactionHistoryRequestDto getTransactionHistoryRequestDto) {
+//
+//        GetTransactionHistoryAllDto ExpensesList = transactionService.showExpenses(user, getTransactionHistoryRequestDto);
+//        ApiResponse<GetTransactionHistoryAllDto> response = ApiResponse.<GetTransactionHistoryAllDto>builder()
+//                .status(HttpStatus.CREATED.value())
+//                .message("showing expenses")
+//                .timestamp(LocalDateTime.now())
+//                .result(ExpensesList)
+//                .error(null)
+//                .build();
+//
+//        return new ResponseEntity<>(response, HttpStatus.CREATED);
+//
+//    }
 
 
     @PutMapping(value = "/modify-expenses/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

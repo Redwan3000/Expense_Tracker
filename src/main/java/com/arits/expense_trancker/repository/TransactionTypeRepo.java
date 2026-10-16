@@ -9,6 +9,5 @@ import java.util.Optional;
 @Repository
 public interface TransactionTypeRepo extends JpaRepository<TransactionType,Long> {
 
-
-    Optional<TransactionType> findByTypeName(String name);
+    Optional<TransactionType> findByName(String name);
 }

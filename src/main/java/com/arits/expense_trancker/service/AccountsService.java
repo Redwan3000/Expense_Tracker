@@ -37,6 +37,7 @@ public class AccountsService {
     private final TransactionRepo transactionRepo;
     private final AccountDetailsRepo accountDetailsRepo;
     private final Verifier verifier;
+    private final UserRepo userRepo;
 
     public AccountType accountTypeSeeding(String accountTypeName) {
 
@@ -148,15 +149,15 @@ public class AccountsService {
     @Transactional
     public AllAccountDetails getAllAccounts(User user, Long userId, Long subuserId) {
 
-        Long targetUserId = resolver.getTargetUserId(user, userId, subuserId);
+        User targetUserId = resolver.getTargetUser(user, userId, subuserId);
 
-        List<AccountDetailsDto> allAccount = accountRepo.findByUserId(targetUserId);
+        List<AccountDetailsDto> allAccount = accountRepo.findByUserId(targetUserId.getId());
 
         Map<String, List<AccountDetailsDto>> groupedAccounts = allAccount.stream()
                 .collect(Collectors.groupingBy(a -> a.getPaymentMethod() != null ? a.getPaymentMethod().toUpperCase() : "UNKNOWN"));
 
         return AllAccountDetails.builder()
-                .totalBalance(balanceRepo.getAllAccountBalance(targetUserId))
+                .totalBalance(balanceRepo.getAllAccountBalance(targetUserId.getId()))
                 .bankAccounts(groupedAccounts.getOrDefault("BANK", List.of()))
                 .mobileBankingAccounts(groupedAccounts.getOrDefault("MOBILE_BANKING", List.of()))
                 .cashWallets(groupedAccounts.getOrDefault("CASH", List.of()))
@@ -173,6 +174,7 @@ public class AccountsService {
 
         return methodsAccounts;
     }
+
 
 
 //    service for the softDeleted Account list

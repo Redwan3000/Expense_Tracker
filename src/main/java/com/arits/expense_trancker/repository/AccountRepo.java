@@ -2,6 +2,7 @@ package com.arits.expense_trancker.repository;
 
 import com.arits.expense_trancker.dto.AccountDetailsDto;
 import com.arits.expense_trancker.entity.Account;
+import com.arits.expense_trancker.entity.User;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,10 +17,12 @@ import java.util.Optional;
 public interface AccountRepo extends JpaRepository<Account, Long> {
 
 
-    boolean existsByUserIdAndAccountNumber(Long id, String accountNumber);
+    @Query("SELECT COUNT(a) > 0 FROM Account a JOIN a.accountDetails ad WHERE a.user.id = :userId AND ad.accountNumber = :accountNumber")
+    boolean existsByUserIdAndAccountNumber(@Param("userId") Long userId, @Param("accountNumber") String accountNumber);
 
-
-    boolean existsByPaymentMethodAndId(Long paymentMethod, Long accountId);
+    @Query("SELECT COUNT(a) > 0 FROM Account a WHERE a.paymentMethod.id = :paymentMethodId AND a.id = :accountId")
+    boolean existsByPaymentMethodAndId(@Param("paymentMethodId") Long paymentMethod,
+                                       @Param("accountId") Long accountId);
 
 
     @Query(value = """
@@ -132,10 +135,10 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
 
 
 
-    boolean existsByIdUserIdAndIdAndIsDeleted(Long targetUserId,
-                                              Long accountId,
-                                              boolean status);
-
+    @Query("SELECT COUNT(a) > 0 FROM Account a WHERE a.user.id = :targetUserId AND a.id = :accountId AND a.isDeleted = :status")
+    boolean existsByIdUserIdAndIdAndIsDeleted(@Param("targetUserId") Long targetUserId,
+                                              @Param("accountId") Long accountId,
+                                              @Param("status") boolean status);
 
 
 
