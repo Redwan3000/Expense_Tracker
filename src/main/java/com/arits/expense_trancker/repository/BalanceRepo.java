@@ -58,8 +58,6 @@ public interface BalanceRepo extends JpaRepository<Balance, Long> {
     FROM account a
     WHERE a.id = :accountId
     AND a.user_id = :userId
-    AND balance.account_id = :accountId
-    AND balance.amount >= :amount
     """, nativeQuery = true)
     void debitBalance(
             @Param("userId") Long userId,
@@ -74,7 +72,6 @@ public interface BalanceRepo extends JpaRepository<Balance, Long> {
     FROM account a
     WHERE a.id = :accountId
     AND a.user_id = :userId
-    AND balance.account_id = :accountId
     """, nativeQuery = true)
     void creditBalance(
             @Param("userId") Long userId,

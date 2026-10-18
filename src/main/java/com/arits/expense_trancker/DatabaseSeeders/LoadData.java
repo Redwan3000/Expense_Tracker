@@ -2,6 +2,7 @@ package com.arits.expense_trancker.DatabaseSeeders;
 
 import com.arits.expense_trancker.dto.SetPermissionDto;
 import com.arits.expense_trancker.dto.UserRegisterRequestDto;
+import com.arits.expense_trancker.entity.User;
 import com.arits.expense_trancker.repository.AccountTypeRepo;
 import com.arits.expense_trancker.repository.UserRepo;
 import com.arits.expense_trancker.security.AuthService;
@@ -63,8 +64,8 @@ public class LoadData implements CommandLineRunner {
         roleService.roleSeeding("TERTIARY");
         roleService.roleSeeding("ADMIN");
 
-//        transactionService.ttSeeding("EXPENSE");
-//        transactionService.ttSeeding("INCOME");
+        transactionService.tTypeSeeding("EXPENSE");
+        transactionService.tTypeSeeding("INCOME");
 
         currencyService.currencySeeding("BDT");
         currencyService.currencySeeding("EUR");
@@ -77,13 +78,16 @@ public class LoadData implements CommandLineRunner {
         accountsService.accountTypeSeeding("DPS");
         accountsService.accountTypeSeeding("VIP");
 
-//        transactionService.tmSeedding("CASH");
-//        transactionService.tmSeedding("BANK");
-//        transactionService.tmSeedding("MOBILE_BANKING");
+        transactionService.pMethodSeeding("CASH");
+        transactionService.pMethodSeeding("BANK");
+        transactionService.pMethodSeeding("MOBILE_BANKING");
+
+
 
         if (userRepo.findByUsername("ADMIN").isEmpty()) {
-            authService.register(null,null, userRegisterRequestDto);
+            authService.register(null, null, userRegisterRequestDto);
         }
+
 
 
         permissionService.addNewPermission("Login", "users can login");//1
@@ -137,9 +141,11 @@ public class LoadData implements CommandLineRunner {
                 .build();
 
         permissionService.setPermissionToRole(userRepo.findByUsername("ADMIN").orElseThrow(), ownerPermission);
-        permissionService.setPermissionToRole(userRepo.findByUsername("OWNER").orElseThrow(), subownerPermission);
-        permissionService.setPermissionToRole(userRepo.findByUsername("SUBOWNER").orElseThrow(), childPermission);
-        permissionService.setPermissionToRole(userRepo.findByUsername("CHILD").orElseThrow(), adminPermission);
+//        permissionService.setPermissionToRole(userRepo.findByUsername("OWNER").orElseThrow(), subownerPermission);
+//        permissionService.setPermissionToRole(userRepo.findByUsername("SUBOWNER").orElseThrow(), childPermission);
+//        permissionService.setPermissionToRole(userRepo.findByUsername("CHILD").orElseThrow(), adminPermission);
+
+
     }
 
 

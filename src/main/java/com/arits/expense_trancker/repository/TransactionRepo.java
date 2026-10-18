@@ -41,22 +41,14 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
 @Query(value = "select * from transactions where user_id=:userId and is_deleted=true and id=:tId",nativeQuery = true)
     Optional<Transactions> findDeletedTransactionsByUserId(@Param("userId") Long userId ,@Param("tId") Long tId);
 
-    Optional<Transactions> findByUserAndId(User user, long id);
-
+    @Query("SELECT t FROM Transactions t WHERE t.account.user = :user AND t.id = :id")
+    Optional<Transactions> findByUserAndId(@Param("user") User user, @Param("id") long id);
 
 
     @Modifying
     @Transactional
     @Query(value = "update transactions set is_deleted = true, deleted_at = NOW() where id = :transaction_id", nativeQuery = true)
     void softDeleteTransactions(@Param("transaction_id") Long transaction_id);
-
-
-    List<Transactions> findByPaymentMethodAndAccountId(PaymentMethod paymentMethodNotFound, long id);
-
-
-    @Query(value = "select * from transactions where account_id =:accountId",nativeQuery = true)
-    List<Transactions> findByAccountId(@Param("accountId") Long accountId);
-
 
 
 
@@ -67,7 +59,6 @@ public interface TransactionRepo extends JpaRepository<Transactions,Long> {
             where account_id=:accountId and is_deleted =true;
             """, nativeQuery = true)
     void reviveTransactionsByAccountId(@Param("accountId") Long accountId);
-
 
 
 

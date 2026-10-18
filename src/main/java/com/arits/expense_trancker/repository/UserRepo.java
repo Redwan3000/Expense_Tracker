@@ -102,18 +102,8 @@ public interface UserRepo extends JpaRepository<User, Long> {
     Optional<RetriveUserResponseDto> reviveUserById(@Param("id") long id);
 
 
-    @Query(value = """
-            
-            select 
-                coalesce((select sum(balance) from bank where user_id=:id),0)+
-                coalesce((select sum(balance) from mobile_banking where user_id=:id),0)+
-                coalesce((select sum(balance) from cash_wallet where user_id=:id),0) as totalBalance
-            
-            """, nativeQuery = true)
-    BigDecimal getAllAccountBalance(@Param("id") Long id);
 
 
-    List<User> parent(User parent);
 
     @Query(value = "select id from users where parent_id=:parentId and id=:userId", nativeQuery = true)
     Optional<Long> findUserIdByParentIdAndUserId(@Param("parentId") Long parentId, @Param("userId") Long userId);

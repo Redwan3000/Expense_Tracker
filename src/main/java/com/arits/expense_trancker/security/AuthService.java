@@ -35,7 +35,10 @@ public class AuthService {
 
     public UserRegisterResponseDto register(User user, Long ownerId, UserRegisterRequestDto requestDto) {
 
-        User currentUser=resolver.getTargetUser(user, ownerId, null);
+        User currentUser = null;
+        if (user != null) {
+            currentUser = resolver.getTargetUser(user, ownerId, null);
+        }
 
         if (userRepo.findByUsername(requestDto.getUsername()).isPresent()) {
             throw new IllegalArgumentException("user already exist ,,,,please login");
@@ -46,7 +49,13 @@ public class AuthService {
         Gender gender = genderRepo.findById(requestDto.getGenderId()).orElseThrow(() -> new RuntimeException("Gender does not exist"));
 
         if (currentUser == null) {
-            role = roleRepo.findByName("OWNER").orElseThrow(() -> new RuntimeException("Role Not Found"));
+            if (userRepo.count() == 0 && requestDto.getRoleId() != null) {
+                role = roleRepo.findById(requestDto.getRoleId())
+                        .orElseThrow(() -> new RuntimeException("Role Not Found"));
+            } else {
+                role = roleRepo.findByName("OWNER")
+                        .orElseThrow(() -> new RuntimeException("Role Not Found"));
+            }
         } else {
             String currentUserRole = currentUser.getRole().getName();
             if (currentUserRole.contains("ADMIN")) {

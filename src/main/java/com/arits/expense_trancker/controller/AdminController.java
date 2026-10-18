@@ -28,7 +28,7 @@ public class AdminController {
 
     @GetMapping({
             "/user/get-user-info/",
-            "/user/subuser/get-user-info/{userID}}",
+            "/user/subuser/get-user-info/{userID}",
             "/admin/user/get-user-info/{userID}/",
             "/admin/subuser/get-user-info/{userID}/{subuserId}",
     })
