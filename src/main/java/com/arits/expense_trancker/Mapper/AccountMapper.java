@@ -19,7 +19,6 @@ public interface AccountMapper {
     @Mapping(source = "paymentMethod.name", target = "paymentMethod")
     @Mapping(source = "accountDetails.accountNumber", target = "accountNumber")
     @Mapping(source = "accountDetails.nomineeName", target = "nomineeName")
-    @Mapping(source = "accountDetails.provider.name", target = "providerName")
     @Mapping(source = "balance.amount", target = "currentBalance")
     @Mapping(source = "accountDetails.accountHolder", target = "accountHolder")
     AccountResponseDto toAccountResponseDto(Account account);

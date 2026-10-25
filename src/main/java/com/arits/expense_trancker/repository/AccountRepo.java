@@ -32,7 +32,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             pm.name as paymentMethod, 
             ad.account_number as accountNumber,
             ad.nominee_name as nomineeName,
-            p.name as providerName,
             b.balance as currentBalance,
             ad.account_holder as accountHolder,
             a.created_at as createdAt
@@ -41,7 +40,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             left join account_type at on a.account_type_id = at.id
             left join payment_method pm on a.payment_method_id = pm.id
             left join account_details ad on a.account_details = ad.id
-            left join provider p on ad.provider_id = p.id
             left join balance b on b.account_id = a.id
             
             where a.user_id=:userId
@@ -62,7 +60,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             pm.name as paymentMethod, 
             ad.account_number as accountNumber,
             ad.nominee_name as nomineeName,
-            p.name as providerName,
             b.balance as currentBalance,
             ad.account_holder as accountHolder,
             a.created_at as createdAt
@@ -71,7 +68,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             left join account_type at on a.account_type_id = at.id
             left join payment_method pm on a.payment_method_id = pm.id
             left join account_details ad on a.account_details = ad.id
-            left join provider p on ad.provider_id = p.id
             left join balance b on b.account_id = a.id
             
             where a.user_id=:userId
@@ -93,14 +89,12 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
                 a.deleted_at,
                 ad.account_number,
                 pm.name,
-                p.name,
                 at.name,
                 b.amount
             from account a
             join account_details ad on ad.account_id = a.id
             join account_type at on at.id = a.account_type_id
             join payment_method pm on pm.id = a.payment_method_id
-            join provider p on p.id = ad.provider_id
             join currency c on c.id  = a.currency_id
             join balance b on b.account_id = a.id
             where a.user_id = :userId
@@ -202,7 +196,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             ad.account_holder,
             ad.nominee_name,
             pm.name,
-            p.name,
             at.name,
             b.amount,
             c.name,
@@ -210,7 +203,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
         from account a
         join account_details ad on ad.account_id = a.id
         join payment_method pm  on pm.id = a.payment_method_id
-        join provider p         on p.id = ad.provider_id
         join account_type at    on at.id = a.account_type_id
         join balance b          on b.account_id = a.id
         join currency c         on c.id = a.currency_id
@@ -220,7 +212,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             or lower(ad.account_holder) like lower(concat('%', :keyword, '%'))
             or lower(ad.nominee_name)   like lower(concat('%', :keyword, '%'))
             or lower(pm.name)           like lower(concat('%', :keyword, '%'))
-            or lower(p.name)            like lower(concat('%', :keyword, '%'))
             or lower(at.name)           like lower(concat('%', :keyword, '%'))
         )
         limit :size offset :offset
@@ -242,7 +233,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
         from account a
         join account_details ad on ad.account_id = a.id
         join payment_method pm  on pm.id = a.payment_method_id
-        join provider p         on p.id = ad.provider_id
         join account_type at    on at.id = a.account_type_id
         where a.is_deleted = false
         and (
@@ -250,7 +240,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             or lower(ad.account_holder) like lower(concat('%', :keyword, '%'))
             or lower(ad.nominee_name)   like lower(concat('%', :keyword, '%'))
             or lower(pm.name)           like lower(concat('%', :keyword, '%'))
-            or lower(p.name)            like lower(concat('%', :keyword, '%'))
             or lower(at.name)           like lower(concat('%', :keyword, '%'))
         )
         """, nativeQuery = true)
@@ -268,7 +257,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             ad.account_holder,
             ad.nominee_name,
             pm.name,
-            p.name,
             at.name,
             b.amount,
             c.name,
@@ -276,7 +264,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
         from account a
         join account_details ad on ad.account_id = a.id
         join payment_method pm  on pm.id = a.payment_method_id
-        join provider p         on p.id = ad.provider_id
         join account_type at    on at.id = a.account_type_id
         join balance b          on b.account_id = a.id
         join currency c         on c.id = a.currency_id
@@ -294,7 +281,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             or lower(ad.account_holder) like lower(concat('%', :keyword, '%'))
             or lower(ad.nominee_name)   like lower(concat('%', :keyword, '%'))
             or lower(pm.name)           like lower(concat('%', :keyword, '%'))
-            or lower(p.name)            like lower(concat('%', :keyword, '%'))
             or lower(at.name)           like lower(concat('%', :keyword, '%'))
         )
         limit :size offset :offset
@@ -312,7 +298,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
         from account a
         join account_details ad on ad.account_id = a.id
         join payment_method pm  on pm.id = a.payment_method_id
-        join provider p         on p.id = ad.provider_id
         join account_type at    on at.id = a.account_type_id
         where a.is_deleted = false
         and (
@@ -328,7 +313,6 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             or lower(ad.account_holder) like lower(concat('%', :keyword, '%'))
             or lower(ad.nominee_name)   like lower(concat('%', :keyword, '%'))
             or lower(pm.name)           like lower(concat('%', :keyword, '%'))
-            or lower(p.name)            like lower(concat('%', :keyword, '%'))
             or lower(at.name)           like lower(concat('%', :keyword, '%'))
         )
         """, nativeQuery = true)

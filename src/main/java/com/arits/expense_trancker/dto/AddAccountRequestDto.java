@@ -29,8 +29,6 @@ public class AddAccountRequestDto {
 
     private String nomineeName;
 
-    @NotNull(message = "providerId is required")
-    private Long provider;
 
     @NotNull(message = "currentBalance is required")
     private BigDecimal balance;

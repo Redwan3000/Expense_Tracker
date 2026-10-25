@@ -29,9 +29,10 @@ public class UsersPermissions {
     @Builder.Default
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
+
     @Builder.Default
-    @Column( name = "is_blocked")
-    private boolean isBlocked = false;
+    @Column(nullable = false, name = "is_blocked")
+    private boolean isBlocked=false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -49,6 +50,7 @@ public class UsersPermissions {
     public void prePersist(){
         this.createdAt= LocalDateTime.now();
         this.updatedAt= LocalDateTime.now();
+        this.isBlocked=false;
     }
     @PreUpdate
     public void preUpdate(){

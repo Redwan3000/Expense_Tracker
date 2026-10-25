@@ -66,9 +66,8 @@ public class AccountsService {
 
         AccountType accountType = accountTypeRepo.findById(dto.getAccountType()).orElseThrow(() -> new RuntimeException("invalid Account Type"));
 
-        PaymentMethod paymentMethod = paymentMethodRepo.findById(dto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("invalid "));
+        PaymentMethod paymentMethod = paymentMethodRepo.findById(dto.getPaymentMethod()).orElseThrow(() -> new RuntimeException("invalid payment method"));
 
-        Provider provider = providerRepo.findById(dto.getProvider()).orElseThrow(() -> new RuntimeException("invalid provider"));
 
         Account newAccount = Account.builder()
                 .currency(currency)
@@ -80,9 +79,10 @@ public class AccountsService {
         AccountDetails accountDetails = AccountDetails.builder()
                 .accountNumber(dto.getAccountNumber())
                 .nomineeName(dto.getNomineeName())
-                .provider(provider)
                 .accountHolder(dto.getAccountHolder())
-                .account(newAccount).build();
+                .account(newAccount)
+                .accountType(accountType)
+                .build();
 
 
         Balance currentBalance = Balance.builder()

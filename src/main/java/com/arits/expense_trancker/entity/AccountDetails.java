@@ -45,9 +45,9 @@ public class AccountDetails {
 
 
 
-    @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
-    @JoinColumn(name = "provider_id")
-    private Provider provider;
+//    @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
+//    @JoinColumn(name = "provider_id")
+//    private Provider provider;
 
     @OneToOne(mappedBy = "accountDetails",cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     private Account account;

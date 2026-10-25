@@ -19,7 +19,7 @@ public interface UsersPermissionsRepo extends JpaRepository<UsersPermissions, Lo
     @Modifying
     @Query(value = """
             update users_permissions
-            set is_deleted = true, deleted_at = now()
+            set is_deleted = true, deleted_at = now(), is_blocked=false
             where permission_id not in (select unnest(CAST(:newPermissions AS bigint[])))
               and user_id in (
                   select id from users 
@@ -38,7 +38,7 @@ public interface UsersPermissionsRepo extends JpaRepository<UsersPermissions, Lo
     @Modifying
     @Query(value = """
             update users_permissions
-            set is_deleted = true, deleted_at = now()
+            set is_deleted = true, deleted_at = now(),is_blocked=false
             where permission_id not in (select unnest(CAST(:newPermissions AS bigint[])))
               and user_id in (
                   select id from users 
@@ -54,8 +54,8 @@ public interface UsersPermissionsRepo extends JpaRepository<UsersPermissions, Lo
 
     @Modifying
     @Query(value = """
-        insert into users_permissions (user_id, permission_id, is_deleted, created_at, updated_at)
-        select u.id, unnest(CAST(:newPermissions as bigint[])), false, now(), now()
+        insert into users_permissions (user_id, permission_id, is_deleted, created_at, updated_at, is_blocked)
+        select u.id, unnest(CAST(:newPermissions as bigint[])), false, now(), now() , false
         from users u
         where u.role_id = :roleId
           and u.is_deleted = false
@@ -64,7 +64,8 @@ public interface UsersPermissionsRepo extends JpaRepository<UsersPermissions, Lo
         do update set 
             is_deleted = false,
             deleted_at = null,
-            updated_at = now()
+            updated_at = now(),
+            is_blocked= false
         """, nativeQuery = true)
     void setNewRolePermissionsToUsers(@Param("roleId") Long roleId,
                                       @Param("newPermissions") Long[] newPermissions,
@@ -73,8 +74,8 @@ public interface UsersPermissionsRepo extends JpaRepository<UsersPermissions, Lo
 
     @Modifying
     @Query(value = """
-        insert into users_permissions (user_id, permission_id, is_deleted, created_at, updated_at)
-        select u.id, unnest(CAST(:newPermissions as bigint[])), false, now(), now()
+        insert into users_permissions (user_id, permission_id, is_deleted, created_at, updated_at ,is_blocked)
+        select u.id, unnest(CAST(:newPermissions as bigint[])), false, now(), now(),false
         from users u
         where u.role_id = :roleId
           and u.is_deleted = false
@@ -83,7 +84,7 @@ public interface UsersPermissionsRepo extends JpaRepository<UsersPermissions, Lo
             is_deleted = false,
             deleted_at = null,
             updated_at = now(),
-            is_blocked = false
+            is_blocked=false
         """, nativeQuery = true)
     void setNewRolePermissionsToUsers(@Param("roleId") Long roleId,
                                       @Param("newPermissions") Long[] newPermissions);

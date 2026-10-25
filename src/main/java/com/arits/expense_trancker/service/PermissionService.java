@@ -38,9 +38,9 @@ public class PermissionService {
       rolesDefaultPermissionsRepo.setNewPermissions(dto.getRoleId(),permissionArray);
 
 
-      usersPermissionsRepo.setNewRolePermissionsToUsers(dto.getRoleId(), permissionArray);
-      usersPermissionsRepo.softDeleteUnwantedUsersPermissions(dto.getRoleId(), permissionArray);
 
+      usersPermissionsRepo.softDeleteUnwantedUsersPermissions(dto.getRoleId(), permissionArray);
+      usersPermissionsRepo.setNewRolePermissionsToUsers(dto.getRoleId(), permissionArray);
 
         SetPermissionDto.builder()
                 .roleId(dto.getRoleId())

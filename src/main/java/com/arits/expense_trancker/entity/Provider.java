@@ -29,8 +29,8 @@ public class Provider {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "provider")
-    private Set<AccountDetails> accountDetails;
+//    @OneToMany(mappedBy = "provider")
+//    private Set<AccountDetails> accountDetails;
 
 
 

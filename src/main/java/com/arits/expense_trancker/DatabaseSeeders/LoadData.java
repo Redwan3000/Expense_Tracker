@@ -212,9 +212,6 @@ public class LoadData implements CommandLineRunner {
         permissionService.setPermissionToRole(subownerPermission);
         permissionService.setPermissionToRole(childPermission);
         permissionService.setPermissionToRole(adminPermission);
-//        permissionService.setPermissionToRole(userRepo.findByUsername("ADMIN").orElseThrow(), subownerPermission);
-//        permissionService.setPermissionToRole(userRepo.findByUsername("ADMIN").orElseThrow(), childPermission);
-//        permissionService.setPermissionToRole(userRepo.findByUsername("ADMIN").orElseThrow(), adminPermission);
 
 
     }
