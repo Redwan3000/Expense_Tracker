@@ -6,20 +6,20 @@ security:
       any-of-permissions:
         - Add Account
 
-    - pattern: /owner/subuser/add-account/*
+    - pattern: /user/add-account/*
       method: POST
       any-of-permissions:
-        - Add Account For Subowner
+        - Add Account For SubUser
 
     - pattern: /admin/user/add-account/*
       method: POST
       any-of-permissions:
         - Add Account For Any User
 
-    - pattern: /admin/subuser/add-account/*/*
+    - pattern: /admin/user/add-account/*/*
       method: POST
       any-of-permissions:
-        - Add Account For Any Owners Subowner
+        - Add Account For Any Users SubUser
 
 
 
@@ -29,10 +29,10 @@ security:
       any-of-permissions:
         - Modify Account Details
 
-    - pattern: /owner/subuser/modify-account-details/*/*/*
+    - pattern: /user/modify-account-details/*/*/*
       method: PUT
       any-of-permissions:
-        - Modify Account Details For Subuser
+        - Modify Account Details For SubUser
 
     - pattern: /admin/user/modify-account-details/*/*/*
       method: PUT
@@ -42,17 +42,17 @@ security:
     - pattern: /admin/subowner/modify-account-details/*/*/*/*
       method: PUT
       any-of-permissions:
-        - Modify Account Details For Any Users Subuser
+        - Modify Account Details For Any Users SubUser
 
 
-#Delete account
+    #Delete account
 
     - pattern: /user/delete-account/*/*
       method: DELETE
       any-of-permissions:
         - Delete Account
 
-    - pattern: /owner/subuser/delete-account/*/*/*
+    - pattern: /user/delete-account/*/*/*
       method: DELETE
       any-of-permissions:
         - Delete Subuser Account
@@ -69,22 +69,22 @@ security:
 
     #get account details
 
-    - pattern: /user/get-account-detials/*/*
+    - pattern: /user/get-account-details/*/*
       method: GET
       any-of-permissions:
         - Get Own Account Details
 
-    - pattern: /owner/subuser/get-account-detials/*/*/*
+    - pattern: /user/get-account-details/*/*/*
       method: GET
       any-of-permissions:
         - Get Subuser Account Details
 
-    - pattern: /admin/user/get-account-detials/*/*/*
+    - pattern: /admin/user/get-account-details/*/*/*
       method: GET
       any-of-permissions:
         - Get Any User Account Details
 
-    - pattern: /admin/subuser/get-account-detials/*/*/*/*
+    - pattern: /admin/subuser/get-account-details/*/*/*/*
       method: GET
       any-of-permissions:
         - Get Any Users Subuser Account Details
@@ -97,7 +97,7 @@ security:
       any-of-permissions:
         - Get Own All Account Details
 
-    - pattern: /owner/subuser/get-all-account-details/*
+    - pattern: /user/get-all-account-details/*
       method: GET
       any-of-permissions:
         - Get Subuser All Account Details
@@ -112,13 +112,15 @@ security:
       any-of-permissions:
         - Get Any Users Subuser All Account Details
 
-#get methods all account details
+
+
+    #get methods all account details
     - pattern: /user/get-any-method-all-account-details/*
       method: GET
       any-of-permissions:
         - Get Own All Account Method Wise Details
 
-    - pattern: /owner/subuser/get-any-method-all-account-details/*/*
+    - pattern: /user/get-any-method-all-account-details/*/*
       method: GET
       any-of-permissions:
         - Get Subuser All Account Method Wise Details
@@ -133,3 +135,177 @@ security:
       any-of-permissions:
         - Get Any Users Subuser All Account Method Wise Details
 
+
+
+    #get all soft-deleted account details
+    - pattern: /user/get-soft-deleted-account-list
+      method: GET
+      any-of-permissions:
+        - Get Soft Deleted Account List
+
+    - pattern: /user/get-soft-deleted-account-list/*
+      method: GET
+      any-of-permissions:
+        - Get Soft Deleted Account List of SubUsers
+
+    - pattern: /admin/user/get-soft-deleted-account-list/*
+      method: GET
+      any-of-permissions:
+        - Get Soft Deleted Account List of Any User
+
+    - pattern: /admin/subuser/get-soft-deleted-account-list/*/*
+      method: GET
+      any-of-permissions:
+        - Get Soft Deleted Account List of Any Users SubUser
+
+
+
+    #restoring accounts from softDeleted
+    - pattern: /user/restore-account/*/*
+      method: PUT
+      any-of-permissions:
+        - Restore Own SoftDeleted Account
+
+    - pattern: /user/restore-account/*/*/*
+      method: PUT
+      any-of-permissions:
+        - Restore SubUsers SoftDeleted Account
+
+    - pattern: /admin/user/restore-account/*/*/*
+      method: PUT
+      any-of-permissions:
+        - Restore SoftDeleted Account of Any Users
+
+    - pattern: /admin/subuser/restore-account/*/*/*/*
+      method: PUT
+      any-of-permissions:
+        - Restore SoftDeleted Account of Any Users SubUser
+
+
+    # permanently delete account from softDelete
+    - pattern: /user/delete-account-permanently/*/*
+      method: DEL
+      any-of-permissions:
+        - Delete Own SoftDeleted Account
+
+    - pattern: /user/delete-account-permanently/*/*/*
+      method: DEL
+      any-of-permissions:
+        - Delete SubUsers SoftDeleted Account
+
+    - pattern: /admin/user/delete-account-permanently/*/*/*
+      method: DEL
+      any-of-permissions:
+        - Delete SoftDeleted Account of Any Users
+
+    - pattern: /admin/subuser/delete-account-permanently/*/*/*/*
+      method: DEL
+      any-of-permissions:
+        - Delete SoftDeleted Account of Any Users SubUser
+
+
+    # getting account balance
+    - pattern: /user/get-account-balance/*/*
+      method: GET
+      any-of-permissions:
+        - Get Account Balance
+
+    - pattern: /user/get-account-balance/*/*/*
+      method: GET
+      any-of-permissions:
+        - Get Account Balance of SubUser
+
+    - pattern: /admin/user/get-account-balance/*/*/*
+      method: GET
+      any-of-permissions:
+        - Get Account Balance of Any User
+
+    - pattern: /admin/subuser/get-account-balance/*/*/*/*
+      method: GET
+      any-of-permissions:
+        - Get Account Balance of Any Users SubUsers
+
+
+    # getting account balance currency Wise
+    - pattern: /user/get-account-balance/*
+      method: GET
+      any-of-permissions:
+        - Get Total Balance Currency Wise
+
+    - pattern: /user/get-total-balance/*/*
+      method: GET
+      any-of-permissions:
+        - Get Total Balance Currency Wise of SubUser
+
+    - pattern: /admin/user/get-total-balance/*/*
+      method: GET
+      any-of-permissions:
+        - Get Total Balance Currency Wise of Any User
+
+    - pattern: /admin/subuser/get-total-balance/*/*/*
+      method: GET
+      any-of-permissions:
+        - Get Total Balance Currency Wise of Any Users SubUsers
+
+
+
+    # updating account balance
+    - pattern: /user/update-account-balance/*/*
+      method: PUT
+      any-of-permissions:
+        - Update Account Balance
+
+    - pattern: /user/update-account-balance/*/*/*
+      method: PUT
+      any-of-permissions:
+        - Update Account Balance of SubUser
+
+    - pattern: /admin/user/update-account-balance/*/*/*
+      method: PUT
+      any-of-permissions:
+        - Update Account Balance of Any User
+
+    - pattern: /admin/subuser/update-account-balance/*/*/*/*
+      method: PUT
+      any-of-permissions:
+        - Update Account Balance of Any Users SubUsers
+
+
+    # transfering balance to any account
+    - pattern: /user/transfer-balance
+      method: POST
+      any-of-permissions:
+        - Transfer Balance to Any Account
+
+    - pattern: /user/transfer-balance/*
+      method: POST
+      any-of-permissions:
+        - Transfer Balance to Any Account of SubUser
+
+    - pattern: /admin/user/transfer-balance/*
+      method: POST
+      any-of-permissions:
+        - Transfer Balance to Any Account of Any User
+
+    - pattern: /admin/subuser/transfer-balance/*/*
+      method: POST
+      any-of-permissions:
+        - Transfer Balance to Any Account of Any Users SubUsers
+
+
+
+    # search accounts
+    - pattern: /user/search-accounts
+      method: GET
+      any-of-permissions:
+        - Search Account
+
+    - pattern: /admin/search-accounts
+      method: GET
+      any-of-permissions:
+        - Search Account of All Users
+
+    - pattern: /admin/search-accounts/*
+      method: GET
+      any-of-permissions:
+        - Search Account of All Users By UserId

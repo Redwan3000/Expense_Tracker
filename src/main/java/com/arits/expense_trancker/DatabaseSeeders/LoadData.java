@@ -90,6 +90,7 @@ public class LoadData implements CommandLineRunner {
 
 
 
+
         permissionService.addNewPermission("Login", "users can login");//1
         permissionService.addNewPermission("Register", "can register as owner");//2
         permissionService.addNewPermission("User Info", "users can see his or her info");//3
@@ -121,9 +122,72 @@ public class LoadData implements CommandLineRunner {
         permissionService.addNewPermission("Get Any Bank Account Detail", "Where any user can delete his Expenses");//24
 
 
+
+
+
+
+//        Account Module's Permissions
+        permissionService.addNewPermission("Add Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Add Account For SubUser", "users can add accounts for himself");//26
+        permissionService.addNewPermission("Add Account For Any User", "users can add accounts for himself");//27
+        permissionService.addNewPermission("Add Account For Any Users SubUser", "users can add accounts for himself");//28
+        permissionService.addNewPermission("Modify Account Details", "users can add accounts for himself");//29
+        permissionService.addNewPermission("Modify Account Details For SubUser", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Modify Account Details For Any User", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Modify Account Details For Any Users SubUser", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Delete Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Delete Subuser Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Delete Any User Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Delete Any Users Subuser Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Own Account Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Subuser Account Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Any User Account Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Any Users Subuser Account Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Own All Account Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Subuser All Account Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Any User All Account Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Any Users Subuser All Account Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Own All Account Method Wise Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Subuser All Account Method Wise Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Any User All Account Method Wise Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Any Users Subuser All Account Method Wise Details", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Soft Deleted Account List", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Soft Deleted Account List of SubUsers", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Soft Deleted Account List of Any User", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Soft Deleted Account List of Any Users SubUser", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Restore Own SoftDeleted Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Restore SubUsers SoftDeleted Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Restore Own SoftDeleted Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Restore SoftDeleted Account of Any Users", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Restore SoftDeleted Account of Any Users SubUser", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Delete Own SoftDeleted Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Delete SubUsers SoftDeleted Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Delete SoftDeleted Account of Any Users", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Delete SoftDeleted Account of Any Users SubUser", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Account Balance", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Account Balance of SubUser", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Account Balance of Any User", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Account Balance of Any Users SubUsers", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Total Balance Currency Wise", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Total Balance Currency Wise of SubUser", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Total Balance Currency Wise of Any User", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Get Total Balance Currency Wise of Any Users SubUsers", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Update Account Balance", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Update Account Balance of SubUser", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Update Account Balance of Any User", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Update Account Balance of Any Users SubUsers", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Transfer Balance to Any Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Transfer Balance to Any Account of SubUser", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Transfer Balance to Any Account of Any User", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Transfer Balance to Any Account of Any Users SubUsers", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Search Account", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Search Account of All Users", "users can add accounts for himself");//25
+        permissionService.addNewPermission("Search Account of All Users By UserId", "users can add accounts for himself");//25
+
+
         SetPermissionDto ownerPermission = SetPermissionDto.builder()
                 .roleId(1L)
-                .permissionIds(Set.of(1L, 2L, 3L))
+                .permissionIds(Set.of(1L, 2L, 3L,25L,26L,27L,28L,29L,30L,31L,32L,33L,34L,35L,36L,37L,38L,39L,40L,41L,42L,43L,44L,45L,46L,47L,48L,49L,50L,51L,52L,53L,54L,55L,56L,57L,58L,59L,60L,61L,62L,63L,64L,65L,66L,67L,68L,69L,70L,71L,72L,73L,74L,75L,76L,77L,78L,79L))
                 .build();
 
         SetPermissionDto subownerPermission = SetPermissionDto.builder()
@@ -135,15 +199,22 @@ public class LoadData implements CommandLineRunner {
                 .roleId(3L)
                 .permissionIds(Set.of(1L, 2L, 3L))
                 .build();
+
+
         SetPermissionDto adminPermission = SetPermissionDto.builder()
                 .roleId(4L)
-                .permissionIds(Set.of(1L, 2L, 3L))
+                .permissionIds(Set.of(2L, 3L,27L,28L,29L,30L,31L,32L,33L,34L,35L,36L,37L,38L,39L,40L,41L,42L,43L,44L,45L,46L,47L,48L,49L,50L,51L,52L,53L,54L,55L,56L,57L,58L,59L,60L,61L,62L,63L,64L,65L,66L,67L,68L,69L,70L,71L,72L,73L,74L,75L,76L,77L,78L,79L))
                 .build();
 
-        permissionService.setPermissionToRole(userRepo.findByUsername("ADMIN").orElseThrow(), ownerPermission);
-//        permissionService.setPermissionToRole(userRepo.findByUsername("OWNER").orElseThrow(), subownerPermission);
-//        permissionService.setPermissionToRole(userRepo.findByUsername("SUBOWNER").orElseThrow(), childPermission);
-//        permissionService.setPermissionToRole(userRepo.findByUsername("CHILD").orElseThrow(), adminPermission);
+
+
+        permissionService.setPermissionToRole(ownerPermission);
+        permissionService.setPermissionToRole(subownerPermission);
+        permissionService.setPermissionToRole(childPermission);
+        permissionService.setPermissionToRole(adminPermission);
+//        permissionService.setPermissionToRole(userRepo.findByUsername("ADMIN").orElseThrow(), subownerPermission);
+//        permissionService.setPermissionToRole(userRepo.findByUsername("ADMIN").orElseThrow(), childPermission);
+//        permissionService.setPermissionToRole(userRepo.findByUsername("ADMIN").orElseThrow(), adminPermission);
 
 
     }

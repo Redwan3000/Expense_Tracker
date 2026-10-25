@@ -29,6 +29,8 @@ public class PermissionsController {
     private final Resolver resolver;
 
 
+
+
     //    controller for setting roles new permission set removing the older ones for both admin and user usage
     @PostMapping({
             "/user/set-new-permissions-to-role",
@@ -53,6 +55,8 @@ public class PermissionsController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
+
 
 
     //    controller for adding roles new permission without effecting the older permissions for both admin and user usage

@@ -10,7 +10,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -28,9 +27,33 @@ public class PermissionService {
     private final PermissionMapper permissionMapper;
 
 
+    @Transactional
+  public void setPermissionToRole(SetPermissionDto dto){
+
+      Long[] permissionArray = dto.getPermissionIds().toArray(new Long[0]);
+
+      verifier.checkRoleExistanceById(dto.getRoleId());
+
+      rolesDefaultPermissionsRepo.softDeleteUnwantedPermissions(dto.getRoleId(),dto.getPermissionIds());
+      rolesDefaultPermissionsRepo.setNewPermissions(dto.getRoleId(),permissionArray);
+
+
+      usersPermissionsRepo.setNewRolePermissionsToUsers(dto.getRoleId(), permissionArray);
+      usersPermissionsRepo.softDeleteUnwantedUsersPermissions(dto.getRoleId(), permissionArray);
+
+
+        SetPermissionDto.builder()
+                .roleId(dto.getRoleId())
+                .permissionIds(dto.getPermissionIds())
+                .build();
+    }
+
+
     //service for setting new sets of permissions to the role
     @Transactional
     public SetPermissionDto setPermissionToRole(User user, SetPermissionDto dto) {
+
+
 
         Long userID;
         boolean isHeAdmin = user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
