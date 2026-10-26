@@ -34,7 +34,7 @@ public class Account {
     @JoinColumn(name = "currency_id", nullable = false)
     private Currency currency;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
