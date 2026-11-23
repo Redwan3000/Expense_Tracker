@@ -67,7 +67,7 @@ public class User implements UserDetails {
 
 
 
-    @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST , CascadeType.MERGE})
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
     private Set<Account> accounts;
 
     @Builder.Default
