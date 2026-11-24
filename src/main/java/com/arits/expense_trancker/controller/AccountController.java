@@ -196,7 +196,7 @@ public class AccountController {
         verifier.checkUserExistence(subuserId);
 
 
-        AllAccountDetails allAccountDetails = accountsService.getAllAccounts(user, userId, subuserId);
+        AllAccountDetails allAccountDetails = accountsService.getAllAccountsDetails(user, userId, subuserId);
 
         ApiResponse<AllAccountDetails> response = ApiResponse.<AllAccountDetails>builder()
                 .status(HttpStatus.OK.value())
@@ -207,6 +207,32 @@ public class AccountController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
+//    @GetMapping(
+//            {
+//                    "/user/get-all-account"
+//            }
+//    )
+//    public ResponseEntity<ApiResponse<?>> getAllAccount(@AuthenticationPrincipal User user,
+//                                                               @PathVariable(value = "userId", required = false) Long userId,
+//                                                               @PathVariable(value = "subuserId", required = false) Long subuserId
+//    ) {
+//
+//        verifier.checkUserExistence(userId);
+//        verifier.checkUserExistence(subuserId);
+//
+//
+////        AllAccountDetails allAccountDetails = accountsService.getAllAccounts(user, userId, subuserId);
+//
+//        ApiResponse<AllAccountDetails> response = ApiResponse.<AllAccountDetails>builder()
+//                .status(HttpStatus.OK.value())
+//                .message("All Account Details Fetched Successfully")
+//                .timestamp(LocalDateTime.now())
+//                .result(allAccountDetails)
+//                .error(null)
+//                .build();
+//        return ResponseEntity.ok(response);
+//    }
 
 
     //Controller For Getting all Account Details method Wise

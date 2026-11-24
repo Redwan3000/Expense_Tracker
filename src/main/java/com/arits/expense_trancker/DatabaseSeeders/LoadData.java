@@ -122,6 +122,42 @@ public class LoadData implements CommandLineRunner {
         permissionService.addNewPermission("Get Any Bank Account Detail", "Where any user can delete his Expenses");//24
 
 
+<<<<<<< Updated upstream
+=======
+//        SetPermissionDto ownerPermission = SetPermissionDto.builder()
+//                .roleId(1L)
+//                .permissionIds(Set.of(1L, 2L, 3L))
+//                .build();
+//
+//        SetPermissionDto subownerPermission = SetPermissionDto.builder()
+//                .roleId(2L)
+//                .permissionIds(Set.of(1L, 2L, 3L))
+//                .build();
+//
+//        SetPermissionDto childPermission = SetPermissionDto.builder()
+//                .roleId(3L)
+//                .permissionIds(Set.of(1L, 2L, 3L))
+//                .build();
+//        SetPermissionDto adminPermission = SetPermissionDto.builder()
+//                .roleId(4L)
+//                .permissionIds(Set.of(1L, 2L, 3L))
+//                .build();
+
+        Long ownerRoleId    = roleRepo.findByName("OWNER").orElseThrow().getId();
+        Long subownerRoleId = roleRepo.findByName("SUBOWNER").orElseThrow().getId();
+        Long tertiaryRoleId = roleRepo.findByName("TERTIARY").orElseThrow().getId();
+        Long adminRoleId    = roleRepo.findByName("ADMIN").orElseThrow().getId();
+
+        Set<Long> basicPerms = Stream.of("Login", "Register", "User Info")
+                .map(n -> permissionRepo.findByNameIncludingSoft(n).orElseThrow().getId())
+                .collect(Collectors.toSet());
+
+        permissionService.seedRolePermissions(ownerRoleId, basicPerms);
+
+        permissionService.seedRolePermissions(subownerRoleId, basicPerms);
+        permissionService.seedRolePermissions(tertiaryRoleId, basicPerms);
+        permissionService.seedRolePermissions(adminRoleId,    basicPerms);
+>>>>>>> Stashed changes
 
 
 

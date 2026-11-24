@@ -147,7 +147,7 @@ public class AccountsService {
 
     //    service level for getting All Account details
     @Transactional
-    public AllAccountDetails getAllAccounts(User user, Long userId, Long subuserId) {
+    public AllAccountDetails getAllAccountsDetails(User user, Long userId, Long subuserId) {
 
         User targetUserId = resolver.getTargetUser(user, userId, subuserId);
 
@@ -165,6 +165,17 @@ public class AccountsService {
 
     }
 
+//    @Transactional
+//    public List<AllAccountsResponse> getAllAccounts(User user, Long userId, Long subuserId) {
+//Long targetUserId = resolver.getTargetUserId(user,userId,subuserId);
+//
+//List<Account> allAccounts= accountRepo.getAccountsById(targetUserId);
+//
+//
+//
+//
+//
+//    }
 
     //service for the getting all accounts list by MethodId
     public List<AccountDetailsDto> getAllAccountsOfMethodId(User user, Long userId, Long subuserId, Long paymentMethodId) {

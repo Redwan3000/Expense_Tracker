@@ -32,7 +32,7 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             pm.name as paymentMethod, 
             ad.account_number as accountNumber,
             ad.nominee_name as nomineeName,
-            b.balance as currentBalance,
+            b.amount as currentBalance,
             ad.account_holder as accountHolder,
             a.created_at as createdAt
             from account a 
@@ -60,7 +60,7 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
             pm.name as paymentMethod, 
             ad.account_number as accountNumber,
             ad.nominee_name as nomineeName,
-            b.balance as currentBalance,
+            b.amount as currentBalance,
             ad.account_holder as accountHolder,
             a.created_at as createdAt
             from account a 
@@ -320,6 +320,5 @@ public interface AccountRepo extends JpaRepository<Account, Long> {
                                       @Param("keyword") String keyword);
 
 
-
-
+    List<Account> getAccountsById(Long targetUserId);
 }

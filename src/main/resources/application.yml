@@ -96,6 +96,7 @@ security:
       method: GET
       any-of-permissions:
         - Get Own All Account Details
+        - User Info
 
     - pattern: /user/get-all-account-details/*
       method: GET

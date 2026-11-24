@@ -16,7 +16,7 @@ public interface BalanceRepo extends JpaRepository<Balance, Long> {
 
     @Query(value = """
             
-            select coalesce(sum(b.balance),0)
+            select coalesce(sum(b.amount),0)
             from balance b 
             left join account a on b.account_id= a.id
             where a.user_id=:userId
